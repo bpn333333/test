@@ -25,9 +25,9 @@ Previously he spent 16 years at Recruit, where he was business planning lead
 for a division with JPY 35B in annual revenue, managed organizations of up to
 63 people, and rolled out a sales enablement program to 1,200 staff nationwide.
 
-He then founded and ran his own consulting firm in Taiwan for seven years,
-advising 17 companies across Japan, Taiwan and China on market entry and
-go-to-market, with an average engagement length of 2.6 years.
+Since 2019 he has run his own consulting firm out of Taiwan, advising 17
+companies across Japan, Taiwan and China on market entry and go-to-market,
+with an average engagement length of 2.6 years.
 
 He is also a practitioner of enterprise generative AI adoption, having cut a
 recurring reporting workload from 32 to 5 hours per week (approx. 110 hours per
@@ -90,16 +90,16 @@ Business planning & go-to-market operator | Japan market, digital assets, cross-
 SUMMARY
 ────────────────────────────────────────────────────────────
 24 years of operating experience in Japan and Greater China. Business planning
-lead for a JPY 35B division at Recruit; founder of a consulting firm in Taiwan
-serving 17 clients over seven years; currently business planning at a Japanese
-Web3 company under the JVCEA/FSA regime. Practitioner of enterprise generative
+lead for a JPY 35B division at Recruit; founder of a consulting firm
+serving 17 clients across Japan, Taiwan and China since 2019; currently
+business planning at a Japanese Web3 company under the JVCEA/FSA regime. Practitioner of enterprise generative
 AI adoption with measured results. Native Japanese, business English.
 
 ────────────────────────────────────────────────────────────
 EXPERIENCE
 ────────────────────────────────────────────────────────────
 HashPort Inc. — Tokyo, Japan
-Business Planning (contract)                                    2023 – Present
+Business Planning (contract)                                    2026 – Present
 Japanese Web3 company operating a regulated digital asset business.
 • Designed and drove the trading campaign program; monthly GMV grew from
   JPY 21M to JPY 760M (approx. 36x) over six months, delivered with the team.
@@ -111,7 +111,7 @@ Japanese Web3 company operating a regulated digital asset business.
   application used to review the output.
 
 Oyagenkyo LLC (合同会社櫻源郷) — Taiwan / Japan
-Founder & Principal Consultant                                     2018 – 2023
+Founder & Principal Consultant                                  2019 – Present
 • Advised 17 companies across Japan, Taiwan and China on market entry,
   go-to-market and organizational design.
 • Average engagement length 2.6 years (longest 5 years); 12 of 17 clients
@@ -139,8 +139,8 @@ ADDITIONAL
 
 | 箇所 | 確認事項 |
 |---|---|
-| HashPort の在籍期間 `2023 – Present` | 開始年が正しいか |
-| 台湾法人の期間 `2018 – 2023` | リクルート退社2018と台湾7年から逆算した。実際の年を入れる |
+| ~~HashPort の在籍期間~~ | **確認済み: 2026 – Present** |
+| ~~台湾法人の期間~~ | **確認済み: 2019 – Present**（合同会社櫻源郷は現在も稼働中。HashPort は同社としての受託） |
 | 合同会社櫻源郷の英語表記 `Oyagenkyo LLC` | **登記上の英語名があればそれを使う。**なければローマ字表記でよい |
 | Mandarin (conversational) | 台湾7年からの推定。**違えば削る** |
 
@@ -169,9 +169,9 @@ under the JVCEA/FSA regulatory regime. I designed and drove the trading
 campaign program that took monthly GMV from JPY 21M to JPY 760M over six
 months, and launched a new AUM product from zero to JPY 210M.
 
-Before that I spent seven years running my own consulting firm out of Taiwan,
-advising 17 companies across Japan, Taiwan and China. Average engagement was
-2.6 years, and most new clients came by referral.
+Since 2019 I have run my own consulting firm out of Taiwan, advising 17
+companies across Japan, Taiwan and China. Average engagement is 2.6 years, and
+most new clients come by referral.
 
 I began at Recruit, where I spent 16 years — business planning lead for a
 JPY 35B division, managing teams of up to 63, and rolling out a sales
