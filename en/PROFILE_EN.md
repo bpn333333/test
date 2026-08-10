@@ -12,22 +12,30 @@
 ## 1. Expert network profile — short bio（200語。登録フォームの Bio 欄にそのまま貼る）
 
 ```
-Noriyoshi Matsuda is a Tokyo-based operator with 24 years of experience across
-Japan's consumer services, cross-border expansion into Greater China, and
-digital assets.
+Noriyoshi Matsuda is a Tokyo-based operator with 27 years of experience across
+Japanese media, consumer services, cross-border expansion into Greater China,
+and digital assets.
 
-He currently leads business planning at HashPort, a Japanese Web3 company
-operating under the JVCEA/FSA regulatory regime, where he designed and drove
-the trading campaign program that grew monthly GMV from JPY 21M to JPY 760M
-(approx. 36x) in six months, and took a new AUM product from zero to JPY 210M.
+He currently works with HashPort, a Japanese Web3 company operating under the
+JVCEA/FSA regulatory regime, as a project manager reporting directly to the
+CEO. Leading a cross-functional team of engineers, designers and marketers, he
+designed and drove the trading campaign program that grew monthly GMV from
+JPY 21M to JPY 760M (approx. 36x) in six months, and took a new wallet AUM
+product from zero to JPY 210M.
 
-Previously he spent 16 years at Recruit, where he was business planning lead
-for a division with JPY 35B in annual revenue, managed organizations of up to
-63 people, and rolled out a sales enablement program to 1,200 staff nationwide.
+At Recruit he was business planning chief in the corporate strategy office of a
+division with JPY 35B in annual revenue, managed multi-site organizations of up
+to 63 people, turned around an underperforming organization, and rolled out a
+sales enablement framework to 1,200 staff nationwide.
 
-Since 2019 he has run his own consulting firm out of Taiwan, advising 17
-companies across Japan, Taiwan and China on market entry and go-to-market,
-with an average engagement length of 2.6 years.
+He has been independent since 2019 and established his Taiwan entity,
+Deshutiao Co., Ltd., in June 2021. Through it he has advised 17 companies
+across Japan, Taiwan and China on marketing strategy, product development and
+go-to-market, with an average engagement length of 2.6 years. His Japanese
+entity, Oyagenkyo LLC, handles domestic contracting.
+
+He began his career as a television programme director at Hokkaido Television
+Broadcasting from 1999 to 2002, then spent 16 years at Recruit.
 
 He is also a practitioner of enterprise generative AI adoption, having cut a
 recurring reporting workload from 32 to 5 hours per week (approx. 110 hours per
@@ -89,41 +97,59 @@ Business planning & go-to-market operator | Japan market, digital assets, cross-
 ────────────────────────────────────────────────────────────
 SUMMARY
 ────────────────────────────────────────────────────────────
-24 years of operating experience in Japan and Greater China. Business planning
-lead for a JPY 35B division at Recruit; founder of a consulting firm
-serving 17 clients across Japan, Taiwan and China since 2019; currently
-business planning at a Japanese Web3 company under the JVCEA/FSA regime. Practitioner of enterprise generative
-AI adoption with measured results. Native Japanese, business English.
+27 years of operating experience in Japan and Greater China, spanning
+television production, Japan's largest HR services group, cross-border
+consulting, and regulated digital assets. Business planning chief for a JPY 35B
+division at Recruit; founder of consulting entities in Taiwan and Japan serving
+17 clients since 2019; currently project manager for a Japanese Web3 company
+under the JVCEA/FSA regime, reporting to the CEO. Hands-on practitioner of
+enterprise generative AI adoption. Native Japanese, business English.
 
 ────────────────────────────────────────────────────────────
 EXPERIENCE
 ────────────────────────────────────────────────────────────
 HashPort Inc. — Tokyo, Japan
-Business Planning (contract)                                    2026 – Present
+Project Manager, Marketing (contract, reporting to CEO)         2026 – Present
 Japanese Web3 company operating a regulated digital asset business.
+• Led a cross-functional team of engineers, designers and marketers.
 • Designed and drove the trading campaign program; monthly GMV grew from
   JPY 21M to JPY 760M (approx. 36x) over six months, delivered with the team.
-• Launched a new AUM product from zero to JPY 210M.
-• Built 10+ analytics dashboards in Redash and Dune covering on-chain and
-  off-chain activity.
+• Launched a new wallet AUM product from zero to JPY 210M.
+• Built a KPI monitoring stack in Redash and Dune covering on-chain and
+  off-chain activity; 10+ dashboards.
 • Automated a recurring reporting workload from 32 to 5 hours per week
-  (approx. 110 hours per month) using Claude, and built the internal web
-  application used to review the output.
+  (approx. 110 hours per month) using Claude, and led in-house development of
+  the data visualization web application around it.
 
-Oyagenkyo LLC (合同会社櫻源郷) — Taiwan / Japan
+Deshutiao Co., Ltd. (德薯條有限公司) — Taipei, Taiwan
+Oyagenkyo LLC (合同会社櫻源郷) — Tokyo, Japan
 Founder & Principal Consultant                                  2019 – Present
-• Advised 17 companies across Japan, Taiwan and China on market entry,
-  go-to-market and organizational design.
+Independent since 2019; Taiwan entity established June 2021. Japanese entity
+handles domestic contracting and invoicing.
+• Advised 17 companies and individuals across Japan, Taiwan and China on
+  marketing strategy, product development and go-to-market, on a project basis.
 • Average engagement length 2.6 years (longest 5 years); 12 of 17 clients
   continued beyond one year; most new business came through referral.
+• Clients were typically small organizations without dedicated IT staff;
+  scope ran from requirements definition through operational adoption.
 
 Recruit Co., Ltd. — Tokyo, Japan
-Business Planning Lead / Sales Management                          2002 – 2018
-• Business planning lead for a division with JPY 35B in annual revenue.
-• Managed organizations of up to 63 people.
-• Designed and rolled out a sales enablement program to 1,200 staff nationwide.
-• Ranked first among approximately 2,500 sales staff nationwide in year three;
-  received the company's annual best-organization award.
+Business Planning Chief, Corporate Strategy Office / Sales Management
+                                                                   2002 – 2018
+• Business planning chief for a division with JPY 35B in annual revenue;
+  owned the business plan and marketing strategy, executed jointly with the
+  business and sales enablement functions.
+• Managed multi-site organizations of up to 63 people; turned around an
+  underperforming organization and won the company's annual best-organization
+  award.
+• Codified tacit sales know-how into a framework and rolled it out to 1,200
+  staff nationwide.
+• Ranked first among approximately 2,500 sales staff nationwide in year three.
+
+Hokkaido Television Broadcasting Corp. (HTB) — Sapporo, Japan
+Programme Director                                                 1999 – 2002
+• Directed television programming for a regional broadcaster affiliated with
+  the ANN network.
 
 ────────────────────────────────────────────────────────────
 ADDITIONAL
@@ -141,7 +167,8 @@ ADDITIONAL
 |---|---|
 | ~~HashPort の在籍期間~~ | **確認済み: 2026 – Present** |
 | ~~台湾法人の期間~~ | **確認済み: 2019 – Present**（合同会社櫻源郷は現在も稼働中。HashPort は同社としての受託） |
-| 合同会社櫻源郷の英語表記 `Oyagenkyo LLC` | **登記上の英語名があればそれを使う。**なければローマ字表記でよい |
+| ~~北海道テレビ放送~~ | **確認済み: 1999.4 – 2002.9 番組ディレクター** |
+| 台湾法人 `Deshutiao Co., Ltd.` / 日本法人 `Oyagenkyo LLC` | **登記上の英語名があればそれを使う。**なければこのローマ字表記でよい |
 | Mandarin (conversational) | 台湾7年からの推定。**違えば削る** |
 
 ---
@@ -155,7 +182,7 @@ ADDITIONAL
 ### Headline（120字以内）
 
 ```
-Japan Market Entry & Go-to-Market | Digital Assets (JVCEA/FSA) | ex-Recruit 16y | 7y Greater China | Enterprise GenAI
+Japan Market Entry & Go-to-Market | Digital Assets (JVCEA/FSA) | ex-Recruit 16y | Taiwan & Greater China | Enterprise GenAI
 ```
 
 ### About
@@ -164,18 +191,22 @@ Japan Market Entry & Go-to-Market | Digital Assets (JVCEA/FSA) | ex-Recruit 16y 
 I help companies understand and enter the Japanese market, and I run the
 operating side of businesses here.
 
-Today I lead business planning at HashPort, a Japanese Web3 company operating
-under the JVCEA/FSA regulatory regime. I designed and drove the trading
-campaign program that took monthly GMV from JPY 21M to JPY 760M over six
-months, and launched a new AUM product from zero to JPY 210M.
+Today I work with HashPort, a Japanese Web3 company operating under the
+JVCEA/FSA regulatory regime, as a project manager reporting to the CEO. Leading
+a cross-functional team of engineers, designers and marketers, I designed and
+drove the trading campaign program that took monthly GMV from JPY 21M to
+JPY 760M over six months, and launched a new wallet AUM product from zero to
+JPY 210M.
 
-Since 2019 I have run my own consulting firm out of Taiwan, advising 17
-companies across Japan, Taiwan and China. Average engagement is 2.6 years, and
-most new clients come by referral.
+I have been independent since 2019 and set up my Taiwan entity in June 2021.
+Through it I have advised 17 companies across Japan, Taiwan and China. Average
+engagement is 2.6 years, and most new clients come by referral.
 
-I began at Recruit, where I spent 16 years — business planning lead for a
-JPY 35B division, managing teams of up to 63, and rolling out a sales
-enablement program to 1,200 people nationwide.
+I started out as a television programme director at Hokkaido Television
+Broadcasting, then spent 16 years at Recruit — business planning chief in the
+corporate strategy office of a JPY 35B division, managing multi-site teams of
+up to 63, and rolling out a sales enablement framework to 1,200 people
+nationwide.
 
 I also work hands-on with generative AI in the enterprise. I cut a recurring
 reporting workload from 32 hours a week to 5 (about 110 hours a month) using
