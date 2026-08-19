@@ -1,0 +1,33 @@
+{
+  "symbols": [
+    "USDJPY",
+    "EURUSD",
+    "GBPJPY"
+  ],
+  "timeframe": "PERIOD_H1",
+  "poll_seconds": 60,
+  "source": "signal_file",
+  "signal_file": "~/AppData/Roaming/MetaQuotes/Terminal/Common/Files/TradeTools/signals.csv",
+  "csv_dir": "data",
+  "notify_console": true,
+  "notify_file": "data/alerts.log",
+  "notify_webhook_url": "",
+  "publish_to_x": false,
+  "publish_max_age_minutes": 180,
+  "state_file": "data/monitor_state.json",
+  "params": {
+    "ema_fast": 12,
+    "ema_slow": 48,
+    "ema_trend": 200,
+    "adx_period": 14,
+    "adx_min": 20.0,
+    "atr_period": 14,
+    "sl_atr_mult": 1.5,
+    "rr_ratio": 1.8,
+    "session_start_hour": 8,
+    "session_end_hour": 22,
+    "block_friday_late": true,
+    "friday_cutoff_hour": 20,
+    "atr_mode": "mt5"
+  }
+}
