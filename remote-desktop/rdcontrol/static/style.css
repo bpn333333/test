@@ -26,6 +26,12 @@ body {
   flex-direction: column;
 }
 
+/* スマホのブラウザはバーの出入りで表示領域の高さが変わる。dvh に対応した
+   端末では、実際に見えている高さに合わせて画面を使い切る。 */
+@supports (height: 100dvh) {
+  html, body { height: 100dvh; }
+}
+
 .bar {
   display: flex;
   align-items: center;
@@ -39,6 +45,8 @@ body {
 .bar--footer {
   border-bottom: none;
   border-top: 1px solid var(--line);
+  /* ホームバー(画面下端)と重ならないようにする */
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
 }
 
 .brand { font-weight: 600; letter-spacing: 0.02em; }
