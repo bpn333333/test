@@ -115,6 +115,21 @@ select {
 
 .stage--viewonly #screen { cursor: default; }
 
+.soft-input {
+  /* スマホのキーボードを出すためだけの入力欄。見えないが、フォーカス可能な
+     状態を保つ必要があるので display:none / visibility:hidden にはしない。 */
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  resize: none;
+  overflow: hidden;
+}
+
 .cursor {
   position: absolute;
   z-index: 2;

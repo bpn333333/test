@@ -35,6 +35,9 @@
   <button id="keyboardToggle" type="button" class="btn" aria-pressed="false">
     キーボード転送: OFF
   </button>
+  <button id="softKeyboard" type="button" class="btn" aria-pressed="false" hidden>
+    ⌨ 入力
+  </button>
   <button id="fullscreen" type="button" class="btn">全画面</button>
 </header>
 
@@ -48,12 +51,26 @@
     </svg>
   </div>
   <div id="overlay" class="overlay">接続中…</div>
+  <!--
+    スマホのソフトキーボードを出すための入力欄。画面には見えないが、
+    フォーカスできる必要があるため display:none にはできない。
+    ここに入った文字は、そのまま操作対象の PC へ送る。
+  -->
+  <textarea id="softInput" class="soft-input" rows="1" autocomplete="off"
+            autocorrect="off" autocapitalize="none" spellcheck="false"
+            aria-label="キーボード入力"></textarea>
 </main>
 
 <footer class="bar bar--footer">
   <div class="keys">
     <button class="btn btn--key" data-combo="Escape">Esc</button>
     <button class="btn btn--key" data-combo="Tab">Tab</button>
+    <button class="btn btn--key" data-combo="Enter">Enter</button>
+    <button class="btn btn--key" data-combo="Backspace">⌫</button>
+    <button class="btn btn--key" data-combo="ArrowLeft">←</button>
+    <button class="btn btn--key" data-combo="ArrowDown">↓</button>
+    <button class="btn btn--key" data-combo="ArrowUp">↑</button>
+    <button class="btn btn--key" data-combo="ArrowRight">→</button>
     <button class="btn btn--key" data-combo="Meta">Win / Cmd</button>
     <button class="btn btn--key" data-combo="Control+c">Ctrl+C</button>
     <button class="btn btn--key" data-combo="Control+v">Ctrl+V</button>

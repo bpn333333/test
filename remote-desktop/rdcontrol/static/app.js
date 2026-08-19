@@ -23,6 +23,8 @@
   const monitorSel = el("monitor");
   const keyboardToggle = el("keyboardToggle");
   const cursorEl = el("cursor");
+  const softInput = el("softInput");
+  const softKeyboardButton = el("softKeyboard");
 
   const MOUSE_MOVE_INTERVAL_MS = 33; // 約 30 回/秒に間引く
   const BUTTONS = ["left", "middle", "right"];
@@ -465,6 +467,77 @@
       [...parts].reverse().forEach((part) => send({ t: "key_up", key: part, code: "" }));
     });
   });
+
+  /* ---------- スマホのソフトキーボード ---------- */
+
+  // スマホには物理キーのイベントが無いので、見えない入力欄にフォーカスして
+  // OS のキーボードを出し、入力された文字列をそのまま送る。日本語入力(IME)は
+  // 変換確定まで待つ必要があるため、composition イベントで区切る。
+  let composing = false;
+
+  function sendText(text) {
+    if (!canControl || !text) return;
+    send({ t: "text", text });
+  }
+
+  function sendKeyPress(key) {
+    if (!canControl) return;
+    send({ t: "key_down", key, code: "" });
+    send({ t: "key_up", key, code: "" });
+  }
+
+  function setSoftKeyboard(open) {
+    softKeyboardButton.setAttribute("aria-pressed", String(open));
+    if (open) {
+      softInput.value = "";
+      softInput.focus();       // ユーザー操作の中で呼ぶ必要がある(iOS の制約)
+    } else {
+      softInput.blur();
+    }
+  }
+
+  softKeyboardButton.addEventListener("click", () => {
+    setSoftKeyboard(softKeyboardButton.getAttribute("aria-pressed") !== "true");
+  });
+
+  softInput.addEventListener("blur", () => {
+    softKeyboardButton.setAttribute("aria-pressed", "false");
+  });
+
+  softInput.addEventListener("compositionstart", () => {
+    composing = true;
+  });
+
+  softInput.addEventListener("compositionend", (event) => {
+    composing = false;
+    sendText(event.data || softInput.value);
+    softInput.value = "";
+  });
+
+  softInput.addEventListener("beforeinput", (event) => {
+    if (composing) return;
+    if (event.inputType === "deleteContentBackward") {
+      event.preventDefault();
+      sendKeyPress("Backspace");
+    } else if (event.inputType === "insertLineBreak" || event.inputType === "insertParagraph") {
+      event.preventDefault();
+      sendKeyPress("Enter");
+    }
+  });
+
+  softInput.addEventListener("input", () => {
+    if (composing) return;
+    const text = softInput.value;
+    if (text) {
+      sendText(text);
+      softInput.value = "";     // 溜めずに毎回送る
+    }
+  });
+
+  // マウスのある端末では不要なので出さない(物理キーボードをそのまま使える)
+  if (window.matchMedia("(pointer: coarse)").matches) {
+    softKeyboardButton.hidden = false;
+  }
 
   /* ---------- 画質・モニタ設定 ---------- */
 

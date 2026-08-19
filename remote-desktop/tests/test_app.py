@@ -281,6 +281,17 @@ def test_invalid_messages_get_an_error_and_the_session_survives(controller):
             sync(websocket)  # まだ生きていることを確認
 
 
+def test_typed_text_is_sent_to_the_keyboard(controller):
+    # スマホのソフトキーボードは、1 文字ずつのキーイベントではなく文字列で届く
+    with make_client(controller) as client:
+        with open_session(client) as websocket:
+            receive_text(websocket)
+            websocket.send_json({"t": "text", "text": "こんにちは"})
+            sync(websocket)
+
+    assert ("text", "こんにちは") in controller.snapshot()
+
+
 def test_view_only_server_ignores_input(controller):
     with make_client(controller, view_only=True) as client:
         with open_session(client) as websocket:
