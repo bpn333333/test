@@ -55,11 +55,17 @@ cd remote-desktop
 ./run.sh --tailscale --token mytoken123     # Windows は .\run.bat --tailscale --token mytoken123
 ```
 
-起動時に、そのまま開ける URL が表示されます。接続する端末のブラウザでそれを開きます。
+起動時に、そのまま開ける URL と **QR コード**が表示されます。
+スマホのカメラで QR を読み取れば、URL を打ち写す必要はありません。
 
 ```
   ■ 外出先・スマホから開く(Tailscale 経由)
-      http://100.101.102.103:8765/?token=mytoken123
+      http://100.90.80.70:8765/?token=mytoken123     ← アドレスは PC ごとに違います
+
+      ↓ スマホのカメラで読み取れます
+       ▄▄▄▄▄▄▄ ▄   ▄▄    ▄▄  ▄▄▄▄▄▄▄
+       █ ▄▄▄ █ ▀█▀▄ ██▄██  █ █ ▄▄▄ █
+       …
 ```
 
 > ルーターのポート開放は不要で、通信は Tailscale(WireGuard)が暗号化します。
@@ -128,7 +134,9 @@ cd remote-desktop
 
 1. PC とスマホの両方に Tailscale を入れ、同じアカウントでログインする
 2. PC 側で `./run.sh --tailscale --token mytoken123`(Windows は `.\run.bat ...`)
-3. スマホの Safari / Chrome で、表示された `http://100.x.x.x:8765/?token=mytoken123` を開く
+3. スマホのカメラで、PC に表示された QR コードを読み取る
+   (手で開く場合は、表示された `http://100.x.x.x:8765/?token=...` をそのまま入力。
+   `100.x.x.x` の部分は PC ごとに違います)
 
 タッチ操作に対応しています。
 
@@ -200,6 +208,8 @@ autossh -M 0 -N -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -L 8765:12
 | 「閲覧のみ」と出て操作できない | 別のタブや端末が操作権を持っています。そちらを閉じてから再読み込みしてください |
 | スマホから開けない | `--tailscale` で起動し、スマホ側でも Tailscale が接続中になっていますか。LAN 内で使う場合は `--host 0.0.0.0` と、Windows ファイアウォールでのプライベートネットワーク許可が必要です |
 | `Tailscale のアドレスが見つかりません` | Tailscale が起動しログイン済みか確認してください。`tailscale ip -4` で 100.x.x.x が出れば正常です |
+| スマホで真っ白なページになる | ドキュメントの例(`100.101.102.103`)をそのまま開いていませんか。アドレスは PC ごとに違います。QR コードを読み取るのが確実です |
+| QR が文字化けする / 表示されない | 日本語 Windows の既定(cp932)では表示できません。`chcp 65001` で UTF-8 にしてから起動してください |
 
 ---
 

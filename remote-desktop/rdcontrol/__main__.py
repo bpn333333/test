@@ -11,6 +11,7 @@ from .auth import generate_token
 from .capture import CaptureUnavailable, ScreenCapture
 from .diagnose import diagnose
 from .input_control import InputController, InputUnavailable
+from .qr import is_printable, render_qr
 from .tailscale import NOT_FOUND_HINT, detect_tailscale_ip
 from .config import DEFAULT_FPS, DEFAULT_PORT, DEFAULT_QUALITY, Settings, local_lan_address
 
@@ -54,6 +55,22 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def print_qr(url: str) -> None:
+    """接続 URL の QR コードを表示する。スマホのカメラで読み取れる。"""
+    code = render_qr(url, indent="      ")
+    if code is None:
+        print("      (QR コードを出すには pip install qrcode)")
+        return
+    if not is_printable(code):
+        # 日本語 Windows の既定 cp932 ではブロック文字を出せない
+        print("      (QR は表示できません。chcp 65001 で UTF-8 にすると表示されます)")
+        return
+    print()
+    print("      ↓ スマホのカメラで読み取れます")
+    print(code)
+    print()
+
+
 def print_startup_notice(settings: Settings) -> None:
     print(BANNER)
     print("  ■ このマシンのブラウザで開く")
@@ -63,6 +80,7 @@ def print_startup_notice(settings: Settings) -> None:
     if settings.is_tailscale:
         print("  ■ 外出先・スマホから開く(Tailscale 経由)")
         print(f"      {settings.url()}")
+        print_qr(settings.url())
         print("      同じ Tailscale アカウントにログインした端末からのみ到達でき、")
         print("      通信は Tailscale(WireGuard)が暗号化します。")
     elif settings.is_loopback:
@@ -79,6 +97,7 @@ def print_startup_notice(settings: Settings) -> None:
         address = settings.host if settings.host not in ("0.0.0.0", "::", "") else local_lan_address()
         if address:
             print(f"      {settings.url_on(address)}")
+            print_qr(settings.url_on(address))
         else:
             print("      http://<この PC の LAN アドレス>:"
                   f"{settings.port}/?token={settings.token}")
