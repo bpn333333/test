@@ -38,6 +38,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--view-only", action="store_true",
                         help="画面共有のみ。マウス・キーボード操作を受け付けない")
     parser.add_argument("--max-clients", type=int, default=4, help="同時接続数の上限 (既定: 4)")
+    parser.add_argument("--ssh-target", default="",
+                        help="案内に表示する SSH 接続先 (例: user@host)。既定はこのマシンから自動推定")
     parser.add_argument("--open", action="store_true", help="起動後にブラウザを自動で開く")
     parser.add_argument("--list-monitors", action="store_true", help="モニタ一覧を表示して終了")
     parser.add_argument("--log-level", default="info",
@@ -47,19 +49,43 @@ def build_parser() -> argparse.ArgumentParser:
 
 def print_startup_notice(settings: Settings) -> None:
     print(BANNER)
-    print(f"  接続 URL : {settings.url()}")
-    print(f"  トークン : {settings.token}")
-    print(f"  モニタ   : {settings.monitor}   FPS: {settings.fps}   画質: {settings.quality}")
-    print(f"  操作     : {'閲覧のみ (--view-only)' if settings.view_only else '有効'}")
+    print("  ■ このマシンのブラウザで開く")
+    print(f"      {settings.url()}")
+    print()
+    print("  ■ 別の端末から使う(SSH トンネル経由。通信は SSH が暗号化します)")
+    print("      1) 操作する側の端末で次を実行し、つないだままにする")
+    print(f"         {settings.tunnel_command()}")
+    print("         ※ 同梱の tunnel.sh / tunnel.bat でも同じことができます")
+    print("      2) その端末のブラウザで次を開く")
+    print(f"         {settings.tunnel_url()}")
+    print()
+    print(f"  モニタ: {settings.monitor}   FPS: {settings.fps}   画質: {settings.quality}   "
+          f"操作: {'閲覧のみ (--view-only)' if settings.view_only else '有効'}")
+    print(f"  トークン: {settings.token}")
     print()
     if settings.is_public:
         print("  ⚠  ループバック以外のアドレスで待ち受けています。")
-        print("     同一ネットワーク上の端末から接続できる状態です。通信は暗号化されません。")
-        print("     インターネット越しに使う場合は、直接公開せず SSH トンネルを使ってください:")
-        print(f"       ssh -N -L {settings.port}:127.0.0.1:{settings.port} <このマシン>")
+        print("     同一ネットワーク上の誰でも接続を試せる状態で、通信は暗号化されません。")
+        print("     インターネット越しに使うなら --host は既定のまま、上の SSH トンネルを使ってください。")
         print()
     print("  終了するには Ctrl+C を押してください。")
     print()
+
+
+def settings_from_args(args: argparse.Namespace) -> Settings:
+    """コマンドライン引数を Settings に変換する(値は許容範囲へ丸める)。"""
+    return Settings(
+        host=args.host,
+        port=args.port,
+        token=args.token or generate_token(),
+        monitor=args.monitor,
+        fps=max(1, min(30, args.fps)),
+        quality=max(10, min(95, args.quality)),
+        scale=max(0.2, min(1.0, args.scale)),
+        view_only=args.view_only,
+        max_clients=max(1, args.max_clients),
+        ssh_target=args.ssh_target,
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -82,17 +108,7 @@ def main(argv: list[str] | None = None) -> int:
         capture.close()
         return 0
 
-    settings = Settings(
-        host=args.host,
-        port=args.port,
-        token=args.token or generate_token(),
-        monitor=args.monitor,
-        fps=max(1, min(30, args.fps)),
-        quality=max(10, min(95, args.quality)),
-        scale=max(0.2, min(1.0, args.scale)),
-        view_only=args.view_only,
-        max_clients=max(1, args.max_clients),
-    )
+    settings = settings_from_args(args)
 
     try:
         import uvicorn
