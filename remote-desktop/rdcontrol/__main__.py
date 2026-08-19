@@ -11,7 +11,8 @@ from .auth import generate_token
 from .capture import CaptureUnavailable, ScreenCapture
 from .diagnose import diagnose
 from .input_control import InputController, InputUnavailable
-from .config import DEFAULT_FPS, DEFAULT_PORT, DEFAULT_QUALITY, Settings
+from .tailscale import NOT_FOUND_HINT, detect_tailscale_ip
+from .config import DEFAULT_FPS, DEFAULT_PORT, DEFAULT_QUALITY, Settings, local_lan_address
 
 BANNER = """
 ╭──────────────────────────────────────────────────────────────╮
@@ -27,6 +28,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--host", default="127.0.0.1",
                         help="listen するアドレス (既定: 127.0.0.1 = このマシンからのみ)")
+    parser.add_argument("--tailscale", action="store_true",
+                        help="Tailscale のアドレスで待ち受ける(外出先・スマホから使う場合はこれ)")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT, help=f"ポート (既定: {DEFAULT_PORT})")
     parser.add_argument("--token", default=None,
                         help="アクセストークン (既定: 起動ごとにランダム生成)")
@@ -54,23 +57,42 @@ def build_parser() -> argparse.ArgumentParser:
 def print_startup_notice(settings: Settings) -> None:
     print(BANNER)
     print("  ■ このマシンのブラウザで開く")
-    print(f"      {settings.url()}")
+    print(f"      {settings.url() if settings.is_loopback else settings.tunnel_url()}")
     print()
-    print("  ■ 別の端末から使う(SSH トンネル経由。通信は SSH が暗号化します)")
-    print("      1) 操作する側の端末で次を実行し、つないだままにする")
-    print(f"         {settings.tunnel_command()}")
-    print("         ※ 同梱の tunnel.sh / tunnel.bat でも同じことができます")
-    print("      2) その端末のブラウザで次を開く")
-    print(f"         {settings.tunnel_url()}")
+
+    if settings.is_tailscale:
+        print("  ■ 外出先・スマホから開く(Tailscale 経由)")
+        print(f"      {settings.url()}")
+        print("      同じ Tailscale アカウントにログインした端末からのみ到達でき、")
+        print("      通信は Tailscale(WireGuard)が暗号化します。")
+    elif settings.is_loopback:
+        print("  ■ 別の端末から使う(SSH トンネル経由。通信は SSH が暗号化します)")
+        print("      1) 操作する側の端末で次を実行し、つないだままにする")
+        print(f"         {settings.tunnel_command()}")
+        print("         ※ 同梱の tunnel.sh / tunnel.bat でも同じことができます")
+        print("      2) その端末のブラウザで次を開く")
+        print(f"         {settings.tunnel_url()}")
+        print()
+        print("      スマホから使う場合は Tailscale を推奨します(--tailscale で起動)。")
+    else:
+        print("  ■ 同じネットワーク上の端末から開く")
+        address = settings.host if settings.host not in ("0.0.0.0", "::", "") else local_lan_address()
+        if address:
+            print(f"      {settings.url_on(address)}")
+        else:
+            print("      http://<この PC の LAN アドレス>:"
+                  f"{settings.port}/?token={settings.token}")
+            print("      (Windows は ipconfig、macOS / Linux は ip addr で確認できます)")
     print()
+
     print(f"  モニタ: {settings.monitor}   FPS: {settings.fps}   画質: {settings.quality}   "
           f"操作: {'閲覧のみ (--view-only)' if settings.view_only else '有効'}")
     print(f"  トークン: {settings.token}")
     print()
     if settings.is_public:
-        print("  ⚠  ループバック以外のアドレスで待ち受けています。")
-        print("     同一ネットワーク上の誰でも接続を試せる状態で、通信は暗号化されません。")
-        print("     インターネット越しに使うなら --host は既定のまま、上の SSH トンネルを使ってください。")
+        print("  ⚠  暗号化されないまま、ループバック以外のアドレスで待ち受けています。")
+        print("     同一ネットワーク上の誰でも接続を試せる状態です。信頼できる LAN 内に限ってください。")
+        print("     外出先から使う場合は --tailscale を使ってください(ポート開放も不要です)。")
         print()
     print("  終了するには Ctrl+C を押してください。")
     print()
@@ -90,6 +112,14 @@ def settings_from_args(args: argparse.Namespace) -> Settings:
         max_clients=max(1, args.max_clients),
         ssh_target=args.ssh_target,
     )
+
+
+def resolve_tailscale_host(detect=detect_tailscale_ip) -> str | None:
+    """--tailscale: 待ち受けるべき Tailscale アドレスを返す。見つからなければ案内を出す。"""
+    address = detect()
+    if address is None:
+        print(f"エラー: {NOT_FOUND_HINT}", file=sys.stderr)
+    return address
 
 
 def run_diagnose(monitor: int) -> int:
@@ -131,6 +161,14 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.diagnose:
         return run_diagnose(args.monitor)
+
+    if args.tailscale:
+        address = resolve_tailscale_host()
+        if address is None:
+            return 1
+        # Tailscale のアドレスにだけ bind する。0.0.0.0 と違い、同じ Wi-Fi に
+        # いるだけの無関係な端末からは見えない。
+        args.host = address
 
     settings = settings_from_args(args)
 

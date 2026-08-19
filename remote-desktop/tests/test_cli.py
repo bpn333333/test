@@ -68,7 +68,7 @@ def test_startup_notice_warns_when_listening_beyond_loopback(capsys):
     print_startup_notice(parse("--host", "0.0.0.0", "--token", "SAMPLE"))
     output = capsys.readouterr().out
     assert "⚠" in output
-    assert "暗号化されません" in output
+    assert "暗号化されない" in output
 
 
 def test_startup_notice_is_quiet_about_exposure_on_loopback(capsys):
@@ -100,3 +100,21 @@ def test_tunnel_script_rejects_bad_ports(port):
     result = run_tunnel("user@host", port)
     assert result.returncode == 2
     assert "ポート番号が不正です" in result.stderr
+
+
+# --- 経路ごとの案内表示 -----------------------------------------------------
+
+def test_tailscale_notice_shows_the_reachable_url_without_a_warning(capsys):
+    print_startup_notice(parse("--host", "100.101.102.103", "--token", "SAMPLE"))
+    output = capsys.readouterr().out
+    assert "http://100.101.102.103:8765/?token=SAMPLE" in output
+    assert "Tailscale" in output
+    assert "⚠" not in output          # Tailscale 経由は暗号化されるので警告しない
+    assert "ssh -N" not in output     # トンネルの案内は不要
+
+
+def test_plain_lan_notice_keeps_the_warning_and_points_at_tailscale(capsys):
+    print_startup_notice(parse("--host", "0.0.0.0", "--token", "SAMPLE"))
+    output = capsys.readouterr().out
+    assert "⚠" in output
+    assert "--tailscale" in output

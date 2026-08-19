@@ -46,19 +46,28 @@ cd remote-desktop
 **A. 同じ PC のブラウザから** — 表示された URL をそのまま開くだけです
 (`--open` を付けて起動すれば自動で開きます)。
 
-**B. 別の端末から(自宅 LAN 内でも、外出先からでも同じ手順)**
+**B. 別の端末・スマホから(外出先でも同じ手順)**
 
-操作する「側」の端末で、トンネルを張ります。つないでいる間だけ通信できます。
+[Tailscale](https://tailscale.com/download) を PC とその端末の両方に入れ、同じアカウントでログインします
+(無料で使えます)。そのうえで `--tailscale` を付けて起動するだけです。
 
 ```bash
-./tunnel.sh nori@desktop.local         # Windows(PowerShell)は .\tunnel.bat nori@desktop.local
+./run.sh --tailscale --token mytoken123     # Windows は .\run.bat --tailscale --token mytoken123
 ```
 
-そのターミナルは開いたままにして、**同じ端末のブラウザ**で、サーバーが表示した
-`http://127.0.0.1:8765/?token=...` を開きます。これで画面が出ます。
+起動時に、そのまま開ける URL が表示されます。接続する端末のブラウザでそれを開きます。
 
-> ポートを外に開ける必要はありません。通信は SSH が暗号化します。
-> 外出先から使うには、その PC へ外から SSH で入れる状態が前提です → [外から SSH で入れるようにする](#外から-ssh-で入れるようにする)
+```
+  ■ 外出先・スマホから開く(Tailscale 経由)
+      http://100.101.102.103:8765/?token=mytoken123
+```
+
+> ルーターのポート開放は不要で、通信は Tailscale(WireGuard)が暗号化します。
+> 同じ Tailscale アカウントにログインした端末からしか到達できません。
+> `--tailscale` は Tailscale のアドレスにだけ待ち受けるため、同じ Wi-Fi にいるだけの
+> 無関係な端末からは見えません。
+>
+> SSH で入れる相手なら [SSH トンネル](#ssh-トンネルで使う)も使えます(スマホには不向き)。
 
 ### 手順 3: 操作する
 
@@ -107,47 +116,55 @@ cd remote-desktop
 | `--ssh-target user@host` | 起動時に表示する SSH 接続先(既定は自動推定) |
 | `--open` | 起動後にブラウザを自動で開く |
 | `--diagnose` | カーソル位置のずれを実測して表示し終了する |
-| `--host` | 待ち受けアドレス(既定 `127.0.0.1`)。[LAN 内限定の例外](#lan-内でトンネルなしに使う)以外では変更不要 |
+| `--tailscale` | Tailscale のアドレスで待ち受ける(外出先・スマホから使う場合はこれ) |
+| `--host` | 待ち受けアドレス(既定 `127.0.0.1`)。LAN 内で使う場合のみ `0.0.0.0` |
 
 ---
 
 ## スマホ・タブレットから使う
 
-iPhone / iPad には標準の SSH クライアントがなく、トンネルを張るのが現実的ではありません。
-次のどちらかを使います。
+上の **手順 2-B(Tailscale)** がそのまま使えます。iPhone / iPad には標準の SSH クライアントが
+無いため、トンネルではなく Tailscale を使ってください。
 
-**外出先から使う場合: Tailscale(推奨)**
+1. PC とスマホの両方に Tailscale を入れ、同じアカウントでログインする
+2. PC 側で `./run.sh --tailscale --token mytoken123`(Windows は `.\run.bat ...`)
+3. スマホの Safari / Chrome で、表示された `http://100.x.x.x:8765/?token=mytoken123` を開く
 
-PC とスマホの両方に [Tailscale](https://tailscale.com/) を入れてログインするだけです。
-ポート開放は不要で、通信は WireGuard で暗号化されます。
+タッチ操作に対応しています。
 
-1. PC 側: `./run.sh --host 0.0.0.0 --token mytoken123`(Windows は `.\run.bat ...`)
-2. PC 側で Tailscale が割り当てたアドレス(`100.x.x.x`)を確認する
-3. スマホの Safari で `http://100.x.x.x:8765/?token=mytoken123` を開く
+| 操作 | 動作 |
+| --- | --- |
+| タップ | 左クリック |
+| 長押し(0.5 秒) | 右クリック |
+| 指を滑らせる | ドラッグ |
+| 2 本指で上下 | スクロール |
 
-**自宅の Wi-Fi 内だけで使う場合**
+> 画面が小さいので `--scale 0.6` で送信解像度を下げると軽くなります。
+> 横向きにするとデスクトップが大きく映って操作しやすくなります。
 
-同じ手順で、Tailscale のアドレスの代わりに PC の LAN IP を使います
-(Windows は `ipconfig`、macOS / Linux は `ip addr` や `ifconfig` で確認。`192.168.x.x` など)。
+### 自宅の Wi-Fi 内だけで使う(Tailscale なし)
 
+信頼できる LAN 内に限り、`--host 0.0.0.0` でも使えます。起動時に表示される
+`http://192.168.x.x:8765/?token=...` を開いてください。初回は Windows Defender
+ファイアウォールの確認が出るので、**プライベートネットワーク**にチェックして許可します。
+この経路は暗号化されないため、外出先では使わないでください。
+
+## SSH トンネルで使う
+
+Tailscale を使わず、SSH で入れる相手(自分の Linux / macOS / Windows PC など)に
+つなぐ場合の方法です。パソコン同士向けで、スマホには向きません。
+
+操作する側の端末でトンネルを張り、つないだままにします:
+
+```bash
+./tunnel.sh nori@desktop.local          # Windows(PowerShell)は .\tunnel.bat
+./tunnel.sh mydesk 8765 9000            # 手元の 8765 が埋まっている場合
 ```
-http://192.168.1.20:8765/?token=mytoken123
-```
 
-初回は Windows Defender ファイアウォールの確認ダイアログが出るので、
-**プライベートネットワーク**にチェックを入れて許可してください。
-この経路は暗号化されないため、信頼できる自宅 LAN 内に限ってください。
-
-> スマホは画面が小さいので、`--scale 0.6` などで送信解像度を下げると軽くなります。
-> 縦画面では横長のデスクトップが小さく映るため、横向きにすると見やすくなります。
-
-## 外から SSH で入れるようにする
-
-外出先から使うには、次のどちらかを用意します(rdcontrol のポートは開けません)。
-
-1. **ルーターで SSH(22 番)だけを転送する。** 必ず公開鍵認証のみにしてください
-   (`/etc/ssh/sshd_config` で `PasswordAuthentication no`、`PermitRootLogin no`)。
-2. **Tailscale や WireGuard を挟む。** ルーター設定が不要で、`./tunnel.sh nori@100.x.x.x` のように使えます。
+その端末のブラウザで `http://127.0.0.1:8765/?token=...` を開きます。サーバー側は
+既定のまま(`127.0.0.1` で待ち受け)で構いません。外から SSH で入れるようにするには、
+ルーターで SSH(22 番)だけを転送し、**必ず公開鍵認証のみ**にしてください
+(`/etc/ssh/sshd_config` で `PasswordAuthentication no`、`PermitRootLogin no`)。
 
 接続先を毎回打たずに済ませるには `~/.ssh/config` に登録します。以降は `./tunnel.sh mydesk` だけです。
 
@@ -163,12 +180,6 @@ Host mydesk
 ```bash
 autossh -M 0 -N -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -L 8765:127.0.0.1:8765 mydesk
 ```
-
-### LAN 内でトンネルなしに使う
-
-信頼できるネットワーク内に限り `./run.sh --host 0.0.0.0`(Windows は `.\run.bat --host 0.0.0.0`)で
-待ち受けを広げられます。
-ただし**通信は暗号化されません**。インターネットに直接公開しないでください。
 
 ---
 
@@ -187,7 +198,8 @@ autossh -M 0 -N -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -L 8765:12
 | マウスオーバー(ホバー)が反応しない | 古い版の症状です。最新版に更新してください(Windows でのカーソル移動を `SendInput` に変更済み) |
 | クリック位置がずれる | `--diagnose` でずれ量を実測できます。表示スケーリング(Windows の拡大縮小 125% など)が原因なら、その旨と対処が表示されます |
 | 「閲覧のみ」と出て操作できない | 別のタブや端末が操作権を持っています。そちらを閉じてから再読み込みしてください |
-| スマホから開けない | `--host 0.0.0.0` で起動していますか。Windows のファイアウォールでプライベートネットワークを許可しましたか([スマホ・タブレットから使う](#スマホタブレットから使う)) |
+| スマホから開けない | `--tailscale` で起動し、スマホ側でも Tailscale が接続中になっていますか。LAN 内で使う場合は `--host 0.0.0.0` と、Windows ファイアウォールでのプライベートネットワーク許可が必要です |
+| `Tailscale のアドレスが見つかりません` | Tailscale が起動しログイン済みか確認してください。`tailscale ip -4` で 100.x.x.x が出れば正常です |
 
 ---
 
@@ -211,7 +223,8 @@ autossh -M 0 -N -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -L 8765:12
 - **総当たり防御** — 接続元ごとに認証失敗を数え、8 回で 5 分間ロックアウト
 - **入力の検証** — 受信 JSON は型・範囲・列挙値をすべて検証してからデバイス操作へ渡す
 - **押しっぱなし防止** — 切断時やタブが非表示になったとき、押されたままのキー・ボタンを必ず解放
-- **暗号化はアプリ外** — TLS は持たないため、他端末からの利用は SSH トンネル前提です
+- **暗号化はアプリ外** — TLS は持ちません。他端末から使うときは Tailscale(WireGuard)か
+  SSH トンネルを経由し、暗号化と相手の認証はそちらに任せます
 
 ---
 
@@ -237,7 +250,9 @@ remote-desktop/
 │   ├── app.py             FastAPI 本体(HTTP / WebSocket、配信ループ、入力ディスパッチ)
 │   ├── auth.py            トークン発行・検証・ロックアウト
 │   ├── capture.py         画面キャプチャと JPEG エンコード(mss + Pillow)
-│   ├── config.py          起動設定と SSH トンネル案内の組み立て
+│   ├── config.py          起動設定と接続案内の組み立て
+│   ├── diagnose.py        座標ずれの実測(--diagnose)
+│   ├── tailscale.py       Tailscale アドレスの検出
 │   ├── input_control.py   マウス・キーボード操作(pynput)とキーマップ
 │   ├── protocol.py        受信メッセージの検証
 │   ├── session.py         接続管理と操作権の調停

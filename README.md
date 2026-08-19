@@ -10,7 +10,8 @@
 
 ```bash
 cd remote-desktop
-./run.sh          # Windows(PowerShell)は .\run.bat ← 先頭の .\ が必要
+./run.sh                  # このマシンで使う(Windows は .\run.bat ← 先頭の .\ が必要)
+./run.sh --tailscale      # 外出先・スマホから使う(要 Tailscale)
 ```
 
 | ファイル | 用途 |

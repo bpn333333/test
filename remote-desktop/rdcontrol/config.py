@@ -7,6 +7,7 @@ import socket
 from dataclasses import dataclass, field
 
 from .auth import generate_token
+from .tailscale import is_tailscale_address
 
 DEFAULT_PORT = 8765
 DEFAULT_FPS = 10
@@ -35,14 +36,33 @@ class Settings:
     ssh_target: str = ""  # 案内に表示する SSH 接続先。空なら自動推定
 
     @property
+    def is_loopback(self) -> bool:
+        return self.host in ("127.0.0.1", "localhost", "::1")
+
+    @property
+    def is_tailscale(self) -> bool:
+        """Tailscale のアドレスで待ち受けているか。
+
+        この場合の通信は Tailscale(WireGuard)が暗号化し、同じアカウントに
+        ログインした端末からしか到達できないため、平文 LAN 公開の警告は出さない。
+        """
+        return is_tailscale_address(self.host)
+
+    @property
     def is_public(self) -> bool:
-        """ループバック以外を listen しているか(警告表示の判定に使う)。"""
-        return self.host not in ("127.0.0.1", "localhost", "::1")
+        """暗号化されないまま外に晒しているか(警告表示の判定に使う)。"""
+        return not self.is_loopback and not self.is_tailscale
 
     def url(self) -> str:
         host = self.host
         if host in ("0.0.0.0", "::", ""):
             host = "127.0.0.1"
+        if ":" in host and not host.startswith("["):
+            host = f"[{host}]"
+        return f"http://{host}:{self.port}/?token={self.token}"
+
+    def url_on(self, host: str) -> str:
+        """指定したアドレスで開くための URL。"""
         if ":" in host and not host.startswith("["):
             host = f"[{host}]"
         return f"http://{host}:{self.port}/?token={self.token}"
@@ -86,3 +106,19 @@ def local_ssh_target() -> str:
     except Exception:
         host = "このマシン"
     return f"{user}@{host}"
+
+
+def local_lan_address() -> str | None:
+    """このマシンの LAN 側 IPv4 アドレスを推定する。
+
+    外部へ UDP ソケットを「接続」して、OS が選んだ送信元アドレスを読む。
+    パケットは送られないので、通信は発生しない。
+    """
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        sock.connect(("192.0.2.1", 9))  # TEST-NET-1。到達しない前提の予約アドレス
+        return sock.getsockname()[0]
+    except OSError:
+        return None
+    finally:
+        sock.close()
