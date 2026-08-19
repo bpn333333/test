@@ -103,7 +103,71 @@ python -m pytest tests/test_parity.py -v
 不一致が出たら `config.json` の `params.atr_mode` を `wilder` に変えて再実行し、
 それでも合わなければ `docs/ARCHITECTURE.md` の手順で両実装を突き合わせる。
 
-## 4. 常時稼働
+## 4. バックテスト(手法の検証)
+
+### データの用意
+
+1. MT5 の **ツール → オプション → チャート** で
+   「ヒストリー内の最大バー数」を無制限にする
+2. 対象銘柄・対象時間軸のチャートを開き、**過去まで十分にスクロール**して
+   ヒストリーをダウンロードする(スクロールしないと過去足が入らない)
+3. そのチャートで `TradeToolsExportData` スクリプトを実行
+   - 既定で `USDJPY,EURUSD,GBPUSD` を書き出す
+   - 時間軸はチャートの時間軸を使う(入力で変更可)
+4. 共有フォルダ `MQL5/Files/TradeTools/<SYMBOL>_<TIMEFRAME>.csv` を
+   このリポジトリの `data/` にコピー
+
+### 実行
+
+```bash
+cd trading-tools
+
+# 全期間
+PYTHONPATH=monitor python -m tradetools_monitor.backtest   --symbols USDJPY EURUSD GBPUSD --timeframe PERIOD_H1
+
+# アウトオブサンプル検証(前7割で見て、残り3割で確認)
+PYTHONPATH=monitor python -m tradetools_monitor.backtest   --symbols USDJPY EURUSD GBPUSD --timeframe PERIOD_H1 --oos 0.7
+
+# 結果をJSONで保存
+PYTHONPATH=monitor python -m tradetools_monitor.backtest --json data/report.json
+```
+
+### 取引条件の設定
+
+既定値は仮のものなので、**ブローカーの実際の条件に合わせること。**
+設定JSONに `backtest` を書いて `--config` で渡す。
+
+```json
+{
+  "params": { "ema_fast": 12, "ema_slow": 48 },
+  "backtest": {
+    "initial_balance": 1000000,
+    "risk_percent": 1.0,
+    "spread_points": 10,
+    "slippage_points": 2,
+    "commission_per_lot": 0,
+    "swap_long_points": 0,
+    "swap_short_points": 0,
+    "quote_to_account_rate": 1.0
+  }
+}
+```
+
+- `spread_points` は**平均ではなく、実際に約定する時間帯のスプレッド**を入れる
+- `quote_to_account_rate` は決済通貨→口座通貨の換算レート。
+  口座が円で USDJPY を検証するなら 1.0。EURUSD/GBPUSD は決済通貨が USD なので
+  **USDJPY のレート(例: 150)** を入れる。固定レート近似である点に注意
+
+### エンジンの前提(結果を読むときに知っておくこと)
+
+- **先読みをしない。** 確定足の終値で判定し、エントリーは次の足の始値
+- **同一足で損切りと利確の両方に触れた場合は損切りを優先**(最悪ケース)。
+  `worst_case_intrabar: false` で反転できるが、既定は悲観側
+- 日足を跨いだ分だけスワップを差し引く
+- **ティックデータではなく OHLC ベース。** 足の中の値動きは再現されない。
+  短期の手法ほど実運用との乖離が大きくなる
+
+## 5. 常時稼働
 
 - **EA**: MT5 を落とすと止まる。FX業者提供のVPSか、Windows VPS を使う
 - **モニタリング/配信**: Linux VPS で `systemd` か `nohup`。

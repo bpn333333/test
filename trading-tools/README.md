@@ -35,6 +35,10 @@
 cd trading-tools
 python -m pytest            # テスト
 PYTHONPATH=monitor python -m tradetools_monitor --once   # 監視を1回実行
+
+# バックテスト(data/ に <SYMBOL>_<TIMEFRAME>.csv が必要)
+PYTHONPATH=monitor python -m tradetools_monitor.backtest \
+  --symbols USDJPY EURUSD GBPUSD --timeframe PERIOD_H1 --oos 0.7
 ```
 
 ## 事業として進めるなら
@@ -70,11 +74,14 @@ trading-tools/
 │   │   └── SignalFile.mqh      Python への受け渡し
 │   ├── Indicators/TradeToolsSignal.mq5   ① サインツール
 │   ├── Experts/TradeToolsEA.mq5          ② EA
-│   └── Scripts/TradeToolsExport.mq5      パリティ検証用の書き出し
+│   └── Scripts/
+│       ├── TradeToolsExport.mq5          パリティ検証用の書き出し
+│       └── TradeToolsExportData.mq5      バックテスト用OHLCの書き出し
 ├── monitor/tradetools_monitor/            ③ 市場モニタリング
 │   ├── indicators.py   EMA / ATR / ADX
 │   ├── signals.py      SignalCore.mqh の鏡像
 │   ├── sources.py      signals.csv / OHLC CSV の取り込み
+│   ├── backtest.py     バックテストエンジンと CLI
 │   ├── notifier.py     コンソール・ファイル・Webhook
 │   └── runner.py       監視ループと CLI
 ├── distribution/tradetools_x/             ④ X配信
