@@ -210,6 +210,7 @@ autossh -M 0 -N -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -L 8765:12
 | `Tailscale のアドレスが見つかりません` | Tailscale が起動しログイン済みか確認してください。`tailscale ip -4` で 100.x.x.x が出れば正常です |
 | スマホで真っ白なページになる | ドキュメントの例(`100.101.102.103`)をそのまま開いていませんか。アドレスは PC ごとに違います。QR コードを読み取るのが確実です |
 | QR が文字化けする / 表示されない | 日本語 Windows の既定(cp932)では表示できません。`chcp 65001` で UTF-8 にしてから起動してください |
+| Tailscale を使わずすぐ試したい | 同じ Wi-Fi なら `.\run.bat --host 0.0.0.0 --token mytoken123`。表示された `http://192.168.x.x:8765/?token=...` をスマホで開きます(暗号化されないので自宅 LAN 限定) |
 
 ---
 

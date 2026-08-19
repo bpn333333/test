@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import ipaddress
+import re
 import socket
 import subprocess
 import sys
@@ -23,9 +24,26 @@ COMMAND_TIMEOUT = 5.0
 
 # tailscale CLI の場所。PATH に無いことが多いので既定のインストール先も見る。
 _EXTRA_PATHS = {
-    "win32": [r"C:\Program Files\Tailscale\tailscale.exe"],
-    "darwin": ["/Applications/Tailscale.app/Contents/MacOS/Tailscale"],
+    "win32": [
+        r"C:\Program Files\Tailscale\tailscale.exe",
+        r"C:\Program Files (x86)\Tailscale IPN\tailscale.exe",  # 旧バージョン
+    ],
+    "darwin": [
+        "/Applications/Tailscale.app/Contents/MacOS/Tailscale",
+        "/usr/local/bin/tailscale",
+        "/opt/homebrew/bin/tailscale",
+    ],
+    "linux": ["/usr/bin/tailscale", "/usr/local/bin/tailscale"],
 }
+
+# OS のネットワーク設定を一覧するコマンド(CLI が見つからないときの保険)
+_INTERFACE_COMMANDS = {
+    "win32": ["ipconfig"],
+    "darwin": ["ifconfig"],
+    "linux": ["ip", "-4", "addr"],
+}
+
+_IPV4_PATTERN = re.compile(r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b")
 
 NOT_FOUND_HINT = """Tailscale のアドレスが見つかりませんでした。次を確認してください。
   1. Tailscale をインストールし、ログインしていますか(https://tailscale.com/download)
@@ -71,17 +89,30 @@ def _commands() -> list[list[str]]:
     return commands
 
 
-def _address_from_interfaces() -> str | None:
-    """CLI が使えない場合に、自ホストのアドレス一覧から探す(保険)。"""
+def find_tailscale_address(text: str) -> str | None:
+    """ネットワーク設定の出力から Tailscale のアドレスを探す。"""
+    for candidate in _IPV4_PATTERN.findall(text):
+        if is_tailscale_address(candidate):
+            return candidate
+    return None
+
+
+def _address_from_interfaces(run=None) -> str | None:
+    """CLI が見つからない場合の保険。自ホストの設定からアドレスを探す。"""
+    run = _run if run is None else run
     try:
         infos = socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET)
     except OSError:
-        return None
+        infos = []
     for info in infos:
-        address = info[4][0]
-        if is_tailscale_address(address):
-            return address
-    return None
+        if is_tailscale_address(info[4][0]):
+            return info[4][0]
+
+    command = _INTERFACE_COMMANDS.get(sys.platform)
+    if command is None:
+        return None
+    output = run(command)
+    return find_tailscale_address(output) if output else None
 
 
 def detect_tailscale_ip(run=_run) -> str | None:
@@ -90,4 +121,4 @@ def detect_tailscale_ip(run=_run) -> str | None:
         output = run(command)
         if output and (address := parse_tailscale_ip(output)):
             return address
-    return _address_from_interfaces()
+    return _address_from_interfaces(run=run)

@@ -52,7 +52,7 @@ def test_detection_falls_through_to_later_commands(monkeypatch):
 
 
 def test_detection_returns_none_when_tailscale_is_not_running(monkeypatch):
-    monkeypatch.setattr(tailscale, "_address_from_interfaces", lambda: None)
+    monkeypatch.setattr(tailscale, "_address_from_interfaces", lambda run=None: None)
     assert detect_tailscale_ip(run=lambda _: None) is None
 
 
@@ -77,3 +77,32 @@ def test_missing_tailscale_prints_the_setup_hint(capsys):
 def test_a_found_address_is_returned_without_noise(capsys):
     assert resolve_tailscale_host(detect=lambda: "100.1.2.3") == "100.1.2.3"
     assert capsys.readouterr().err == ""
+
+
+def test_an_address_is_found_in_network_configuration_output():
+    ipconfig = """
+Windows IP Configuration
+
+Ethernet adapter イーサネット:
+   IPv4 Address. . . . . . . . . . . : 192.168.1.20
+   Subnet Mask . . . . . . . . . . . : 255.255.255.0
+
+Unknown adapter Tailscale:
+   IPv4 Address. . . . . . . . . . . : 100.90.80.70
+"""
+    assert tailscale.find_tailscale_address(ipconfig) == "100.90.80.70"
+
+
+def test_configuration_without_tailscale_yields_nothing():
+    assert tailscale.find_tailscale_address("IPv4 Address: 192.168.1.20") is None
+
+
+def test_detection_falls_back_to_network_configuration(monkeypatch):
+    monkeypatch.setattr(tailscale.sys, "platform", "win32")
+    monkeypatch.setattr(tailscale, "_commands", lambda: [["tailscale", "ip", "-4"]])
+
+    def fake_run(command):
+        # CLI は見つからないが、ipconfig からは読み取れる
+        return "IPv4 Address: 100.90.80.70" if command == ["ipconfig"] else None
+
+    assert detect_tailscale_ip(run=fake_run) == "100.90.80.70"

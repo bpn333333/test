@@ -1,38 +1,35 @@
 @echo off
-REM 依存をそろえてサーバーを起動する(Windows)
+REM Start the rdcontrol server on Windows.
+REM   PowerShell needs the .\ prefix:   .\run.bat
+REM   Options are passed through:       .\run.bat --tailscale --token mytoken123
 REM
-REM   PowerShell では先頭に .\ が必要:  .\run.bat
-REM   オプションはそのまま渡せる:      .\run.bat --view-only --open
+REM NOTE: keep this file ASCII-only. cmd.exe reads batch files using the OEM
+REM code page (cp932 on Japanese Windows), so UTF-8 text would be garbled.
 setlocal
 cd /d "%~dp0"
 
 where python >nul 2>nul
 if errorlevel 1 (
-  echo [エラー] python が見つかりません。
-  echo   https://www.python.org/downloads/ から Python 3.10 以上をインストールし、
-  echo   インストール時に "Add python.exe to PATH" にチェックを入れてください。
+  echo [ERROR] python not found.
+  echo   Install Python 3.10+ from https://www.python.org/downloads/
+  echo   and tick "Add python.exe to PATH" during setup.
   exit /b 1
 )
 
 if not exist .venv (
-  echo 初回セットアップ中です。少し時間がかかります...
+  echo First-time setup. This takes a few minutes...
   python -m venv .venv
   if errorlevel 1 (
-    echo [エラー] 仮想環境の作成に失敗しました。上のメッセージを確認してください。
+    echo [ERROR] Could not create the virtual environment. See the message above.
     exit /b 1
   )
   .venv\Scripts\python -m pip install --upgrade pip
   .venv\Scripts\python -m pip install -r requirements.txt
   if errorlevel 1 (
-    echo [エラー] 依存パッケージのインストールに失敗しました。
-    echo   .venv フォルダを削除してから、もう一度実行すると直ることがあります。
+    echo [ERROR] Could not install dependencies.
+    echo   Deleting the .venv folder and running again often fixes this.
     exit /b 1
   )
 )
 
 .venv\Scripts\python -m rdcontrol %*
-if errorlevel 1 (
-  echo.
-  echo [エラー] サーバーが起動できませんでした。上のメッセージを確認してください。
-  exit /b 1
-)
