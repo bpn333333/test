@@ -1,5 +1,11 @@
 """CLI と、SSH トンネル案内の組み立てに関するテスト。"""
 
+import shutil
+import subprocess
+from pathlib import Path
+
+import pytest
+
 from rdcontrol.__main__ import build_parser, print_startup_notice, settings_from_args
 from rdcontrol.config import Settings, local_ssh_target, ssh_tunnel_command
 
@@ -68,3 +74,29 @@ def test_startup_notice_warns_when_listening_beyond_loopback(capsys):
 def test_startup_notice_is_quiet_about_exposure_on_loopback(capsys):
     print_startup_notice(parse("--token", "SAMPLE"))
     assert "⚠" not in capsys.readouterr().out
+
+
+# --- tunnel.sh(接続する側で使うスクリプト)-------------------------------
+
+TUNNEL_SH = Path(__file__).resolve().parents[1] / "tunnel.sh"
+
+
+def run_tunnel(*argv) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        ["bash", str(TUNNEL_SH), *argv], capture_output=True, text=True, timeout=10
+    )
+
+
+@pytest.mark.skipif(shutil.which("bash") is None, reason="bash が無い環境")
+def test_tunnel_script_requires_a_target():
+    result = run_tunnel()
+    assert result.returncode == 2
+    assert "使い方" in result.stderr
+
+
+@pytest.mark.skipif(shutil.which("bash") is None, reason="bash が無い環境")
+@pytest.mark.parametrize("port", ["abc", "0", "70000"])
+def test_tunnel_script_rejects_bad_ports(port):
+    result = run_tunnel("user@host", port)
+    assert result.returncode == 2
+    assert "ポート番号が不正です" in result.stderr
