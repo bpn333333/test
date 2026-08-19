@@ -25,6 +25,7 @@
   const cursorEl = el("cursor");
   const softInput = el("softInput");
   const softKeyboardButton = el("softKeyboard");
+  const zoomResetButton = el("zoomReset");
 
   const MOUSE_MOVE_INTERVAL_MS = 33; // 約 30 回/秒に間引く
   const BUTTONS = ["left", "middle", "right"];
@@ -158,6 +159,80 @@
     bytesInWindow = 0;
   }, 1000);
 
+  /* ---------- 表示の拡大・移動 ---------- */
+
+  // 画面そのものは canvas の CSS transform で拡大する。サーバーへ送る座標は
+  // getBoundingClientRect() から計算しており、これは transform 後の位置を返すため、
+  // 拡大しても操作位置の計算は変えなくてよい。
+  const MIN_ZOOM = 1;
+  const MAX_ZOOM = 5;
+
+  let zoom = 1;
+  let panX = 0;
+  let panY = 0;
+
+  function layoutBox() {
+    // transform を適用する前の(レイアウト上の)位置と大きさ
+    return {
+      left: canvas.offsetLeft,
+      top: canvas.offsetTop,
+      width: canvas.offsetWidth,
+      height: canvas.offsetHeight,
+    };
+  }
+
+  function clampPan() {
+    const box = layoutBox();
+    const stageRect = stage.getBoundingClientRect();
+    const scaledWidth = box.width * zoom;
+    const scaledHeight = box.height * zoom;
+
+    // 拡大した画像の端が表示領域の内側に入り込まないように、移動量を制限する
+    // (右端・下端が画面の端より内側に来たら、それ以上は動かさない)
+    const minX = Math.min(0, stageRect.width - box.left - scaledWidth);
+    const minY = Math.min(0, stageRect.height - box.top - scaledHeight);
+    panX = Math.min(0, Math.max(minX, panX));
+    panY = Math.min(0, Math.max(minY, panY));
+  }
+
+  function applyTransform() {
+    if (zoom === 1) {
+      panX = 0;
+      panY = 0;
+    } else {
+      clampPan();
+    }
+    canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+    zoomResetButton.textContent = `⤢ ${Math.round(zoom * 100)}%`;
+    placeCursor();
+  }
+
+  function setZoom(nextZoom, anchorClientX, anchorClientY) {
+    const clamped = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, nextZoom));
+    if (clamped === zoom) return;
+
+    const box = layoutBox();
+    const stageRect = stage.getBoundingClientRect();
+    // 指の位置(anchor)にある画像上の点が動かないように移動量を調整する
+    const originX = stageRect.left + box.left;
+    const originY = stageRect.top + box.top;
+    const localX = (anchorClientX - originX - panX) / zoom;
+    const localY = (anchorClientY - originY - panY) / zoom;
+
+    zoom = clamped;
+    panX = anchorClientX - originX - localX * zoom;
+    panY = anchorClientY - originY - localY * zoom;
+    applyTransform();
+  }
+
+  function resetZoom() {
+    zoom = 1;
+    applyTransform();
+  }
+
+  zoomResetButton.addEventListener("click", resetZoom);
+  window.addEventListener("resize", applyTransform);
+
   /* ---------- カーソル表示 ---------- */
 
   function placeCursor() {
@@ -270,8 +345,18 @@
   let touchDragging = false;
   let longPressTimer = null;
   let longPressFired = false;
-  let scrollAnchor = null;
   let scrollRemainder = 0;
+  let gesture = null;      // 2 本指の操作(ズーム / 移動 / スクロール)の状態
+
+  // 2 本指の操作は、指の間隔が変われば拡大、位置だけ動けば移動かスクロールと判断する
+  const GESTURE_THRESHOLD_PX = 12;
+
+  function fingerDistance(touches) {
+    return Math.hypot(
+      touches[0].clientX - touches[1].clientX,
+      touches[0].clientY - touches[1].clientY
+    );
+  }
 
   function centroid(touches) {
     let x = 0;
@@ -310,7 +395,15 @@
           send({ t: "mouse_up", x: touchLast.x, y: touchLast.y, button: "left" });
         }
         endTouchGesture();
-        scrollAnchor = centroid(event.touches);
+        const center = centroid(event.touches);
+        const spread = fingerDistance(event.touches);
+        gesture = {
+          mode: null,
+          startDistance: spread,
+          lastDistance: spread,
+          startCentroid: center,
+          lastCentroid: center,
+        };
         scrollRemainder = 0;
         return;
       }
@@ -343,18 +436,51 @@
       if (!canControl) return;
       event.preventDefault();
 
-      if (scrollAnchor && event.touches.length >= 2) {
+      if (gesture && event.touches.length >= 2) {
         const center = centroid(event.touches);
-        scrollRemainder += center.clientY - scrollAnchor.clientY;
-        scrollAnchor = center;
-        const notches = Math.trunc(scrollRemainder / SCROLL_STEP_PX);
-        if (notches !== 0) {
-          scrollRemainder -= notches * SCROLL_STEP_PX;
-          const point = normalize(center);
-          if (inside(point)) {
-            send({ t: "scroll", x: point.x, y: point.y, dx: 0, dy: notches });
+        const spread = fingerDistance(event.touches);
+        const movedX = center.clientX - gesture.lastCentroid.clientX;
+        const movedY = center.clientY - gesture.lastCentroid.clientY;
+
+        if (gesture.mode === null) {
+          const spreadChange = Math.abs(spread - gesture.startDistance);
+          const centroidMove = Math.hypot(
+            center.clientX - gesture.startCentroid.clientX,
+            center.clientY - gesture.startCentroid.clientY
+          );
+          if (spreadChange > GESTURE_THRESHOLD_PX) {
+            gesture.mode = "zoom";
+          } else if (centroidMove > GESTURE_THRESHOLD_PX) {
+            // 等倍のままなら相手の画面をスクロール、拡大中なら表示位置を動かす
+            gesture.mode = zoom > 1 ? "pan" : "scroll";
           }
         }
+
+        if (gesture.mode === "zoom") {
+          if (gesture.lastDistance > 0) {
+            panX += movedX;
+            panY += movedY;
+            setZoom(zoom * (spread / gesture.lastDistance), center.clientX, center.clientY);
+            applyTransform();
+          }
+        } else if (gesture.mode === "pan") {
+          panX += movedX;
+          panY += movedY;
+          applyTransform();
+        } else if (gesture.mode === "scroll") {
+          scrollRemainder += movedY;
+          const notches = Math.trunc(scrollRemainder / SCROLL_STEP_PX);
+          if (notches !== 0) {
+            scrollRemainder -= notches * SCROLL_STEP_PX;
+            const point = normalize(center);
+            if (inside(point)) {
+              send({ t: "scroll", x: point.x, y: point.y, dx: 0, dy: notches });
+            }
+          }
+        }
+
+        gesture.lastDistance = spread;
+        gesture.lastCentroid = center;
         return;
       }
 
@@ -383,8 +509,8 @@
     (event) => {
       if (!canControl) return;
       event.preventDefault();
-      if (event.touches.length === 0) {
-        scrollAnchor = null;
+      if (event.touches.length < 2) {
+        gesture = null;
         scrollRemainder = 0;
       }
       if (!touchOrigin) return;
@@ -407,7 +533,7 @@
       send({ t: "mouse_up", x: touchLast.x, y: touchLast.y, button: "left" });
     }
     endTouchGesture();
-    scrollAnchor = null;
+    gesture = null;
   });
 
   /* ---------- キーボード ---------- */
@@ -537,6 +663,7 @@
   // マウスのある端末では不要なので出さない(物理キーボードをそのまま使える)
   if (window.matchMedia("(pointer: coarse)").matches) {
     softKeyboardButton.hidden = false;
+    zoomResetButton.hidden = false;   // ピンチで拡大したときに等倍へ戻す
   }
 
   /* ---------- 画質・モニタ設定 ---------- */

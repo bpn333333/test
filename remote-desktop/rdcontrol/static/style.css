@@ -111,6 +111,10 @@ select {
   cursor: crosshair;
   touch-action: none;
   image-rendering: auto;
+  /* ピンチ操作の拡大は transform で行う。基準点を左上に固定しておくと、
+     指の位置を動かさずに拡大する計算が単純になる。 */
+  transform-origin: 0 0;
+  will-change: transform;
 }
 
 .stage--viewonly #screen { cursor: default; }
