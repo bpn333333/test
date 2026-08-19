@@ -312,6 +312,41 @@
     applyTransform();
   }
 
+  // Safari(WebKit)はピンチ操作を独自の gesture イベントとして扱い、
+  // ページ自体の拡大に使ってしまう。こちらで受け取って打ち消し、
+  // 表示の拡大に振り向ける。event.scale は操作開始時を 1 とした倍率。
+  const hasGestureEvents = typeof window.GestureEvent !== "undefined";
+  let gestureActive = false;
+  let gestureStartZoom = 1;
+  let gestureLastPoint = null;
+
+  if (hasGestureEvents) {
+    stage.addEventListener("gesturestart", (event) => {
+      event.preventDefault();
+      gestureActive = true;
+      gestureStartZoom = zoom;
+      gestureLastPoint = { x: event.clientX, y: event.clientY };
+    });
+
+    stage.addEventListener("gesturechange", (event) => {
+      event.preventDefault();
+      if (gestureLastPoint) {
+        // 指をつまんだまま動かした分だけ、表示位置も動かす
+        panX += event.clientX - gestureLastPoint.x;
+        panY += event.clientY - gestureLastPoint.y;
+      }
+      gestureLastPoint = { x: event.clientX, y: event.clientY };
+      setZoom(gestureStartZoom * event.scale, event.clientX, event.clientY);
+      applyTransform();
+    });
+
+    stage.addEventListener("gestureend", (event) => {
+      event.preventDefault();
+      gestureActive = false;
+      gestureLastPoint = null;
+    });
+  }
+
   zoomResetButton.addEventListener("click", resetZoom);
   window.addEventListener("resize", applyTransform);
 
@@ -519,6 +554,9 @@
       event.preventDefault();
 
       if (gesture && event.touches.length >= 2) {
+        // Safari では拡大・移動を gesture イベント側で処理しているので、
+        // ここで二重に反応させない(ピンチ中に相手の画面がスクロールしてしまう)
+        if (gestureActive) return;
         const center = centroid(event.touches);
         const spread = fingerDistance(event.touches);
         const movedX = center.clientX - gesture.lastCentroid.clientX;
@@ -530,7 +568,8 @@
             center.clientX - gesture.startCentroid.clientX,
             center.clientY - gesture.startCentroid.clientY
           );
-          if (spreadChange > GESTURE_THRESHOLD_PX) {
+          if (spreadChange > GESTURE_THRESHOLD_PX && !hasGestureEvents) {
+            // Safari では拡大は gesture イベント側で処理する
             gesture.mode = "zoom";
           } else if (centroidMove > GESTURE_THRESHOLD_PX) {
             // 等倍のままなら相手の画面をスクロール、拡大中なら表示位置を動かす
