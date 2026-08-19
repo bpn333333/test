@@ -197,6 +197,27 @@ autossh -M 0 -N -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -L 8765:12
 
 ---
 
+## 更新のしかた
+
+このアプリを新しい版に入れ替える手順です。
+
+1. サーバーが動いているウィンドウで **Ctrl + C** を押して止める
+2. 同じウィンドウで最新版を取り込む(`git pull` = GitHub 上の最新の中身を自分の PC にコピーする命令):
+
+   ```powershell
+   git pull
+   ```
+
+3. もう一度起動する(必要な追加パッケージは自動で入ります):
+
+   ```powershell
+   .\run.bat --tailscale --token mytoken123
+   ```
+
+4. スマホやブラウザで開いているページを再読み込みする
+
+---
+
 ## 困ったとき
 
 | 症状 | 対処 |

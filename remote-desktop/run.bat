@@ -24,12 +24,19 @@ if not exist .venv (
     exit /b 1
   )
   .venv\Scripts\python -m pip install --upgrade pip
+)
+
+REM Re-install when requirements.txt changed (e.g. after git pull added a package).
+fc /b requirements.txt .venv\requirements.lock >nul 2>nul
+if errorlevel 1 (
+  echo Updating dependencies...
   .venv\Scripts\python -m pip install -r requirements.txt
   if errorlevel 1 (
     echo [ERROR] Could not install dependencies.
     echo   Deleting the .venv folder and running again often fixes this.
     exit /b 1
   )
+  copy /y requirements.txt .venv\requirements.lock >nul
 )
 
 .venv\Scripts\python -m rdcontrol %*

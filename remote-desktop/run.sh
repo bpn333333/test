@@ -18,11 +18,17 @@ if [ ! -d .venv ]; then
     exit 1
   fi
   ./.venv/bin/python -m pip install --upgrade pip
+fi
+
+# requirements.txt が変わっていたら入れ直す(git pull で依存が増えたときのため)
+if ! cmp -s requirements.txt .venv/requirements.lock; then
+  echo "依存パッケージを更新しています..."
   if ! ./.venv/bin/python -m pip install -r requirements.txt; then
     echo "[エラー] 依存パッケージのインストールに失敗しました。" >&2
     echo "        .venv を削除してから、もう一度実行してみてください。" >&2
     exit 1
   fi
+  cp requirements.txt .venv/requirements.lock
 fi
 
 exec ./.venv/bin/python -m rdcontrol "$@"
