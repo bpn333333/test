@@ -1,0 +1,205 @@
+:root {
+  color-scheme: dark;
+  --bg: #14161a;
+  --bar: #1e2128;
+  --line: #2c313b;
+  --fg: #e6e8ec;
+  --muted: #9aa2b1;
+  --accent: #5aa9ff;
+  --ok: #4ec38a;
+  --warn: #e0b341;
+  --err: #e2685f;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 13px/1.5 system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  /* ページ自体はスクロールさせない。スクロールできる状態だと、ブラウザが
+     指の動きをページのスクロールに使ってしまい、ドラッグや表示移動が効かなくなる。 */
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* スマホのブラウザはバーの出入りで表示領域の高さが変わる。dvh に対応した
+   端末では、実際に見えている高さに合わせて画面を使い切る。 */
+@supports (height: 100dvh) {
+  html, body { height: 100dvh; }
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--bar);
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+  flex: 0 0 auto;
+}
+
+/* 画面の狭い端末では、バーを折り返さず横スクロールにする。折り返して
+   縦に伸びると、肝心の画面表示領域が削られてしまうため。 */
+@media (max-width: 720px) {
+  .bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .bar::-webkit-scrollbar { display: none; }
+  .bar > * { flex: 0 0 auto; }
+  .keys { flex-wrap: nowrap; }
+}
+
+.bar--footer {
+  border-bottom: none;
+  border-top: 1px solid var(--line);
+  /* ホームバー(画面下端)と重ならないようにする */
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+}
+
+.brand { font-weight: 600; letter-spacing: 0.02em; }
+.spacer { flex: 1 1 auto; }
+
+.status { font-size: 12px; }
+.status--ok { color: var(--ok); }
+.status--pending { color: var(--warn); }
+.status--err { color: var(--err); }
+
+.badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.field input[type="range"] { width: 90px; }
+.field output { color: var(--fg); min-width: 3.5em; }
+
+select {
+  background: #262a33;
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 3px 6px;
+}
+
+.btn {
+  background: #262a33;
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+
+.btn:hover { border-color: var(--accent); }
+.btn[aria-pressed="true"] { background: var(--accent); color: #10131a; border-color: var(--accent); }
+.btn--key { font-size: 11px; padding: 4px 8px; }
+
+.keys { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* 全画面表示。iPhone の Safari は要素の全画面表示に対応しないため、
+   バーを隠して画面いっぱいに使う方式も用意する。 */
+body.immersive .bar { display: none; }
+
+.btn--floating {
+  position: absolute;
+  top: max(8px, env(safe-area-inset-top));
+  right: max(8px, env(safe-area-inset-right));
+  z-index: 3;
+  background: rgba(30, 33, 40, 0.85);
+}
+
+.stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;   /* これが無いと、内容の高さに押されて画面外へはみ出す */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #0c0e12;
+}
+
+#screen {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  cursor: crosshair;
+  touch-action: none;
+  image-rendering: auto;
+  /* ピンチ操作の拡大は transform で行う。基準点を左上に固定しておくと、
+     指の位置を動かさずに拡大する計算が単純になる。 */
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.stage--viewonly #screen { cursor: default; }
+.stage--panning #screen { cursor: grab; }
+
+.soft-input {
+  /* スマホのキーボードを出すためだけの入力欄。見えないが、フォーカス可能な
+     状態を保つ必要があるので display:none / visibility:hidden にはしない。 */
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  resize: none;
+  overflow: hidden;
+}
+
+.cursor {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  line-height: 0;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+}
+
+.cursor[hidden] { display: none; }
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  background: rgba(12, 14, 18, 0.82);
+  color: var(--muted);
+  white-space: pre-line;
+}
+
+.overlay[hidden] { display: none; }
+
+.stats { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; }

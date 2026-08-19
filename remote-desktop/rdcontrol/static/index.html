@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<!-- ホーム画面に追加したときに、ブラウザのバーを出さずに起動する(iOS / Android) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="rdcontrol">
+<meta name="theme-color" content="#14161a">
+<link rel="manifest" href="/static/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<title>rdcontrol — リモートデスクトップ</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="bar">
+  <span class="brand">rdcontrol</span>
+  <span id="status" class="status status--pending">接続中…</span>
+  <span id="mode" class="badge" hidden>閲覧のみ</span>
+
+  <div class="spacer"></div>
+
+  <label class="field">
+    モニタ
+    <select id="monitor"></select>
+  </label>
+  <label class="field">
+    画質 <output id="qualityOut">60</output>
+    <input id="quality" type="range" min="10" max="95" step="5" value="60">
+  </label>
+  <label class="field">
+    FPS <output id="fpsOut">10</output>
+    <input id="fps" type="range" min="1" max="30" step="1" value="10">
+  </label>
+  <label class="field">
+    解像度 <output id="scaleOut">100%</output>
+    <input id="scale" type="range" min="20" max="100" step="10" value="100">
+  </label>
+
+  <button id="keyboardToggle" type="button" class="btn" aria-pressed="false">
+    キーボード転送: OFF
+  </button>
+  <button id="softKeyboard" type="button" class="btn" aria-pressed="false" hidden>
+    ⌨ 入力
+  </button>
+  <button id="panMode" type="button" class="btn" aria-pressed="false" hidden>✋ 表示移動</button>
+  <button id="zoomReset" type="button" class="btn" hidden>⤢ 100%</button>
+  <button id="audioToggle" type="button" class="btn" aria-pressed="false">🔊 音声</button>
+  <button id="fullscreen" type="button" class="btn" aria-pressed="false">⛶ 全画面</button>
+</header>
+
+<main id="stage" class="stage">
+  <button id="exitImmersive" type="button" class="btn btn--floating" hidden>✕ 全画面を終了</button>
+  <canvas id="screen" width="1280" height="720"></canvas>
+  <!-- キャプチャ画像にマウスポインタは写らないので、位置を受け取って重ねて描く -->
+  <div id="cursor" class="cursor" hidden aria-hidden="true">
+    <svg width="20" height="20" viewBox="0 0 13 20">
+      <path d="M1 1 L1 15.5 L4.6 12 L7.2 17.8 L9.8 16.6 L7.2 11 L11.8 11 Z"
+            fill="#000" stroke="#fff" stroke-width="1.3" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <div id="overlay" class="overlay">接続中…</div>
+  <!--
+    スマホのソフトキーボードを出すための入力欄。画面には見えないが、
+    フォーカスできる必要があるため display:none にはできない。
+    ここに入った文字は、そのまま操作対象の PC へ送る。
+  -->
+  <textarea id="softInput" class="soft-input" rows="1" autocomplete="off"
+            autocorrect="off" autocapitalize="none" spellcheck="false"
+            aria-label="キーボード入力"></textarea>
+</main>
+
+<footer class="bar bar--footer">
+  <div class="keys">
+    <button class="btn btn--key" data-combo="Escape">Esc</button>
+    <button class="btn btn--key" data-combo="Tab">Tab</button>
+    <button class="btn btn--key" data-combo="Enter">Enter</button>
+    <button class="btn btn--key" data-combo="Backspace">⌫</button>
+    <button class="btn btn--key" data-combo="ArrowLeft">←</button>
+    <button class="btn btn--key" data-combo="ArrowDown">↓</button>
+    <button class="btn btn--key" data-combo="ArrowUp">↑</button>
+    <button class="btn btn--key" data-combo="ArrowRight">→</button>
+    <button class="btn btn--key" data-combo="Meta">Win / Cmd</button>
+    <button class="btn btn--key" data-combo="Control+c">Ctrl+C</button>
+    <button class="btn btn--key" data-combo="Control+v">Ctrl+V</button>
+    <button class="btn btn--key" data-combo="Alt+Tab">Alt+Tab</button>
+  </div>
+  <div class="spacer"></div>
+  <span id="stats" class="stats">—</span>
+</footer>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

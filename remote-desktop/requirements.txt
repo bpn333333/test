@@ -1,0 +1,14 @@
+# サーバー本体
+fastapi>=0.110
+uvicorn[standard]>=0.27
+# 画面キャプチャ
+mss>=9.0
+pillow>=10.0
+# マウス・キーボード操作
+pynput>=1.7
+# 接続 URL の QR コード表示(スマホから開くとき)
+qrcode>=7.4
+# 音声の取り込みと変換
+numpy>=1.24
+pyaudiowpatch>=0.2.12; sys_platform == "win32"
+sounddevice>=0.4.6; sys_platform != "win32"
