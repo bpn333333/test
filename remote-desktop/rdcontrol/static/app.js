@@ -26,6 +26,7 @@
   const softInput = el("softInput");
   const softKeyboardButton = el("softKeyboard");
   const zoomResetButton = el("zoomReset");
+  const panModeButton = el("panMode");
   const audioButton = el("audioToggle");
   const fullscreenButton = el("fullscreen");
   const exitImmersiveButton = el("exitImmersive");
@@ -348,6 +349,17 @@
   }
 
   zoomResetButton.addEventListener("click", resetZoom);
+
+  // 1 本指で表示位置を動かすモード。拡大したあと、指 2 本での操作が
+  // うまくいかない端末でも確実に動かせるようにするための逃げ道。
+  let panMode = false;
+  let panDragFrom = null;
+
+  panModeButton.addEventListener("click", () => {
+    panMode = !panMode;
+    panModeButton.setAttribute("aria-pressed", String(panMode));
+    stage.classList.toggle("stage--panning", panMode);
+  });
   window.addEventListener("resize", applyTransform);
 
   /* ---------- カーソル表示 ---------- */
@@ -525,6 +537,11 @@
         return;
       }
 
+      if (panMode) {
+        panDragFrom = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+        return;
+      }
+
       const point = normalize(event.touches[0]);
       if (!inside(point)) return;
       touchOrigin = {
@@ -605,6 +622,15 @@
         return;
       }
 
+      if (panMode) {
+        if (!panDragFrom) return;
+        panX += event.touches[0].clientX - panDragFrom.x;
+        panY += event.touches[0].clientY - panDragFrom.y;
+        panDragFrom = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+        applyTransform();
+        return;
+      }
+
       if (!touchOrigin) return;
       const touch = event.touches[0];
       const point = normalize(touch);
@@ -634,6 +660,7 @@
         gesture = null;
         scrollRemainder = 0;
       }
+      if (event.touches.length === 0) panDragFrom = null;
       if (!touchOrigin) return;
 
       const point = touchLast || touchOrigin;
@@ -785,6 +812,7 @@
   if (window.matchMedia("(pointer: coarse)").matches) {
     softKeyboardButton.hidden = false;
     zoomResetButton.hidden = false;   // ピンチで拡大したときに等倍へ戻す
+    panModeButton.hidden = false;
   }
 
   /* ---------- 画質・モニタ設定 ---------- */

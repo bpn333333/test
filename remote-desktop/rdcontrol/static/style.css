@@ -24,6 +24,10 @@ html, body {
 body {
   display: flex;
   flex-direction: column;
+  /* ページ自体はスクロールさせない。スクロールできる状態だと、ブラウザが
+     指の動きをページのスクロールに使ってしまい、ドラッグや表示移動が効かなくなる。 */
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 /* スマホのブラウザはバーの出入りで表示領域の高さが変わる。dvh に対応した
@@ -40,6 +44,23 @@ body {
   background: var(--bar);
   border-bottom: 1px solid var(--line);
   flex-wrap: wrap;
+  flex: 0 0 auto;
+}
+
+/* 画面の狭い端末では、バーを折り返さず横スクロールにする。折り返して
+   縦に伸びると、肝心の画面表示領域が削られてしまうため。 */
+@media (max-width: 720px) {
+  .bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .bar::-webkit-scrollbar { display: none; }
+  .bar > * { flex: 0 0 auto; }
+  .keys { flex-wrap: nowrap; }
 }
 
 .bar--footer {
@@ -116,6 +137,7 @@ body.immersive .bar { display: none; }
 .stage {
   position: relative;
   flex: 1 1 auto;
+  min-height: 0;   /* これが無いと、内容の高さに押されて画面外へはみ出す */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -138,6 +160,7 @@ body.immersive .bar { display: none; }
 }
 
 .stage--viewonly #screen { cursor: default; }
+.stage--panning #screen { cursor: grab; }
 
 .soft-input {
   /* スマホのキーボードを出すためだけの入力欄。見えないが、フォーカス可能な
