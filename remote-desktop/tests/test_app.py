@@ -202,6 +202,32 @@ def test_unauthorized_page_explains_the_common_causes_without_leaking_the_token(
         assert TOKEN not in body
 
 
+@pytest.mark.parametrize(
+    "path", ["/favicon.ico", "/apple-touch-icon.png", "/apple-touch-icon-precomposed.png"]
+)
+def test_browsers_can_fetch_the_icons_without_a_token(controller, path):
+    # iOS はページとは別にこれらを直接取りに来る(ホーム画面のアイコンに使う)
+    with make_client(controller) as client:
+        response = client.get(path)
+        assert response.status_code == 200
+        assert len(response.content) > 0
+
+
+def test_disconnects_are_not_logged_as_errors():
+    from rdcontrol.app import disconnect_noise_filter
+
+    seen = []
+    handler = disconnect_noise_filter(lambda loop, context: seen.append(context))
+
+    handler(None, {"exception": ConnectionResetError(10054, "切断されました")})
+    handler(None, {"exception": ConnectionAbortedError()})
+    assert seen == []          # 接続断は表示しない
+
+    real = {"exception": ValueError("本当の不具合")}
+    handler(None, real)
+    assert seen == [real]      # それ以外はそのまま表示する
+
+
 def test_healthz_is_open_and_reports_client_count(controller):
     with make_client(controller) as client:
         response = client.get("/healthz")

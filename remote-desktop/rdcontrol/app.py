@@ -69,6 +69,37 @@ WS_TOO_MANY_CLIENTS = 4429
 WS_SERVER_ERROR = 4500
 
 
+def _icon_route(path: Path):
+    async def send_icon() -> FileResponse:
+        return FileResponse(path)
+
+    return send_icon
+
+
+def disconnect_noise_filter(default_handler):
+    """接続断そのものを、エラーとして表示しないようにする。
+
+    スマホがページを離れると Windows では ConnectionResetError(WinError 10054)が
+    上がるが、これは異常ではない。そのまま出すと長い英語の traceback がログを
+    埋め、本当の問題が埋もれてしまう。
+    """
+
+    def handler(loop, context):
+        exception = context.get("exception")
+        if isinstance(exception, (ConnectionResetError, ConnectionAbortedError)):
+            logger.debug("接続が切れました: %s", exception)
+            return
+        default_handler(loop, context)
+
+    return handler
+
+
+def _quiet_disconnect_noise() -> None:
+    loop = asyncio.get_running_loop()
+    default = loop.get_exception_handler() or loop.default_exception_handler
+    loop.set_exception_handler(disconnect_noise_filter(default))
+
+
 _UNSET = object()
 
 
@@ -104,6 +135,7 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
+        _quiet_disconnect_noise()
         yield
         if controller is not None:
             controller.release_all()
@@ -126,6 +158,20 @@ def create_app(
     app.state.audio_hub = audio_hub
 
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+    # ブラウザ(特に iOS)は、ページとは別にこれらを直接取りに来る。
+    # 用意しておかないと 404 がログを埋め、ホーム画面のアイコンも既定の絵になる。
+    for path, filename in (
+        ("/favicon.ico", "favicon.ico"),
+        ("/apple-touch-icon.png", "apple-touch-icon.png"),
+        ("/apple-touch-icon-precomposed.png", "apple-touch-icon.png"),
+    ):
+        app.add_api_route(
+            path,
+            _icon_route(STATIC_DIR / filename),
+            methods=["GET"],
+            include_in_schema=False,
+        )
 
     @app.get("/healthz")
     async def healthz() -> JSONResponse:
