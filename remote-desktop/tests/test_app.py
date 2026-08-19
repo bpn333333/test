@@ -61,19 +61,26 @@ class FakeController:
 
     def __init__(self) -> None:
         self.calls: list[tuple] = []
+        self._position = (100, 100)
         self._lock = threading.Lock()
 
     def _record(self, *call) -> None:
         with self._lock:
             self.calls.append(call)
 
+    def get_position(self) -> tuple[int, int]:
+        return self._position
+
     def move_to(self, x, y):
+        self._position = (x, y)
         self._record("move", x, y)
 
     def mouse_down(self, x, y, button):
+        self._position = (x, y)
         self._record("down", x, y, button)
 
     def mouse_up(self, x, y, button):
+        self._position = (x, y)
         self._record("up", x, y, button)
 
     def scroll(self, x, y, dx, dy):
@@ -193,6 +200,33 @@ def test_hello_describes_the_session_and_frames_start_flowing(controller):
 
             message = websocket.receive()
             assert message.get("bytes", b"").startswith(b"\xff\xd8\xff")
+
+
+def test_cursor_position_is_streamed_so_the_client_can_draw_it(controller):
+    # キャプチャ画像にポインタは写らないため、位置だけ別に送っている
+    with make_client(controller) as client:
+        with open_session(client) as websocket:
+            receive_text(websocket)
+            while True:
+                message = receive_text(websocket)
+                if message["t"] == "cursor":
+                    break
+            assert message["visible"] is True
+            assert message["x"] == pytest.approx(100 / 1920)
+            assert message["y"] == pytest.approx(100 / 1080)
+
+
+def test_cursor_on_another_monitor_is_reported_as_hidden(controller):
+    controller._position = (5000, 5000)  # モニタ 1 の外
+    with make_client(controller) as client:
+        with open_session(client) as websocket:
+            receive_text(websocket)
+            while True:
+                message = receive_text(websocket)
+                if message["t"] == "cursor":
+                    break
+            assert message["visible"] is False
+            assert "x" not in message
 
 
 def test_mouse_events_reach_the_controller_in_screen_coordinates(controller):

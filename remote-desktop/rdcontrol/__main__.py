@@ -9,6 +9,8 @@ import webbrowser
 
 from .auth import generate_token
 from .capture import CaptureUnavailable, ScreenCapture
+from .diagnose import diagnose
+from .input_control import InputController, InputUnavailable
 from .config import DEFAULT_FPS, DEFAULT_PORT, DEFAULT_QUALITY, Settings
 
 BANNER = """
@@ -42,6 +44,8 @@ def build_parser() -> argparse.ArgumentParser:
                         help="案内に表示する SSH 接続先 (例: user@host)。既定はこのマシンから自動推定")
     parser.add_argument("--open", action="store_true", help="起動後にブラウザを自動で開く")
     parser.add_argument("--list-monitors", action="store_true", help="モニタ一覧を表示して終了")
+    parser.add_argument("--diagnose", action="store_true",
+                        help="カーソル位置のずれを実測して表示し終了(操作位置が合わないときに使う)")
     parser.add_argument("--log-level", default="info",
                         choices=["debug", "info", "warning", "error"], help="ログレベル")
     return parser
@@ -88,6 +92,23 @@ def settings_from_args(args: argparse.Namespace) -> Settings:
     )
 
 
+def run_diagnose(monitor: int) -> int:
+    """--diagnose: 座標のずれを実測して表示する。"""
+    try:
+        capture = ScreenCapture(monitor=monitor)
+        controller = InputController()
+    except (CaptureUnavailable, InputUnavailable) as exc:
+        print(f"エラー: {exc}", file=sys.stderr)
+        return 1
+    try:
+        print("カーソルを数か所へ動かして測定します(数秒かかります)...\n")
+        for line in diagnose(capture, controller):
+            print(line)
+    finally:
+        capture.close()
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     logging.basicConfig(
@@ -107,6 +128,9 @@ def main(argv: list[str] | None = None) -> int:
                   f"@ ({monitor.left},{monitor.top}){role}")
         capture.close()
         return 0
+
+    if args.diagnose:
+        return run_diagnose(args.monitor)
 
     settings = settings_from_args(args)
 

@@ -115,6 +115,16 @@ select {
 
 .stage--viewonly #screen { cursor: default; }
 
+.cursor {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  line-height: 0;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+}
+
+.cursor[hidden] { display: none; }
+
 .overlay {
   position: absolute;
   inset: 0;

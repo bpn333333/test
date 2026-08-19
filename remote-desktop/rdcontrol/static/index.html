@@ -40,6 +40,13 @@
 
 <main id="stage" class="stage">
   <canvas id="screen" width="1280" height="720"></canvas>
+  <!-- キャプチャ画像にマウスポインタは写らないので、位置を受け取って重ねて描く -->
+  <div id="cursor" class="cursor" hidden aria-hidden="true">
+    <svg width="20" height="20" viewBox="0 0 13 20">
+      <path d="M1 1 L1 15.5 L4.6 12 L7.2 17.8 L9.8 16.6 L7.2 11 L11.8 11 Z"
+            fill="#000" stroke="#fff" stroke-width="1.3" stroke-linejoin="round"/>
+    </svg>
+  </div>
   <div id="overlay" class="overlay">接続中…</div>
 </main>
 

@@ -21,7 +21,12 @@ from fastapi.staticfiles import StaticFiles
 from .auth import AuthGuard
 from .capture import CaptureUnavailable, ScreenCapture
 from .config import Settings
-from .input_control import InputController, InputUnavailable, normalized_to_screen
+from .input_control import (
+    InputController,
+    InputUnavailable,
+    normalized_to_screen,
+    screen_to_normalized,
+)
 from .protocol import ProtocolError, parse_client_message
 from .session import ClientSession, SessionManager
 
@@ -211,6 +216,8 @@ async def _stream_loop(websocket: WebSocket, session: ClientSession, app: FastAP
     capture: ScreenCapture = app.state.capture
     last_digest = ""
     last_sent = 0.0
+    last_cursor: tuple[float, float] | None = None
+    cursor_hidden = False
     while True:
         started = time.monotonic()
         try:
@@ -233,6 +240,29 @@ async def _stream_loop(websocket: WebSocket, session: ClientSession, app: FastAP
                 return
             last_digest = frame.digest
             last_sent = now
+
+        # キャプチャ画像にマウスポインタは写らない(OS がカーソルを画面バッファに
+        # 描かないため)。位置だけ別に送り、ブラウザ側で重ねて表示する。
+        controller: InputController | None = app.state.controller
+        if controller is not None:
+            monitor = capture.current_monitor()
+            position = await asyncio.to_thread(controller.get_position)
+            cursor = screen_to_normalized(
+                position[0], position[1],
+                monitor.left, monitor.top, monitor.width, monitor.height,
+            )
+            if cursor is None:
+                # 別のモニタへ出た。1 度だけ非表示を伝える。
+                if not cursor_hidden:
+                    await websocket.send_json({"t": "cursor", "visible": False})
+                    cursor_hidden = True
+                    last_cursor = None
+            elif cursor != last_cursor:
+                await websocket.send_json(
+                    {"t": "cursor", "visible": True, "x": cursor[0], "y": cursor[1]}
+                )
+                last_cursor = cursor
+                cursor_hidden = False
 
         elapsed = time.monotonic() - started
         await asyncio.sleep(max(0.0, session.frame_interval - elapsed))

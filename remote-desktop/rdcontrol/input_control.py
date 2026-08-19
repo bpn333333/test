@@ -116,6 +116,11 @@ class InputController:
 
     # ---- マウス -----------------------------------------------------
 
+    def get_position(self) -> tuple[int, int]:
+        """OS が持っている現在のカーソル位置(画面全体の絶対座標)。"""
+        x, y = self._mouse.position
+        return int(x), int(y)
+
     def move_to(self, x: int, y: int) -> None:
         self._mouse.position = (int(x), int(y))
 
@@ -201,3 +206,20 @@ def normalized_to_screen(
     screen_x = left + min(width - 1, int(round(x * width)))
     screen_y = top + min(height - 1, int(round(y * height)))
     return screen_x, screen_y
+
+
+def screen_to_normalized(
+    x: int, y: int, left: int, top: int, width: int, height: int
+) -> tuple[float, float] | None:
+    """画面の絶対座標を 0.0〜1.0 に戻す。対象モニタの外なら None。
+
+    カーソル位置をクライアントに知らせるために使う。別モニタにカーソルが
+    ある間は送っても意味がないので None を返す。
+    """
+    if width <= 0 or height <= 0:
+        return None
+    nx = (x - left) / width
+    ny = (y - top) / height
+    if not (0.0 <= nx <= 1.0 and 0.0 <= ny <= 1.0):
+        return None
+    return nx, ny

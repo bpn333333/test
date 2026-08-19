@@ -22,6 +22,7 @@
   const statsEl = el("stats");
   const monitorSel = el("monitor");
   const keyboardToggle = el("keyboardToggle");
+  const cursorEl = el("cursor");
 
   const MOUSE_MOVE_INTERVAL_MS = 33; // 約 30 回/秒に間引く
   const BUTTONS = ["left", "middle", "right"];
@@ -35,6 +36,7 @@
   let pendingMove = null;
   let framesInWindow = 0;
   let bytesInWindow = 0;
+  let remoteCursor = null;   // サーバーから届いた実際のカーソル位置(正規化)
 
   /* ---------- 接続 ---------- */
 
@@ -108,6 +110,11 @@
         monitorSel.value = String(message.monitor);
         syncOutputs();
         break;
+      case "cursor":
+        // 画面キャプチャにポインタは写らないため、位置を受け取って重ねて描く
+        remoteCursor = message.visible ? { x: message.x, y: message.y } : null;
+        placeCursor();
+        break;
       case "error":
         setStatus(message.message, "err");
         break;
@@ -129,6 +136,7 @@
         ctx.drawImage(bitmap, 0, 0);
         bitmap.close();
         overlay.hidden = true;
+        placeCursor();   // 解像度が変わるとカーソルの位置もずれる
         framesInWindow += 1;
         bytesInWindow += buffer.byteLength;
       })
@@ -147,6 +155,25 @@
     framesInWindow = 0;
     bytesInWindow = 0;
   }, 1000);
+
+  /* ---------- カーソル表示 ---------- */
+
+  function placeCursor() {
+    if (!remoteCursor) {
+      cursorEl.hidden = true;
+      return;
+    }
+    const canvasRect = canvas.getBoundingClientRect();
+    const stageRect = stage.getBoundingClientRect();
+    if (canvasRect.width === 0) return;
+    cursorEl.style.left = `${canvasRect.left - stageRect.left + remoteCursor.x * canvasRect.width}px`;
+    cursorEl.style.top = `${canvasRect.top - stageRect.top + remoteCursor.y * canvasRect.height}px`;
+    cursorEl.hidden = false;
+  }
+
+  // 表示サイズが変わるとカーソルの位置もずれるので置き直す
+  window.addEventListener("resize", placeCursor);
+  document.addEventListener("fullscreenchange", placeCursor);
 
   /* ---------- 座標変換 ---------- */
 
@@ -226,6 +253,160 @@
     },
     { passive: false }
   );
+
+  /* ---------- タッチ操作(iPhone / iPad / Android)---------- */
+
+  // タップ = 左クリック、長押し = 右クリック、指を滑らせる = ドラッグ、
+  // 2 本指 = スクロール。マウスと違って「押さずに動かす」ができないので、
+  // 押し下げは「ドラッグと判定できてから」送る。
+  const LONG_PRESS_MS = 550;
+  const DRAG_THRESHOLD_PX = 8;
+  const SCROLL_STEP_PX = 40;
+
+  let touchOrigin = null;      // 最初に触れた位置
+  let touchLast = null;        // 直近の位置(指を離すときに使う)
+  let touchDragging = false;
+  let longPressTimer = null;
+  let longPressFired = false;
+  let scrollAnchor = null;
+  let scrollRemainder = 0;
+
+  function centroid(touches) {
+    let x = 0;
+    let y = 0;
+    for (const touch of touches) {
+      x += touch.clientX;
+      y += touch.clientY;
+    }
+    return { clientX: x / touches.length, clientY: y / touches.length };
+  }
+
+  function cancelLongPress() {
+    if (longPressTimer !== null) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+  }
+
+  function endTouchGesture() {
+    cancelLongPress();
+    touchOrigin = null;
+    touchLast = null;
+    touchDragging = false;
+    longPressFired = false;
+  }
+
+  canvas.addEventListener(
+    "touchstart",
+    (event) => {
+      if (!canControl) return;
+      event.preventDefault();
+
+      if (event.touches.length >= 2) {
+        // 2 本指に切り替わった。ドラッグ中なら先に離しておく。
+        if (touchDragging && touchLast) {
+          send({ t: "mouse_up", x: touchLast.x, y: touchLast.y, button: "left" });
+        }
+        endTouchGesture();
+        scrollAnchor = centroid(event.touches);
+        scrollRemainder = 0;
+        return;
+      }
+
+      const point = normalize(event.touches[0]);
+      if (!inside(point)) return;
+      touchOrigin = {
+        ...point,
+        clientX: event.touches[0].clientX,
+        clientY: event.touches[0].clientY,
+      };
+      touchLast = point;
+      touchDragging = false;
+      longPressFired = false;
+      send({ t: "mouse_move", x: point.x, y: point.y });
+
+      longPressTimer = setTimeout(() => {
+        longPressFired = true;
+        longPressTimer = null;
+        send({ t: "mouse_down", x: point.x, y: point.y, button: "right" });
+        send({ t: "mouse_up", x: point.x, y: point.y, button: "right" });
+      }, LONG_PRESS_MS);
+    },
+    { passive: false }
+  );
+
+  canvas.addEventListener(
+    "touchmove",
+    (event) => {
+      if (!canControl) return;
+      event.preventDefault();
+
+      if (scrollAnchor && event.touches.length >= 2) {
+        const center = centroid(event.touches);
+        scrollRemainder += center.clientY - scrollAnchor.clientY;
+        scrollAnchor = center;
+        const notches = Math.trunc(scrollRemainder / SCROLL_STEP_PX);
+        if (notches !== 0) {
+          scrollRemainder -= notches * SCROLL_STEP_PX;
+          const point = normalize(center);
+          if (inside(point)) {
+            send({ t: "scroll", x: point.x, y: point.y, dx: 0, dy: notches });
+          }
+        }
+        return;
+      }
+
+      if (!touchOrigin) return;
+      const touch = event.touches[0];
+      const point = normalize(touch);
+      if (!inside(point)) return;
+      touchLast = point;
+
+      const moved = Math.hypot(
+        touch.clientX - touchOrigin.clientX,
+        touch.clientY - touchOrigin.clientY
+      );
+      if (!touchDragging && !longPressFired && moved > DRAG_THRESHOLD_PX) {
+        cancelLongPress();
+        touchDragging = true;
+        send({ t: "mouse_down", x: touchOrigin.x, y: touchOrigin.y, button: "left" });
+      }
+      send({ t: "mouse_move", x: point.x, y: point.y });
+    },
+    { passive: false }
+  );
+
+  canvas.addEventListener(
+    "touchend",
+    (event) => {
+      if (!canControl) return;
+      event.preventDefault();
+      if (event.touches.length === 0) {
+        scrollAnchor = null;
+        scrollRemainder = 0;
+      }
+      if (!touchOrigin) return;
+
+      const point = touchLast || touchOrigin;
+      if (touchDragging) {
+        send({ t: "mouse_up", x: point.x, y: point.y, button: "left" });
+      } else if (!longPressFired) {
+        // 動かさずに離した = タップ。左クリックとして送る。
+        send({ t: "mouse_down", x: point.x, y: point.y, button: "left" });
+        send({ t: "mouse_up", x: point.x, y: point.y, button: "left" });
+      }
+      endTouchGesture();
+    },
+    { passive: false }
+  );
+
+  canvas.addEventListener("touchcancel", () => {
+    if (touchDragging && touchLast) {
+      send({ t: "mouse_up", x: touchLast.x, y: touchLast.y, button: "left" });
+    }
+    endTouchGesture();
+    scrollAnchor = null;
+  });
 
   /* ---------- キーボード ---------- */
 

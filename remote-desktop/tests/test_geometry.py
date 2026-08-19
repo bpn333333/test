@@ -1,5 +1,5 @@
 from rdcontrol.capture import MIN_DIMENSION, scaled_size
-from rdcontrol.input_control import normalized_to_screen
+from rdcontrol.input_control import normalized_to_screen, screen_to_normalized
 
 
 def test_scaled_size_halves_dimensions():
@@ -35,3 +35,17 @@ def test_offsets_of_a_secondary_monitor_are_applied():
 
 def test_out_of_range_values_are_clamped():
     assert normalized_to_screen(-3.0, 4.0, 0, 0, 800, 600) == (0, 599)
+
+
+def test_screen_coordinates_convert_back_to_normalized():
+    assert screen_to_normalized(960, 540, 0, 0, 1920, 1080) == (0.5, 0.5)
+    assert screen_to_normalized(0, 0, 0, 0, 1920, 1080) == (0.0, 0.0)
+
+
+def test_positions_on_another_monitor_are_reported_as_outside():
+    assert screen_to_normalized(-5, 500, 0, 0, 1920, 1080) is None
+    assert screen_to_normalized(2500, 500, 0, 0, 1920, 1080) is None
+
+
+def test_secondary_monitor_offsets_are_subtracted():
+    assert screen_to_normalized(2560, 512, 1920, 0, 1280, 1024) == (0.5, 0.5)
