@@ -10,7 +10,7 @@
 
 ```bash
 cd remote-desktop
-./run.sh          # Windows は run.bat
+./run.sh          # Windows(PowerShell)は .\run.bat ← 先頭の .\ が必要
 ```
 
 | ファイル | 用途 |

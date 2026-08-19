@@ -16,7 +16,16 @@
 
 ```bash
 cd remote-desktop
-./run.sh                # Windows は run.bat(初回は仮想環境の作成と依存インストールも行う)
+./run.sh                # 初回は仮想環境の作成と依存インストールも行う
+```
+
+Windows(PowerShell)は次のとおり。**先頭の `.\` が必要**です
+(PowerShell はカレントディレクトリのコマンドを既定で実行しないため、
+付けないと "The term 'run.bat' is not recognized" になります):
+
+```powershell
+cd remote-desktop
+.\run.bat
 ```
 
 起動すると、開くべき URL とトークンが表示されます。トークンは起動のたびに変わります。
@@ -41,7 +50,7 @@ cd remote-desktop
 操作する「側」の端末で、トンネルを張ります。つないでいる間だけ通信できます。
 
 ```bash
-./tunnel.sh nori@desktop.local        # Windows は tunnel.bat
+./tunnel.sh nori@desktop.local         # Windows(PowerShell)は .\tunnel.bat nori@desktop.local
 ```
 
 そのターミナルは開いたままにして、**同じ端末のブラウザ**で、サーバーが表示した
@@ -69,7 +78,7 @@ cd remote-desktop
 
 ## 主なオプション
 
-`./run.sh --view-only` のように、そのまま渡せます。
+`./run.sh --view-only`(Windows は `.\run.bat --view-only`)のように、そのまま渡せます。
 
 | オプション | 説明 |
 | --- | --- |
@@ -110,7 +119,8 @@ autossh -M 0 -N -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -L 8765:12
 
 ### LAN 内でトンネルなしに使う
 
-信頼できるネットワーク内に限り `./run.sh --host 0.0.0.0` で待ち受けを広げられます。
+信頼できるネットワーク内に限り `./run.sh --host 0.0.0.0`(Windows は `.\run.bat --host 0.0.0.0`)で
+待ち受けを広げられます。
 ただし**通信は暗号化されません**。インターネットに直接公開しないでください。
 
 ---
@@ -121,6 +131,7 @@ autossh -M 0 -N -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -L 8765:12
 | --- | --- |
 | `bind: Address already in use` | 手元の 8765 番が使用中。`./tunnel.sh mydesk 8765 9000` と手元だけ別ポートにして `http://127.0.0.1:9000/?token=...` を開く(サーバー側は変更不要) |
 | ブラウザが「接続できません」 | トンネルのターミナルを閉じていないか確認。閉じると転送も切れます |
+| PowerShell で `The term 'run.bat' is not recognized` | `.\run.bat` のように先頭に `.\` を付けて実行してください |
 | 401 Unauthorized | トークン違い。起動時に表示された URL をそのまま使う(毎回変わります。固定は `--token`) |
 | 放置すると固まる | 回線側で切断されています。トンネルを張り直すか `autossh` を使ってください |
 | 画面が真っ黒 / 起動時にエラー | デスクトップにログインした状態で起動していますか。SSH 越しに起動しても画面は取得できません |
