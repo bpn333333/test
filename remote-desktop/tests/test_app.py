@@ -9,7 +9,15 @@ import pytest
 from fastapi.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
 
-from rdcontrol.app import WS_TOO_MANY_CLIENTS, WS_UNAUTHORIZED, create_app
+from rdcontrol.app import (
+    AUDIO_TAG,
+    FRAME_TAG,
+    WS_TOO_MANY_CLIENTS,
+    WS_UNAUTHORIZED,
+    create_app,
+)
+from rdcontrol.audio import AudioUnavailable
+from rdcontrol.audio_stream import AudioHub
 from rdcontrol.capture import Frame, MonitorInfo
 from rdcontrol.config import Settings
 
@@ -108,9 +116,29 @@ def controller() -> FakeController:
     return FakeController()
 
 
-def make_client(controller: FakeController | None, **settings_kwargs) -> TestClient:
+class FakeAudioCapture:
+    """一定のかたまりを返し続ける、音の取り込みの偽物。"""
+
+    def __init__(self) -> None:
+        self.closed = False
+
+    def read(self) -> bytes:
+        return b"\x01\x02\x03\x04"
+
+    def close(self) -> None:
+        self.closed = True
+
+
+def make_client(
+    controller: FakeController | None, *, audio_hub=None, **settings_kwargs
+) -> TestClient:
     settings = Settings(token=TOKEN, **settings_kwargs)
-    app = create_app(settings, capture=FakeCapture(), controller=controller)
+    app = create_app(
+        settings,
+        capture=FakeCapture(),
+        controller=controller,
+        audio_hub=audio_hub if audio_hub is not None else AudioHub(factory=FakeAudioCapture),
+    )
     return TestClient(app)
 
 
@@ -199,7 +227,8 @@ def test_hello_describes_the_session_and_frames_start_flowing(controller):
             assert [m["index"] for m in hello["monitors"]] == [0, 1, 2]
 
             message = websocket.receive()
-            assert message.get("bytes", b"").startswith(b"\xff\xd8\xff")
+            # バイナリは先頭 1 バイトが種別(画面か音声か)
+            assert message.get("bytes", b"").startswith(FRAME_TAG + b"\xff\xd8\xff")
 
 
 def test_cursor_position_is_streamed_so_the_client_can_draw_it(controller):
@@ -290,6 +319,60 @@ def test_typed_text_is_sent_to_the_keyboard(controller):
             sync(websocket)
 
     assert ("text", "こんにちは") in controller.snapshot()
+
+
+def test_audio_starts_only_when_the_client_asks_for_it(controller):
+    with make_client(controller) as client:
+        with open_session(client) as websocket:
+            hello = receive_text(websocket)
+            assert hello["audio"] is True
+
+            websocket.send_json({"t": "audio", "enabled": True})
+            while True:
+                message = receive_text(websocket)
+                if message["t"] == "audio":
+                    break
+            assert message["enabled"] is True
+
+            # 音声のかたまりが届く(先頭バイトで画面と区別できる)
+            for _ in range(200):
+                packet = websocket.receive()
+                data = packet.get("bytes")
+                if data and data.startswith(AUDIO_TAG):
+                    assert data[1:] == b"\x01\x02\x03\x04"
+                    break
+            else:
+                raise AssertionError("音声が届きませんでした")
+
+
+def test_unavailable_audio_is_reported_with_its_reason(controller):
+    def broken_capture():
+        raise AudioUnavailable("録音デバイスがありません")
+
+    with make_client(controller, audio_hub=AudioHub(factory=broken_capture)) as client:
+        with open_session(client) as websocket:
+            receive_text(websocket)
+            websocket.send_json({"t": "audio", "enabled": True})
+            while True:
+                message = receive_text(websocket)
+                if message["t"] == "audio":
+                    break
+            assert message["enabled"] is False
+            assert "録音デバイスがありません" in message["message"]
+
+
+def test_audio_can_be_disabled_on_the_server(controller):
+    with make_client(controller, audio=False) as client:
+        with open_session(client) as websocket:
+            hello = receive_text(websocket)
+            assert hello["audio"] is False
+            websocket.send_json({"t": "audio", "enabled": True})
+            while True:
+                message = receive_text(websocket)
+                if message["t"] == "audio":
+                    break
+            assert message["enabled"] is False
+            assert "--no-audio" in message["message"]
 
 
 def test_view_only_server_ignores_input(controller):

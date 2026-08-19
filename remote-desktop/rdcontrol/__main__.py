@@ -43,6 +43,8 @@ def build_parser() -> argparse.ArgumentParser:
                         help="送信時の縮小率 0.2-1.0 (既定: 1.0)")
     parser.add_argument("--view-only", action="store_true",
                         help="画面共有のみ。マウス・キーボード操作を受け付けない")
+    parser.add_argument("--no-audio", action="store_true",
+                        help="音声を送らない(既定では、接続側が要求したときだけ送る)")
     parser.add_argument("--max-clients", type=int, default=4, help="同時接続数の上限 (既定: 4)")
     parser.add_argument("--ssh-target", default="",
                         help="案内に表示する SSH 接続先 (例: user@host)。既定はこのマシンから自動推定")
@@ -128,6 +130,7 @@ def settings_from_args(args: argparse.Namespace) -> Settings:
         quality=max(10, min(95, args.quality)),
         scale=max(0.2, min(1.0, args.scale)),
         view_only=args.view_only,
+        audio=not args.no_audio,
         max_clients=max(1, args.max_clients),
         ssh_target=args.ssh_target,
     )

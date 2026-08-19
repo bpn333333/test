@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="referrer" content="no-referrer">
+<!-- ホーム画面に追加したときに、ブラウザのバーを出さずに起動する(iOS / Android) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="rdcontrol">
+<meta name="theme-color" content="#14161a">
+<link rel="manifest" href="/static/manifest.webmanifest">
 <title>rdcontrol — リモートデスクトップ</title>
 <link rel="stylesheet" href="/static/style.css">
 </head>
@@ -39,10 +45,12 @@
     ⌨ 入力
   </button>
   <button id="zoomReset" type="button" class="btn" hidden>⤢ 100%</button>
-  <button id="fullscreen" type="button" class="btn">全画面</button>
+  <button id="audioToggle" type="button" class="btn" aria-pressed="false">🔊 音声</button>
+  <button id="fullscreen" type="button" class="btn" aria-pressed="false">⛶ 全画面</button>
 </header>
 
 <main id="stage" class="stage">
+  <button id="exitImmersive" type="button" class="btn btn--floating" hidden>✕ 全画面を終了</button>
   <canvas id="screen" width="1280" height="720"></canvas>
   <!-- キャプチャ画像にマウスポインタは写らないので、位置を受け取って重ねて描く -->
   <div id="cursor" class="cursor" hidden aria-hidden="true">

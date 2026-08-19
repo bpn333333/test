@@ -16,7 +16,7 @@ _POINTER_TYPES = frozenset({"mouse_move", "mouse_down", "mouse_up", "scroll"})
 # キーボード系イベント
 _KEY_TYPES = frozenset({"key_down", "key_up"})
 
-MESSAGE_TYPES = _POINTER_TYPES | _KEY_TYPES | frozenset({"text", "config", "ping"})
+MESSAGE_TYPES = _POINTER_TYPES | _KEY_TYPES | frozenset({"text", "config", "audio", "ping"})
 
 MAX_MESSAGE_BYTES = 8 * 1024
 MAX_TEXT_LENGTH = 4096
@@ -99,6 +99,11 @@ def parse_client_message(raw: str | bytes) -> dict[str, Any]:
 
     if msg_type == "text":
         return {"t": "text", "text": _string(payload.get("text", ""), "text", MAX_TEXT_LENGTH)}
+
+    if msg_type == "audio":
+        enabled = payload.get("enabled", True)
+        _require(isinstance(enabled, bool), "enabled must be a boolean")
+        return {"t": "audio", "enabled": enabled}
 
     if msg_type == "config":
         message = {"t": "config"}

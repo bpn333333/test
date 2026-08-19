@@ -18,6 +18,8 @@ from fastapi import FastAPI, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from .audio import AudioUnavailable
+from .audio_stream import AudioHub
 from .auth import AuthGuard
 from .capture import CaptureUnavailable, ScreenCapture
 from .config import Settings
@@ -57,6 +59,10 @@ UNAUTHORIZED_PAGE = """<!DOCTYPE html>
 </body></html>
 """
 
+# バイナリで送るものが 2 種類になったので、先頭 1 バイトで種別を示す
+FRAME_TAG = b"\x01"   # 画面(JPEG)
+AUDIO_TAG = b"\x02"   # 音声(モノラル 24kHz 16bit PCM)
+
 # WebSocket のクローズコード(4000 番台はアプリ定義)
 WS_UNAUTHORIZED = 4401
 WS_TOO_MANY_CLIENTS = 4429
@@ -71,6 +77,7 @@ def create_app(
     *,
     capture: Any = None,
     controller: Any = _UNSET,
+    audio_hub: Any = None,
 ) -> FastAPI:
     """アプリを組み立てる。
 
@@ -80,6 +87,7 @@ def create_app(
     if capture is None:
         capture = ScreenCapture(monitor=settings.monitor)
     guard = AuthGuard(settings.token)
+    audio_hub = AudioHub() if audio_hub is None else audio_hub
     manager = SessionManager(settings)
 
     input_error: str | None = None
@@ -99,6 +107,7 @@ def create_app(
         yield
         if controller is not None:
             controller.release_all()
+        await audio_hub.aclose()
         capture.close()
 
     app = FastAPI(
@@ -114,6 +123,7 @@ def create_app(
     app.state.manager = manager
     app.state.controller = controller
     app.state.input_error = input_error
+    app.state.audio_hub = audio_hub
 
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
@@ -166,6 +176,54 @@ def create_app(
     return app
 
 
+class _AudioLink:
+    """1 接続分の音声配信。聞き始め / 聞き終わりの後始末をまとめる。"""
+
+    def __init__(self, websocket: WebSocket, hub: AudioHub) -> None:
+        self._websocket = websocket
+        self._hub = hub
+        self._queue: asyncio.Queue | None = None
+        self._task: asyncio.Task | None = None
+
+    @property
+    def active(self) -> bool:
+        return self._task is not None
+
+    async def enable(self) -> str | None:
+        """配信を始める。失敗した場合は理由(利用者に見せる文言)を返す。"""
+        if self.active:
+            return None
+        try:
+            self._queue = await self._hub.subscribe()
+        except AudioUnavailable as exc:
+            return str(exc)
+        self._task = asyncio.create_task(self._send_loop())
+        return None
+
+    async def disable(self) -> None:
+        task, self._task = self._task, None
+        if task is not None:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+        queue, self._queue = self._queue, None
+        if queue is not None:
+            await self._hub.unsubscribe(queue)
+
+    async def _send_loop(self) -> None:
+        assert self._queue is not None
+        while True:
+            chunk = await self._queue.get()
+            if chunk is None:   # 取り込みが止まった
+                await self._websocket.send_json(
+                    {"t": "audio", "enabled": False, "message": "音声の取り込みが止まりました。"}
+                )
+                return
+            try:
+                await self._websocket.send_bytes(AUDIO_TAG + chunk)
+            except (WebSocketDisconnect, RuntimeError):
+                return
+
+
 async def _serve_session(websocket: WebSocket, session: ClientSession, app: FastAPI) -> None:
     settings: Settings = app.state.settings
     capture: ScreenCapture = app.state.capture
@@ -186,10 +244,12 @@ async def _serve_session(websocket: WebSocket, session: ClientSession, app: Fast
             "quality": session.quality,
             "fps": session.fps,
             "scale": session.scale,
+            "audio": settings.audio,
         }
     )
 
-    receiver = asyncio.create_task(_receive_loop(websocket, session, app))
+    audio = _AudioLink(websocket, app.state.audio_hub)
+    receiver = asyncio.create_task(_receive_loop(websocket, session, app, audio))
     streamer = asyncio.create_task(_stream_loop(websocket, session, app))
     done, pending = await asyncio.wait(
         {receiver, streamer}, return_when=asyncio.FIRST_COMPLETED
@@ -197,6 +257,7 @@ async def _serve_session(websocket: WebSocket, session: ClientSession, app: Fast
     for task in pending:
         task.cancel()
     await asyncio.gather(*pending, return_exceptions=True)
+    await audio.disable()
 
     # 片方が落ちたときも、両方の例外を必ず回収してから再送出する
     # (回収し損ねると "Task exception was never retrieved" になる)
@@ -234,7 +295,7 @@ async def _stream_loop(websocket: WebSocket, session: ClientSession, app: FastAP
         now = time.monotonic()
         if frame.digest != last_digest or now - last_sent > 2.0:
             try:
-                await websocket.send_bytes(frame.jpeg)
+                await websocket.send_bytes(FRAME_TAG + frame.jpeg)
             except (WebSocketDisconnect, RuntimeError):
                 # 相手が切断した直後の送信。配信ループを静かに終える。
                 return
@@ -268,7 +329,9 @@ async def _stream_loop(websocket: WebSocket, session: ClientSession, app: FastAP
         await asyncio.sleep(max(0.0, session.frame_interval - elapsed))
 
 
-async def _receive_loop(websocket: WebSocket, session: ClientSession, app: FastAPI) -> None:
+async def _receive_loop(
+    websocket: WebSocket, session: ClientSession, app: FastAPI, audio: _AudioLink
+) -> None:
     """クライアントからの入力イベントを処理する。"""
     settings: Settings = app.state.settings
     capture: ScreenCapture = app.state.capture
@@ -293,6 +356,22 @@ async def _receive_loop(websocket: WebSocket, session: ClientSession, app: FastA
 
         if kind == "ping":
             await websocket.send_json({"t": "pong"})
+            continue
+
+        if kind == "audio":
+            if not settings.audio:
+                await websocket.send_json(
+                    {"t": "audio", "enabled": False,
+                     "message": "サーバーが --no-audio で起動しているため音声は送れません。"}
+                )
+            elif message["enabled"]:
+                error = await audio.enable()
+                await websocket.send_json(
+                    {"t": "audio", "enabled": error is None, "message": error}
+                )
+            else:
+                await audio.disable()
+                await websocket.send_json({"t": "audio", "enabled": False})
             continue
 
         if kind == "config":

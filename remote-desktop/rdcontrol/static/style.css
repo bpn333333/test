@@ -93,6 +93,18 @@ select {
 
 .keys { display: flex; gap: 6px; flex-wrap: wrap; }
 
+/* 全画面表示。iPhone の Safari は要素の全画面表示に対応しないため、
+   バーを隠して画面いっぱいに使う方式も用意する。 */
+body.immersive .bar { display: none; }
+
+.btn--floating {
+  position: absolute;
+  top: max(8px, env(safe-area-inset-top));
+  right: max(8px, env(safe-area-inset-right));
+  z-index: 3;
+  background: rgba(30, 33, 40, 0.85);
+}
+
 .stage {
   position: relative;
   flex: 1 1 auto;

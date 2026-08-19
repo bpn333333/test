@@ -31,6 +31,7 @@ class Settings:
     quality: int = DEFAULT_QUALITY
     scale: float = DEFAULT_SCALE
     view_only: bool = False
+    audio: bool = True          # PC の音をクライアントへ送るか
     max_clients: int = 4
     idle_timeout: float = 0.0  # 0 なら無効
     ssh_target: str = ""  # 案内に表示する SSH 接続先。空なら自動推定

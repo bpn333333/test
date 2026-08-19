@@ -1,0 +1,8 @@
+{
+  "name": "rdcontrol — リモートデスクトップ",
+  "short_name": "rdcontrol",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#14161a",
+  "theme_color": "#14161a"
+}

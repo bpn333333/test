@@ -26,6 +26,13 @@
   const softInput = el("softInput");
   const softKeyboardButton = el("softKeyboard");
   const zoomResetButton = el("zoomReset");
+  const audioButton = el("audioToggle");
+  const fullscreenButton = el("fullscreen");
+  const exitImmersiveButton = el("exitImmersive");
+
+  const FRAME_TAG = 1;
+  const AUDIO_TAG = 2;
+  const AUDIO_RATE = 24000;          // サーバーが送ってくる音の標本化周波数
 
   const MOUSE_MOVE_INTERVAL_MS = 33; // 約 30 回/秒に間引く
   const BUTTONS = ["left", "middle", "right"];
@@ -57,8 +64,15 @@
     socket.addEventListener("message", (event) => {
       if (typeof event.data === "string") {
         handleControlMessage(JSON.parse(event.data));
-      } else {
-        drawFrame(event.data);
+        return;
+      }
+      // バイナリは先頭 1 バイトが種別(1 = 画面、2 = 音声)
+      const kind = new Uint8Array(event.data, 0, 1)[0];
+      const body = event.data.slice(1);
+      if (kind === FRAME_TAG) {
+        drawFrame(body);
+      } else if (kind === AUDIO_TAG) {
+        playAudio(body);
       }
     });
 
@@ -100,6 +114,7 @@
         if (message.input_error) {
           modeEl.title = message.input_error;
         }
+        audioButton.hidden = message.audio === false;
         fillMonitors(message.monitors, message.monitor);
         el("quality").value = message.quality;
         el("fps").value = message.fps;
@@ -112,6 +127,13 @@
         el("scale").value = Math.round(message.scale * 100);
         monitorSel.value = String(message.monitor);
         syncOutputs();
+        break;
+      case "audio":
+        audioButton.setAttribute("aria-pressed", String(Boolean(message.enabled)));
+        if (!message.enabled && message.message) {
+          setStatus(`音声を再生できません: ${message.message}`, "err");
+          if (audioContext) audioContext.suspend();
+        }
         break;
       case "cursor":
         // 画面キャプチャにポインタは写らないため、位置を受け取って重ねて描く
@@ -158,6 +180,66 @@
     framesInWindow = 0;
     bytesInWindow = 0;
   }, 1000);
+
+  /* ---------- 音声の再生 ---------- */
+
+  // iOS は「利用者の操作の中で」音の再生を始めないと鳴らないため、ボタン経由で開始する。
+  let audioContext = null;
+  let audioPlayHead = 0;      // 次のかたまりを鳴らし始める時刻
+
+  async function startAudio() {
+    if (!audioContext) {
+      const AudioCtor = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtor) {
+        setStatus("このブラウザは音声再生に対応していません", "err");
+        return false;
+      }
+      audioContext = new AudioCtor();
+    }
+    await audioContext.resume();
+    audioPlayHead = 0;
+    send({ t: "audio", enabled: true });
+    return true;
+  }
+
+  function stopAudio() {
+    send({ t: "audio", enabled: false });
+    if (audioContext) audioContext.suspend();
+  }
+
+  function playAudio(buffer) {
+    if (!audioContext || audioContext.state !== "running") return;
+    const pcm = new Int16Array(buffer);
+    if (pcm.length === 0) return;
+
+    // 標本化周波数を指定して作れば、端末側が自動で合わせて再生する
+    const audioBuffer = audioContext.createBuffer(1, pcm.length, AUDIO_RATE);
+    const channel = audioBuffer.getChannelData(0);
+    for (let i = 0; i < pcm.length; i += 1) {
+      channel[i] = pcm[i] / 32768;
+    }
+    const source = audioContext.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(audioContext.destination);
+
+    // 少し先に置いて鳴らす。通信の揺らぎで途切れるのを防ぐ。
+    const now = audioContext.currentTime;
+    if (audioPlayHead < now + 0.02) {
+      audioPlayHead = now + 0.12;
+    }
+    source.start(audioPlayHead);
+    audioPlayHead += audioBuffer.duration;
+  }
+
+  audioButton.addEventListener("click", async () => {
+    const turningOn = audioButton.getAttribute("aria-pressed") !== "true";
+    if (turningOn) {
+      if (await startAudio()) audioButton.setAttribute("aria-pressed", "true");
+    } else {
+      stopAudio();
+      audioButton.setAttribute("aria-pressed", "false");
+    }
+  });
 
   /* ---------- 表示の拡大・移動 ---------- */
 
@@ -704,12 +786,51 @@
     send({ t: "config", monitor: Number(monitorSel.value) });
   });
 
-  el("fullscreen").addEventListener("click", () => {
-    if (document.fullscreenElement) {
-      document.exitFullscreen();
-    } else {
-      stage.requestFullscreen().catch(() => setStatus("全画面表示を開始できませんでした", "err"));
+  /* ---------- 全画面 ---------- */
+
+  // iPhone の Safari は要素の全画面表示に対応していない。対応環境では本来の
+  // 全画面にし、そうでなければ上下のバーを隠して画面いっぱいに使う。
+  function supportsFullscreen() {
+    return typeof stage.requestFullscreen === "function";
+  }
+
+  function setImmersive(on) {
+    document.body.classList.toggle("immersive", on);
+    exitImmersiveButton.hidden = !on;
+    fullscreenButton.setAttribute("aria-pressed", String(on));
+    // 表示領域の大きさが変わるので、拡大とカーソルの位置を計算し直す
+    applyTransform();
+  }
+
+  function enterFullscreen() {
+    setImmersive(true);
+    if (supportsFullscreen() && !document.fullscreenElement) {
+      stage.requestFullscreen().catch(() => {
+        /* 拒否されても、バーを隠した表示は有効なままにする */
+      });
+    } else if (!supportsFullscreen() && !window.navigator.standalone) {
+      setStatus("共有 → ホーム画面に追加 で開くと、より広く使えます", "ok");
     }
+  }
+
+  function exitFullscreen() {
+    setImmersive(false);
+    if (document.fullscreenElement) document.exitFullscreen();
+  }
+
+  fullscreenButton.addEventListener("click", () => {
+    if (document.body.classList.contains("immersive")) {
+      exitFullscreen();
+    } else {
+      enterFullscreen();
+    }
+  });
+
+  exitImmersiveButton.addEventListener("click", exitFullscreen);
+
+  document.addEventListener("fullscreenchange", () => {
+    // 端末側の操作で全画面が解除されたときに表示を合わせる
+    if (!document.fullscreenElement && supportsFullscreen()) setImmersive(false);
   });
 
   /* ---------- 表示ヘルパ ---------- */
