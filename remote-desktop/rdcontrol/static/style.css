@@ -1,0 +1,133 @@
+:root {
+  color-scheme: dark;
+  --bg: #14161a;
+  --bar: #1e2128;
+  --line: #2c313b;
+  --fg: #e6e8ec;
+  --muted: #9aa2b1;
+  --accent: #5aa9ff;
+  --ok: #4ec38a;
+  --warn: #e0b341;
+  --err: #e2685f;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 13px/1.5 system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--bar);
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.bar--footer {
+  border-bottom: none;
+  border-top: 1px solid var(--line);
+}
+
+.brand { font-weight: 600; letter-spacing: 0.02em; }
+.spacer { flex: 1 1 auto; }
+
+.status { font-size: 12px; }
+.status--ok { color: var(--ok); }
+.status--pending { color: var(--warn); }
+.status--err { color: var(--err); }
+
+.badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.field input[type="range"] { width: 90px; }
+.field output { color: var(--fg); min-width: 3.5em; }
+
+select {
+  background: #262a33;
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 3px 6px;
+}
+
+.btn {
+  background: #262a33;
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+
+.btn:hover { border-color: var(--accent); }
+.btn[aria-pressed="true"] { background: var(--accent); color: #10131a; border-color: var(--accent); }
+.btn--key { font-size: 11px; padding: 4px 8px; }
+
+.keys { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.stage {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #0c0e12;
+}
+
+#screen {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  cursor: crosshair;
+  touch-action: none;
+  image-rendering: auto;
+}
+
+.stage--viewonly #screen { cursor: default; }
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  background: rgba(12, 14, 18, 0.82);
+  color: var(--muted);
+  white-space: pre-line;
+}
+
+.overlay[hidden] { display: none; }
+
+.stats { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; }

@@ -1,0 +1,8 @@
+# サーバー本体
+fastapi>=0.110
+uvicorn[standard]>=0.27
+# 画面キャプチャ
+mss>=9.0
+pillow>=10.0
+# マウス・キーボード操作
+pynput>=1.7
