@@ -156,6 +156,17 @@ def test_page_requires_a_valid_token(controller):
         assert "rdcontrol" in response.text
 
 
+def test_unauthorized_page_explains_the_common_causes_without_leaking_the_token(controller):
+    with make_client(controller) as client:
+        body = client.get("/", params={"token": "..."}).text
+        # 実際に多い原因(プレースホルダのまま / 途中で切れた / 再起動でトークンが変わった)
+        assert "プレースホルダ" in body
+        assert "切れて" in body
+        assert "起動のたびに変わります" in body
+        # 未認証の相手にトークンそのものを見せない
+        assert TOKEN not in body
+
+
 def test_healthz_is_open_and_reports_client_count(controller):
     with make_client(controller) as client:
         response = client.get("/healthz")

@@ -29,6 +29,29 @@ logger = logging.getLogger("rdcontrol")
 
 STATIC_DIR = Path(__file__).parent / "static"
 
+# 401 ページ。トークンは絶対に載せない(未認証の相手に見せる画面のため)。
+# 実際に多い原因は「手順の例に書かれたプレースホルダをそのまま開いた」なので、
+# そこを最初に確認してもらう。
+UNAUTHORIZED_PAGE = """<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8"><title>401 Unauthorized</title></head>
+<body style="font-family: system-ui, sans-serif; line-height: 1.7; margin: 3em auto; max-width: 40em;">
+<h1>401 Unauthorized</h1>
+<p>トークンが正しくありません。次を確認してください。</p>
+<ol>
+  <li>URL の <code>token=</code> の後ろが <code>...</code> や <code>&lt;トークン&gt;</code> のような
+      <b>説明用のプレースホルダのまま</b>になっていませんか。
+      サーバーを起動したターミナルに表示されている、実際のランダム文字列に置き換えてください。</li>
+  <li>URL の末尾が途中で切れていませんか(折り返された行をコピーすると起きます)。</li>
+  <li>サーバーを再起動していませんか。トークンは起動のたびに変わります。</li>
+</ol>
+<p>毎回同じ URL で開きたい場合は、トークンを固定して起動できます。
+   起動時に <code>--open</code> を付ければブラウザが自動で開きます。</p>
+<pre style="background:#f4f4f6; padding:1em; overflow-x:auto;">python -m rdcontrol --token mytoken123 --open</pre>
+<p style="color:#666; font-size:0.9em;">認証失敗が続くと、一定時間このページしか返さなくなります
+   (既定: 8 回で 5 分)。その場合はサーバーを再起動してください。</p>
+</body></html>
+"""
+
 # WebSocket のクローズコード(4000 番台はアプリ定義)
 WS_UNAUTHORIZED = 4401
 WS_TOO_MANY_CLIENTS = 4429
@@ -98,11 +121,7 @@ def create_app(
         client_ip = request.client.host if request.client else "unknown"
         if not guard.check(client_ip, token):
             logger.warning("認証失敗: %s (失敗 %d 回)", client_ip, guard.failures(client_ip))
-            return HTMLResponse(
-                "<h1>401 Unauthorized</h1><p>トークンが正しくありません。"
-                "サーバー起動時に表示された URL をそのまま開いてください。</p>",
-                status_code=401,
-            )
+            return HTMLResponse(UNAUTHORIZED_PAGE, status_code=401)
         return FileResponse(STATIC_DIR / "index.html")
 
     @app.websocket("/ws")
