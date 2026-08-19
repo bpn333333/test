@@ -7,8 +7,15 @@
 
 from __future__ import annotations
 
+import logging
+import sys
 import threading
 from typing import Any
+
+logger = logging.getLogger("rdcontrol.input")
+
+# SendInput の絶対座標は、仮想デスクトップ全体を 0〜65535 に写像したもの
+ABSOLUTE_RANGE = 65535
 
 
 class InputUnavailable(RuntimeError):
@@ -76,6 +83,112 @@ def build_key_map(keyboard_module: Any) -> dict[str, Any]:
     return mapping
 
 
+def absolute_mouse_coordinates(
+    x: int, y: int, left: int, top: int, width: int, height: int
+) -> tuple[int, int]:
+    """画面座標を SendInput 用の絶対座標(0〜65535)へ変換する。
+
+    left/top/width/height は仮想デスクトップ全体(全モニタを含む矩形)。
+    """
+    nx = round((x - left) * ABSOLUTE_RANGE / max(1, width - 1))
+    ny = round((y - top) * ABSOLUTE_RANGE / max(1, height - 1))
+    return (
+        min(ABSOLUTE_RANGE, max(0, nx)),
+        min(ABSOLUTE_RANGE, max(0, ny)),
+    )
+
+
+class WindowsPointer:
+    """Windows でカーソル移動を SendInput として送るための補助。
+
+    pynput は Windows でのカーソル移動に SetCursorPos を使う。これは
+    ポインタの座標を書き換えるだけで、マウス移動イベントを入力ストリームに
+    流さないため、多くのアプリでホバー(マウスオーバー)が反応しない。
+    移動も SendInput で送ることで、実際にマウスを動かしたときと同じ扱いになる。
+    """
+
+    # GetSystemMetrics のインデックス(仮想デスクトップ全体の位置とサイズ)
+    SM_XVIRTUALSCREEN = 76
+    SM_YVIRTUALSCREEN = 77
+    SM_CXVIRTUALSCREEN = 78
+    SM_CYVIRTUALSCREEN = 79
+
+    MOUSEEVENTF_MOVE = 0x0001
+    MOUSEEVENTF_ABSOLUTE = 0x8000
+    MOUSEEVENTF_VIRTUALDESK = 0x4000
+
+    def __init__(self) -> None:
+        import ctypes
+        from ctypes import wintypes
+
+        self._ctypes = ctypes
+        self._user32 = ctypes.WinDLL("user32", use_last_error=True)
+
+        class MOUSEINPUT(ctypes.Structure):
+            _fields_ = [
+                ("dx", wintypes.LONG),
+                ("dy", wintypes.LONG),
+                ("mouseData", wintypes.DWORD),
+                ("dwFlags", wintypes.DWORD),
+                ("time", wintypes.DWORD),
+                ("dwExtraInfo", wintypes.WPARAM),  # ULONG_PTR 相当
+            ]
+
+        class INPUT(ctypes.Structure):
+            _fields_ = [("type", wintypes.DWORD), ("mi", MOUSEINPUT)]
+
+        self._INPUT = INPUT
+        self._MOUSEINPUT = MOUSEINPUT
+        self._user32.SendInput.argtypes = (
+            wintypes.UINT,
+            ctypes.POINTER(INPUT),
+            ctypes.c_int,
+        )
+        self._user32.SendInput.restype = wintypes.UINT
+
+    def virtual_screen(self) -> tuple[int, int, int, int]:
+        metrics = self._user32.GetSystemMetrics
+        return (
+            metrics(self.SM_XVIRTUALSCREEN),
+            metrics(self.SM_YVIRTUALSCREEN),
+            metrics(self.SM_CXVIRTUALSCREEN),
+            metrics(self.SM_CYVIRTUALSCREEN),
+        )
+
+    def move_to(self, x: int, y: int) -> bool:
+        """カーソルを動かす。送信できたら True。"""
+        left, top, width, height = self.virtual_screen()
+        if width <= 0 or height <= 0:
+            return False
+        nx, ny = absolute_mouse_coordinates(x, y, left, top, width, height)
+        event = self._INPUT(
+            type=0,  # INPUT_MOUSE
+            mi=self._MOUSEINPUT(
+                dx=nx,
+                dy=ny,
+                mouseData=0,
+                dwFlags=self.MOUSEEVENTF_MOVE
+                | self.MOUSEEVENTF_ABSOLUTE
+                | self.MOUSEEVENTF_VIRTUALDESK,
+                time=0,
+                dwExtraInfo=0,
+            ),
+        )
+        sent = self._user32.SendInput(1, self._ctypes.byref(event), self._ctypes.sizeof(event))
+        return sent == 1
+
+
+def _make_windows_pointer() -> WindowsPointer | None:
+    """Windows なら SendInput 版のポインタを用意する。失敗したら None。"""
+    if sys.platform != "win32":
+        return None
+    try:
+        return WindowsPointer()
+    except Exception as exc:  # ctypes まわりは環境依存で落ちうる
+        logger.warning("SendInput を使えないため SetCursorPos を使います: %s", exc)
+        return None
+
+
 class InputController:
     """1 セッション分の入力状態を保持するコントローラ。"""
 
@@ -100,6 +213,7 @@ class InputController:
         self._lock = threading.Lock()
         self._pressed_keys: set[Any] = set()
         self._pressed_buttons: set[Any] = set()
+        self._windows_pointer = _make_windows_pointer()
 
     # ---- 変換 -------------------------------------------------------
 
@@ -122,6 +236,15 @@ class InputController:
         return int(x), int(y)
 
     def move_to(self, x: int, y: int) -> None:
+        # Windows では SendInput を優先する(SetCursorPos ではホバーが反応しない)
+        pointer = self._windows_pointer
+        if pointer is not None:
+            try:
+                if pointer.move_to(int(x), int(y)):
+                    return
+            except Exception as exc:
+                logger.warning("SendInput での移動に失敗しました。以後は従来の方法を使います: %s", exc)
+                self._windows_pointer = None
         self._mouse.position = (int(x), int(y))
 
     def mouse_down(self, x: int, y: int, button: str) -> None:
