@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# 実行時に生成されるもの。認証情報や配信履歴が入るのでコミットしない
+data/*.log
+data/*_state.json
+data/parity_*.csv
+data/*.csv
+.env
+
+# MT5 のコンパイル成果物
+*.ex5
+*.ex4
