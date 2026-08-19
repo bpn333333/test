@@ -37,13 +37,17 @@ python -m pytest            # テスト
 PYTHONPATH=monitor python -m tradetools_monitor --once   # 監視を1回実行
 ```
 
-## 商品化・配信するなら先に読むもの
+## 事業として進めるなら
 
-[`docs/COMPLIANCE.md`](docs/COMPLIANCE.md)
+| ドキュメント | 内容 |
+|---|---|
+| [`docs/BUSINESS_MODEL.md`](docs/BUSINESS_MODEL.md) | 事業構造・収益源・ユニットエコノミクス・ロードマップ・未決事項 |
+| [`docs/MARKET_RESEARCH.md`](docs/MARKET_RESEARCH.md) | 販売プラットフォーム・ブローカー・Kindle・配信チャネルの調査 |
+| [`docs/COMPLIANCE.md`](docs/COMPLIANCE.md) | 日本・米国の規制論点と、配信表現のチェックリスト |
 
-有償でシグナルを配信すると、金商法の投資助言・代理業の登録が論点になる。
-**何を有償にするのか(ツールか、シグナルか)を先に決めないと、
-作るものも売り方も変わる。**
+有償でシグナルを配信すると、日本では金商法の投資助言・代理業、
+米国では CTA 登録が論点になる。**何を有償にするのか(ツールか、シグナルか)を
+先に決めないと、作るものも売り方も変わる。**
 
 ## 次にやること(順番に意味がある)
 
