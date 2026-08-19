@@ -42,6 +42,9 @@ class FakeCapture:
     def current_monitor(self):
         return next(m for m in self._monitors if m.index == self.monitor_index)
 
+    def poll_layout(self, **_kwargs):
+        return None   # 構成は変わらない
+
     def select_monitor(self, index: int) -> bool:
         if not any(m.index == index for m in self._monitors):
             return False

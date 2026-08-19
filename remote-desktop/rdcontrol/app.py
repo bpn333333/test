@@ -348,6 +348,20 @@ async def _stream_loop(websocket: WebSocket, session: ClientSession, app: FastAP
             last_digest = frame.digest
             last_sent = now
 
+        # ディスプレイの数や解像度が変わっていないか、一定間隔で確かめる
+        changed = capture.poll_layout()
+        if changed is not None:
+            await websocket.send_json(
+                {
+                    "t": "monitors",
+                    "monitors": [
+                        {"index": m.index, "label": m.label, "width": m.width, "height": m.height}
+                        for m in changed
+                    ],
+                    "monitor": capture.monitor_index,
+                }
+            )
+
         # キャプチャ画像にマウスポインタは写らない(OS がカーソルを画面バッファに
         # 描かないため)。位置だけ別に送り、ブラウザ側で重ねて表示する。
         controller: InputController | None = app.state.controller

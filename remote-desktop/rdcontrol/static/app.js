@@ -129,6 +129,11 @@
         monitorSel.value = String(message.monitor);
         syncOutputs();
         break;
+      case "monitors":
+        // PC 側でディスプレイの数や解像度が変わった
+        fillMonitors(message.monitors, message.monitor);
+        setStatus("ディスプレイの構成が変わりました", "ok");
+        break;
       case "audio":
         audioButton.setAttribute("aria-pressed", String(Boolean(message.enabled)));
         if (!message.enabled && message.message) {
