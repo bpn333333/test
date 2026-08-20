@@ -77,7 +77,7 @@ def row_to_record(row: ComparisonRow) -> dict[str, Any]:
         "商品名": row.name,
         "淘宝価格_元": taobao.price if taobao else None,
         "淘宝リンク": taobao.url if taobao else "",
-        "日本着原価_円": round(row.cost_jpy) if row.cost_jpy is not None else None,
+        "仕入値_円": round(row.cost_jpy) if row.cost_jpy is not None else None,
         "Amazon価格_円": row.amazon_price,
         "Amazonリンク": amazon.url if amazon else "",
         "Amazonランキング": row.amazon_rank,
@@ -94,17 +94,24 @@ def row_to_record(row: ComparisonRow) -> dict[str, Any]:
         "楽天価格差_円": round(row.diff(RAKUTEN)) if row.diff(RAKUTEN) is not None else None,
         "重さ_g": round(row.weight_g) if row.weight_g else None,
         "重さ取得元": row.weight_source,
-        "原価内訳": row.landed.to_dict() if row.landed else None,
+        "仕入値内訳": row.landed.to_dict() if row.landed else None,
         "為替_CNYJPY": round(row.fx_rate, 3) if row.fx_rate else None,
         "警告": "; ".join(row.errors),
     }
 
 
 # --- コンソール ----------------------------------------------------------
+COST_LABELS = {"item": "商品代", "landed": "原価"}
+
+
+def cost_label(mode: str = "item") -> str:
+    return COST_LABELS.get(mode, "仕入値")
+
+
 CONSOLE_COLUMNS = [
     ("#", 3, "right"),
     ("商品名", 26, "left"),
-    ("原価", 8, "right"),
+    ("{cost}", 8, "right"),
     ("Amazon", 8, "right"),
     ("楽天", 8, "right"),
     ("価格差", 9, "right"),
@@ -115,12 +122,18 @@ CONSOLE_COLUMNS = [
 ]
 
 
-def render_console(rows: Iterable[ComparisonRow], *, show_links: bool = True) -> str:
+def render_console(
+    rows: Iterable[ComparisonRow], *, show_links: bool = True, mode: str = "item"
+) -> str:
     rows = list(rows)
     lines: list[str] = []
 
-    header = " ".join(pad(name, width, "center") for name, width, _ in CONSOLE_COLUMNS)
-    separator = " ".join("-" * width for _, width, _ in CONSOLE_COLUMNS)
+    columns = [
+        (name.format(cost=cost_label(mode)), width, align)
+        for name, width, align in CONSOLE_COLUMNS
+    ]
+    header = " ".join(pad(name, width, "center") for name, width, _ in columns)
+    separator = " ".join("-" * width for _, width, _ in columns)
     lines.append(header)
     lines.append(separator)
 
@@ -140,7 +153,7 @@ def render_console(rows: Iterable[ComparisonRow], *, show_links: bool = True) ->
         lines.append(
             " ".join(
                 pad(value, width, align)
-                for value, (_, width, align) in zip(values, CONSOLE_COLUMNS)
+                for value, (_, width, align) in zip(values, columns)
             )
         )
 
@@ -187,7 +200,7 @@ def render_summary(rows: list[ComparisonRow], fx, elapsed: Optional[float] = Non
 CSV_COLUMNS = [
     "商品名",
     "淘宝価格_元",
-    "日本着原価_円",
+    "仕入値_円",
     "Amazon価格_円",
     "楽天価格_円",
     "最高値モール",
@@ -290,7 +303,7 @@ document.querySelectorAll('th[data-idx]').forEach(function(th){
 
 HTML_HEADERS = [
     ("商品名", "name"),
-    ("原価(円)", ""),
+    ("{cost}(円)", ""),
     ("Amazon(円)", ""),
     ("楽天(円)", ""),
     ("価格差(円)", ""),
@@ -306,8 +319,19 @@ def _cell(value: str, sort_value: Any = "", css: str = "") -> str:
     return f'<td data-v="{html.escape(str(sort_value))}"{classes}>{value}</td>'
 
 
-def render_html(rows: list[ComparisonRow], *, fx=None, title: str = "淘宝 × 日本 価格差レポート") -> str:
+def render_html(
+    rows: list[ComparisonRow],
+    *,
+    fx=None,
+    title: str = "淘宝 × 日本 価格差レポート",
+    mode: str = "item",
+) -> str:
     generated = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M")
+    diff_note = (
+        "商品代(淘宝価格の円換算)"
+        if mode != "landed"
+        else "日本着原価(商品代+中国国内送料+代行手数料+国際送料+税)"
+    )
     priced = [r for r in rows if r.best_diff is not None]
     avg = sum(r.best_diff for r in priced) / len(priced) if priced else None
 
@@ -323,7 +347,8 @@ def render_html(rows: list[ComparisonRow], *, fx=None, title: str = "淘宝 × �
     )
 
     header_html = "".join(
-        f'<th data-idx="{index}" class="{css}">{html.escape(label)}</th>'
+        f'<th data-idx="{index}" class="{css}">'
+        f"{html.escape(label.format(cost=cost_label(mode)))}</th>"
         for index, (label, css) in enumerate(HTML_HEADERS)
     )
 
@@ -362,7 +387,7 @@ def render_html(rows: list[ComparisonRow], *, fx=None, title: str = "淘宝 × �
 <title>{html.escape(title)}</title><style>{HTML_STYLE}</style></head>
 <body>
 <h1>{html.escape(title)}</h1>
-<div class="meta">生成 {generated} ／ 価格差 = 日本側の最高値 − 日本着原価(商品代+中国国内送料+代行手数料+国際送料+税)。
+<div class="meta">生成 {generated} ／ 価格差 = 日本側の最高値 − {html.escape(diff_note)}。
 ランキングは Amazon 売れ筋ランキングと楽天ジャンル別ランキング。列見出しをクリックすると並べ替えできます。</div>
 <div class="cards">{card_html}</div>
 <div class="wrap"><table><thead><tr>{header_html}</tr></thead><tbody>
@@ -373,10 +398,18 @@ def render_html(rows: list[ComparisonRow], *, fx=None, title: str = "淘宝 × �
 </body></html>"""
 
 
-def write_html(rows: list[ComparisonRow], path: str | Path, *, fx=None, title: Optional[str] = None) -> Path:
+def write_html(
+    rows: list[ComparisonRow],
+    path: str | Path,
+    *,
+    fx=None,
+    title: Optional[str] = None,
+    mode: str = "item",
+) -> Path:
     path = Path(path).expanduser()
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        render_html(rows, fx=fx, title=title or "淘宝 × 日本 価格差レポート"), encoding="utf-8"
+        render_html(rows, fx=fx, title=title or "淘宝 × 日本 価格差レポート", mode=mode),
+        encoding="utf-8",
     )
     return path

@@ -115,6 +115,33 @@ class ConsoleTest(unittest.TestCase):
         self.assertIn("1.2秒", summary)
 
 
+class CostLabelTest(unittest.TestCase):
+    """列見出しは仕入値の取り方に合わせて変わる。"""
+
+    def test_console_header_says_item_price_by_default(self):
+        output = render_console([sample_row()], show_links=False)
+        self.assertIn("商品代", output)
+        self.assertNotIn("原価", output)
+
+    def test_console_header_says_landed_cost_in_landed_mode(self):
+        output = render_console([sample_row()], show_links=False, mode="landed")
+        self.assertIn("原価", output)
+
+    def test_header_change_keeps_columns_aligned(self):
+        for mode in ("item", "landed"):
+            output = render_console([sample_row()], show_links=False, mode=mode)
+            lines = [line for line in output.splitlines() if line.strip()]
+            self.assertEqual(len({display_width(line) for line in lines[:3]}), 1, mode)
+
+    def test_html_header_and_note_follow_mode(self):
+        item_html = render_html([sample_row()])
+        self.assertIn("商品代(円)", item_html)
+        self.assertIn("商品代(淘宝価格の円換算)", item_html)
+        landed_html = render_html([sample_row()], mode="landed")
+        self.assertIn("原価(円)", landed_html)
+        self.assertIn("国際送料", landed_html)
+
+
 class FileOutputTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -130,6 +157,7 @@ class FileOutputTest(unittest.TestCase):
         self.assertEqual(rows[0]["Amazonランキング"], "8420")
         self.assertEqual(rows[0]["楽天ランキング"], "14")
         self.assertEqual(rows[0]["重さ_g"], "320")
+        self.assertEqual(rows[0]["仕入値_円"], "1566")
         self.assertTrue(rows[0]["淘宝リンク"].startswith("https://"))
 
     def test_json_has_meta_and_items(self):
@@ -137,7 +165,7 @@ class FileOutputTest(unittest.TestCase):
         payload = json.loads(path.read_text(encoding="utf-8"))
         self.assertEqual(payload["meta"]["fx_rate"], 21.42)
         self.assertEqual(len(payload["items"]), 1)
-        self.assertIn("原価内訳", payload["items"][0])
+        self.assertIn("仕入値内訳", payload["items"][0])
 
     def test_html_contains_table_and_links(self):
         html_text = render_html([sample_row()], fx=FxRate(21.0, "test"))

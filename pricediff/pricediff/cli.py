@@ -43,6 +43,7 @@ def build_parser() -> argparse.ArgumentParser:
             "  pricediff run -w watchlist.csv       一覧を表示\n"
             "  pricediff run -f console,csv,html    ファイルにも書き出す\n"
             "  pricediff run --sort ratio --top 20  差率の高い順に上位20件\n"
+            "  pricediff run --cost landed          送料・手数料まで積み上げて比較\n"
         ),
     )
     parser.add_argument("--version", action="version", version=f"pricediff {__version__}")
@@ -68,6 +69,12 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--min-diff", type=float, default=None, help="価格差がこの円未満の行を除外")
     run.add_argument("--max-rank", type=int, default=None, help="ランキングがこの順位より下の行を除外")
     run.add_argument("--fx-rate", type=float, default=None, help="1元あたりの円レートを直接指定")
+    run.add_argument(
+        "--cost",
+        choices=("item", "landed"),
+        default=None,
+        help="仕入値の取り方。item=商品代のみ(既定) / landed=送料・手数料・税まで積み上げる",
+    )
     run.add_argument("--no-cache", action="store_true", help="キャッシュを使わない")
     run.add_argument("--offline", action="store_true", help="APIを一切呼ばず手入力値だけで計算する")
     run.add_argument("--no-links", action="store_true", help="コンソール出力でリンク一覧を省く")
@@ -149,6 +156,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     if args.no_cache:
         config.set(False, "cache", "enabled")
     for value, path in (
+        (args.cost, ("cost", "mode")),
         (args.sort, ("output", "sort")),
         (args.top, ("output", "top")),
         (args.min_diff, ("output", "min_diff_jpy")),
@@ -205,18 +213,24 @@ def cmd_run(args: argparse.Namespace) -> int:
         print(f"エラー: 未知の出力形式 {', '.join(unknown)}", file=sys.stderr)
         return 2
 
+    mode = str(config.get("cost", "mode", default="item"))
     if "console" in formats:
-        print(render_console(rows, show_links=not args.no_links))
+        print(render_console(rows, show_links=not args.no_links, mode=mode))
         print()
         print(render_summary(rows, fx, elapsed))
 
     out_dir = Path(args.out_dir)
     stamp = time.strftime("%Y%m%d-%H%M")
-    meta = {"fx_rate": fx.rate, "fx_source": fx.source, "watchlist": str(args.watchlist)}
+    meta = {
+        "fx_rate": fx.rate,
+        "fx_source": fx.source,
+        "cost_mode": mode,
+        "watchlist": str(args.watchlist),
+    }
     if "csv" in formats:
         print(f"CSV : {write_csv(rows, out_dir / f'pricediff-{stamp}.csv')}")
     if "html" in formats:
-        print(f"HTML: {write_html(rows, out_dir / f'pricediff-{stamp}.html', fx=fx)}")
+        print(f"HTML: {write_html(rows, out_dir / f'pricediff-{stamp}.html', fx=fx, mode=mode)}")
     if "json" in formats:
         print(f"JSON: {write_json(rows, out_dir / f'pricediff-{stamp}.json', meta=meta)}")
 

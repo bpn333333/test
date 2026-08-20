@@ -1,14 +1,19 @@
-"""淘宝の商品価格を「日本に着いた時点の原価(円)」に積み上げる。
+"""淘宝の商品価格を、比較の基準になる仕入値(円)に換算する。
 
-    商品代金(元→円)
-  + 中国国内送料
-  + 代行手数料(率 or 最低額の大きい方)
-  + 国際送料(課金重量 x 単価 + 固定費)
-  + 輸入時の税(概算・任意)
-  = 日本着原価
+モードは2つ。
 
-価格差はこの原価と日本側の販売価格を比べて出す。単純な為替換算だけでは
-「送料で消える利益」が見えないため、重量を必ず計算に組み込んでいる。
+  item(既定) : 商品代金だけを円換算する
+      仕入値 = 商品代金(元) x 為替
+
+  landed     : 日本に着くまでの費用を積み上げる
+      仕入値 = 商品代金(元→円)
+             + 中国国内送料
+             + 代行手数料(率 or 最低額の大きい方)
+             + 国際送料(課金重量 x 単価 + 固定費)
+             + 輸入時の税(概算)
+
+landed は送料で利益が消える商品を弾きたいときに使う。重さは
+どちらのモードでも一覧に表示される(landed のときだけ計算にも効く)。
 """
 
 from __future__ import annotations
@@ -34,6 +39,11 @@ def chargeable_weight_g(
     return actual
 
 
+ITEM_ONLY = "item"
+LANDED = "landed"
+MODES = (ITEM_ONLY, LANDED)
+
+
 def calc_landed_cost(
     price_cny: Optional[float],
     weight_g: Optional[float],
@@ -42,9 +52,16 @@ def calc_landed_cost(
     *,
     dimensions_cm: Optional[tuple[float, float, float]] = None,
 ) -> Optional[LandedCost]:
-    """日本着原価の内訳を返す。淘宝価格が無ければ None。"""
+    """仕入値の内訳を返す。淘宝価格が無ければ None。"""
     if price_cny is None:
         return None
+
+    mode = str(cost_config.get("mode") or ITEM_ONLY).lower()
+    if mode not in MODES:
+        mode = ITEM_ONLY
+    if mode == ITEM_ONLY:
+        # 商品代金だけ。送料・手数料・税は乗せない
+        return LandedCost(item_jpy=fx.to_jpy(price_cny) or 0.0)
 
     def cfg(key: str, default: float) -> float:
         value = cost_config.get(key, default)

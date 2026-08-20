@@ -21,6 +21,7 @@ def make_config(**overrides):
 FX = FxRate(20.0, "test")
 
 COST = {
+    "mode": "landed",
     "china_domestic_cny": 0.0,
     "agent_fee_pct": 0.0,
     "agent_fee_min_jpy": 0.0,

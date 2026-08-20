@@ -28,6 +28,7 @@ class LandedCostTest(unittest.TestCase):
     def setUp(self):
         self.fx = FxRate(20.0, "test")
         self.cost_config = {
+            "mode": "landed",
             "china_domestic_cny": 5.0,
             "agent_fee_pct": 10.0,
             "agent_fee_min_jpy": 100.0,
@@ -68,6 +69,47 @@ class LandedCostTest(unittest.TestCase):
     def test_missing_weight_uses_default(self):
         landed = calc_landed_cost(50.0, None, self.fx, self.cost_config)
         self.assertEqual(landed.intl_shipping_jpy, 550.0)  # 0.5kg 既定
+
+
+class ItemOnlyModeTest(unittest.TestCase):
+    """既定の item モードは商品代だけを円換算する。"""
+
+    def setUp(self):
+        self.fx = FxRate(20.0, "test")
+        self.landed_config = {
+            "mode": "landed", "china_domestic_cny": 5.0, "agent_fee_pct": 10.0,
+            "agent_fee_min_jpy": 100.0, "intl_shipping_jpy_per_kg": 1000.0,
+            "intl_shipping_min_jpy": 150.0, "handling_jpy_per_item": 50.0,
+            "import_tax_pct": 10.0, "default_weight_g": 500.0,
+        }
+
+    def test_item_mode_ignores_shipping_and_fees(self):
+        config = dict(self.landed_config, mode="item")
+        landed = calc_landed_cost(50.0, 400, self.fx, config)
+        self.assertEqual(landed.item_jpy, 1000.0)
+        self.assertEqual(landed.china_domestic_jpy, 0.0)
+        self.assertEqual(landed.agent_fee_jpy, 0.0)
+        self.assertEqual(landed.intl_shipping_jpy, 0.0)
+        self.assertEqual(landed.import_tax_jpy, 0.0)
+        self.assertEqual(landed.total, 1000.0)
+
+    def test_item_is_the_default_mode(self):
+        config = dict(self.landed_config)
+        config.pop("mode")
+        self.assertEqual(calc_landed_cost(50.0, 400, self.fx, config).total, 1000.0)
+
+    def test_unknown_mode_falls_back_to_item(self):
+        config = dict(self.landed_config, mode="なにか")
+        self.assertEqual(calc_landed_cost(50.0, 400, self.fx, config).total, 1000.0)
+
+    def test_weight_does_not_affect_item_mode(self):
+        config = dict(self.landed_config, mode="item")
+        light = calc_landed_cost(50.0, 10, self.fx, config).total
+        heavy = calc_landed_cost(50.0, 5000, self.fx, config).total
+        self.assertEqual(light, heavy)
+
+    def test_item_mode_without_price(self):
+        self.assertIsNone(calc_landed_cost(None, 400, self.fx, {"mode": "item"}))
 
 
 class FxRateTest(unittest.TestCase):

@@ -11,6 +11,11 @@ fx:
   buffer_pct: 2.0
 
 cost:
+  # item   = 商品代金だけを円換算して比べる(既定)
+  # landed = 送料・代行手数料・税まで積み上げて比べる
+  mode: item
+
+  # ここから下は mode: landed のときだけ使う
   china_domestic_cny: 8.0      # 中国国内送料(1商品あたり・元)
   agent_fee_pct: 5.0           # 代行手数料(%)
   agent_fee_min_jpy: 200.0     # 代行手数料の最低額(円)。率と比べて高い方を採用

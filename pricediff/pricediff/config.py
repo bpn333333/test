@@ -24,6 +24,10 @@ DEFAULTS: dict[str, Any] = {
         "buffer_pct": 2.0,  # 為替変動ぶんの安全マージン(%)
     },
     "cost": {
+        # item   = 商品代金だけを円換算する(既定)
+        # landed = 送料・代行手数料・税まで積み上げる
+        "mode": "item",
+        # 以下は mode: landed のときだけ使う
         # 中国国内送料(1商品あたり・元)。代行業者に集約する前提の概算
         "china_domestic_cny": 8.0,
         # 代行手数料。率と最低額の大きい方を採用

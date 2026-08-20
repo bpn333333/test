@@ -126,6 +126,26 @@ class CliTest(unittest.TestCase):
         self.assertIn("ダミー", err)
         self.assertIn("価格差", out)
 
+    def test_cost_mode_defaults_to_item_price_only(self):
+        _, out, _ = self.run_cli(["run", "-w", str(self.watchlist), "--offline",
+                                  "--fx-rate", "20", "--no-links"])
+        self.assertIn("商品代", out)
+        self.assertIn("770", out)   # 38.5元 x 20 = 770円。送料も手数料も乗らない
+
+    def test_cost_mode_landed_adds_shipping(self):
+        _, item, _ = self.run_cli(["run", "-w", str(self.watchlist), "--offline",
+                                   "--fx-rate", "20", "--no-links"])
+        _, landed, _ = self.run_cli(["run", "-w", str(self.watchlist), "--offline",
+                                     "--fx-rate", "20", "--cost", "landed", "--no-links"])
+        self.assertIn("原価", landed)
+        self.assertNotEqual(item, landed)
+
+    def test_json_records_cost_mode(self):
+        self.run_cli(["run", "-w", str(self.watchlist), "--offline", "-f", "json",
+                      "-o", str(self.dir / "j")])
+        payload = json.loads(next((self.dir / "j").iterdir()).read_text(encoding="utf-8"))
+        self.assertEqual(payload["meta"]["cost_mode"], "item")
+
     def test_doctor_reports_missing_keys(self):
         code, out, _ = self.run_cli(["doctor"])
         self.assertEqual(code, 0)
