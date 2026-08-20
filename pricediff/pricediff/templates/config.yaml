@@ -1,0 +1,60 @@
+# pricediff 設定ファイル
+# APIキーはここには書かず .env(環境変数)で渡すことを推奨します。
+# 数値はすべて「自分の代行業者の実績値」に置き換えてください。既定値は概算です。
+
+fx:
+  # fixed = 下の cny_jpy をそのまま使う(オフラインでも動く)
+  # frankfurter = 当日レートを https://api.frankfurter.app から取得
+  source: fixed
+  cny_jpy: 21.0
+  # 円安方向にぶれても計算が甘くならないように上乗せする安全マージン(%)
+  buffer_pct: 2.0
+
+cost:
+  china_domestic_cny: 8.0      # 中国国内送料(1商品あたり・元)
+  agent_fee_pct: 5.0           # 代行手数料(%)
+  agent_fee_min_jpy: 200.0     # 代行手数料の最低額(円)。率と比べて高い方を採用
+  intl_shipping_jpy_per_kg: 1000.0  # 国際送料(円/kg)
+  intl_shipping_min_jpy: 150.0      # 国際送料の最低額(円)
+  handling_jpy_per_item: 50.0       # 1商品あたりの梱包・雑費(円)
+  volumetric_divisor: 6000.0        # 容積重量の除数。航空便は 6000 が一般的
+  import_tax_pct: 0.0               # 関税+消費税の概算率(%)。必要なら 10 前後を入れる
+  default_weight_g: 500.0           # 重量が取得できなかったときに使う値(g)
+
+rakuten:
+  enabled: true
+  # 無料のアプリID: https://webservice.rakuten.co.jp/
+  # application_id: 環境変数 RAKUTEN_APPLICATION_ID で渡す
+  hits: 5
+  ranking_period: realtime   # realtime / daily / weekly / monthly
+  ranking_pages: 1           # 1ページ30位まで。2にすると60位まで拾える
+
+amazon:
+  enabled: true
+  # PA-API 5.0(アソシエイト審査が必要)
+  # access_key / secret_key / partner_tag は環境変数で渡す
+  host: webservices.amazon.co.jp
+  region: us-west-2
+  marketplace: www.amazon.co.jp
+
+taobao:
+  enabled: true
+  # 淘宝開放平台のキー。未設定なら watchlist.csv の taobao_price_cny を使う
+  endpoint: https://eco.taobao.com/router/rest
+
+cache:
+  enabled: true
+  dir: ~/.cache/pricediff
+  ttl_seconds: 21600   # 6時間。同じ日に何度も回すぶんにはAPIを叩かない
+
+output:
+  sort: diff          # diff(価格差) / ratio(差率) / rank(順位) / price / name
+  min_diff_jpy: null  # 例: 800 にすると価格差800円未満を除外
+  max_rank: null      # 例: 50000 にするとランキング5万位以内だけ表示
+  top: null
+
+request:
+  timeout: 20
+  retries: 3
+  backoff: 2.0
+  interval: 1.0       # 連続リクエストの間隔(秒)。楽天APIは1秒程度空けるのが無難

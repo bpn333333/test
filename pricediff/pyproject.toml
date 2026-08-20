@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pricediff"
+version = "1.0.0"
+description = "淘宝と Amazon.co.jp / 楽天市場の価格差を、重さと売上ランキング付きで一覧化するツール"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "requests>=2.28",
+    "PyYAML>=6.0",
+]
+
+[project.scripts]
+pricediff = "pricediff.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["pricediff*"]
+
+[tool.setuptools.package-data]
+pricediff = ["templates/*"]

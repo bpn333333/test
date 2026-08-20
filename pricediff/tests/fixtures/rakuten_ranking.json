@@ -1,0 +1,8 @@
+{
+  "title": "楽天ランキング",
+  "Items": [
+    {"rank": 1, "itemName": "1位の商品", "itemCode": "first:1"},
+    {"rank": 2, "itemName": "2位の商品", "itemCode": "other:9"},
+    {"rank": 14, "itemName": "ステンレス タンブラー 480ml", "itemCode": "shop123:10000042"}
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "tbk_item_info_get_response": {
+    "results": {
+      "n_tbk_item": [
+        {
+          "num_iid": 600000000001,
+          "title": "不锈钢保温杯 480ml 真空",
+          "zk_final_price": "38.50",
+          "reserve_price": "59.00",
+          "item_url": "//item.taobao.com/item.htm?id=600000000001",
+          "nick": "样例店铺",
+          "pict_url": "//img.alicdn.com/sample.jpg",
+          "volume": 5230
+        }
+      ]
+    }
+  }
+}

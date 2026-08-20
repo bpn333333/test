@@ -1,0 +1,25 @@
+{
+  "SearchResult": {
+    "TotalResultCount": 137,
+    "Items": [
+      {
+        "ASIN": "B0SAMPLE01",
+        "DetailPageURL": "https://www.amazon.co.jp/dp/B0SAMPLE01?tag=example-22",
+        "ItemInfo": {
+          "Title": {"DisplayValue": "ステンレスタンブラー 480ml 真空断熱"},
+          "ProductInfo": {
+            "ItemDimensions": {
+              "Weight": {"DisplayValue": 0.66, "Unit": "Pounds"},
+              "Length": {"DisplayValue": 700, "Unit": "Hundredths Inches"},
+              "Width": {"DisplayValue": 300, "Unit": "Hundredths Inches"},
+              "Height": {"DisplayValue": 700, "Unit": "Hundredths Inches"}
+            }
+          }
+        },
+        "Offers": {"Listings": [{"Price": {"Amount": 2480, "Currency": "JPY", "DisplayAmount": "￥2,480"}}]},
+        "BrowseNodeInfo": {"WebsiteSalesRank": {"SalesRank": 8420, "DisplayName": "ホーム&キッチン"}},
+        "Images": {"Primary": {"Medium": {"URL": "https://m.media-amazon.com/images/I/sample._SL160_.jpg"}}}
+      }
+    ]
+  }
+}
