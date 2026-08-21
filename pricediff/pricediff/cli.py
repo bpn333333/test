@@ -22,7 +22,7 @@ from .fx import get_fx_rate
 from .models import AMAZON, MARKET_LABELS, RAKUTEN, TAOBAO
 from .report import render_console, render_summary, write_csv, write_html, write_json
 from .sources.http import build_client
-from .watchlist import WatchlistError, load_watchlist
+from .watchlist import WatchlistError, append_items, load_watchlist, parse_rows
 
 log = logging.getLogger("pricediff")
 
@@ -40,6 +40,7 @@ def build_parser() -> argparse.ArgumentParser:
             "例:\n"
             "  pricediff run --demo                 サンプルで動作確認\n"
             "  pricediff init                       雛形を作る\n"
+            "  pricediff add < rows.csv             調べた行を貼り付けて追加\n"
             "  pricediff run -w watchlist.csv       一覧を表示\n"
             "  pricediff run -f console,csv,html    ファイルにも書き出す\n"
             "  pricediff run --sort ratio --top 20  差率の高い順に上位20件\n"
@@ -80,6 +81,22 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--no-links", action="store_true", help="コンソール出力でリンク一覧を省く")
     run.add_argument("-v", "--verbose", action="store_true", help="詳細ログ")
 
+    add = sub.add_parser(
+        "add",
+        help="ブラウザで調べた行を貼り付けて追跡リストに足す",
+        description=(
+            "CSV形式の行を標準入力から読み、watchlist.csv に追記します。"
+            "1行目がヘッダなら列名に従い、無ければ既定の列順とみなします。"
+        ),
+    )
+    add.add_argument("-w", "--watchlist", default="watchlist.csv", help="追記先(無ければ新規作成)")
+    add.add_argument(
+        "--update",
+        action="store_true",
+        help="同じ商品が既にある場合、貼り付けた項目だけを既存行に上書きする",
+    )
+    add.add_argument("--dry-run", action="store_true", help="書き込まずに結果だけ表示する")
+
     init = sub.add_parser("init", help="config.yaml と watchlist.csv の雛形を作る")
     init.add_argument("-d", "--dir", default=".", help="作成先ディレクトリ")
     init.add_argument("--force", action="store_true", help="既存ファイルを上書きする")
@@ -96,6 +113,38 @@ def _setup_logging(verbose: bool) -> None:
         format="%(levelname)s %(name)s: %(message)s",
         stream=sys.stderr,
     )
+
+
+def cmd_add(args: argparse.Namespace) -> int:
+    if sys.stdin.isatty():
+        print("CSV形式の行を貼り付けて、最後に Ctrl-D を押してください:", file=sys.stderr)
+    text = sys.stdin.read()
+
+    try:
+        items = parse_rows(text)
+    except WatchlistError as exc:
+        print(f"エラー: {exc}", file=sys.stderr)
+        return 2
+
+    if args.dry_run:
+        for item in items:
+            print(f"  + {item.key}  {item.name}  淘宝{item.taobao_price_cny}元")
+        print(f"\n{len(items)}件を読み取りました(--dry-run のため書き込んでいません)")
+        return 0
+
+    try:
+        added, skipped = append_items(args.watchlist, items, update=args.update)
+    except WatchlistError as exc:
+        print(f"エラー: {exc}", file=sys.stderr)
+        return 2
+
+    for item in added:
+        print(f"  + {item.key}  {item.name}")
+    for item in skipped:
+        print(f"  = {item.name}(既に同じ商品があります。更新するなら --update)")
+    print(f"\n{len(added)}件を {args.watchlist} に反映しました"
+          + (f" / {len(skipped)}件は重複のため見送り" if skipped else ""))
+    return 0
 
 
 def cmd_init(args: argparse.Namespace) -> int:
@@ -243,6 +292,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     args = parser.parse_args(argv)
     _setup_logging(getattr(args, "verbose", False))
 
+    if args.command == "add":
+        return cmd_add(args)
     if args.command == "init":
         return cmd_init(args)
     if args.command == "doctor":

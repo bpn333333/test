@@ -67,6 +67,21 @@ cp .env.example .env
 # RAKUTEN_APPLICATION_ID=xxxxxxxx を記入
 ```
 
+### ブラウザで集めて貼る運用
+
+API が取れないモールは、自分でブラウザを開いて見た数字を貼る形になります。
+`pricediff add` が CSV行の貼り付けを受け取り、重複を弾いて watchlist.csv に追記します。
+
+```bash
+pricediff add -w watchlist.csv          # 貼り付けて Ctrl-D
+pricediff add < rows.csv                # ファイルから
+printf 'name,taobao_price_cny\n保温タンブラー,39.9\n' | pricediff add --update   # 価格だけ更新
+```
+
+同じ商品(商品名か淘宝URLが一致)は自動で飛ばします。`--update` は**貼り付けた列だけ**を
+上書きするので、書かなかった列は残ります。ブラウザ側に投げるプロンプトの雛形と手順は
+[docs/browser-workflow.md](docs/browser-workflow.md) にあります。
+
 ### 淘宝をスクレイピングしない理由
 
 淘宝の商品ページを HTML 解析する実装は**意図的に入れていません**。利用規約で禁じられている上、
@@ -157,6 +172,7 @@ pricediff run --fx-rate 20.5               # 為替を固定して試算
 pricediff run --cost landed                # 送料・手数料・税まで積み上げて比較
 pricediff run --offline                    # APIを一切呼ばない(手入力値のみ)
 pricediff run --no-cache -v                # キャッシュを使わず詳細ログ
+pricediff add --dry-run                    # 貼り付けた行を書き込まずに確認
 ```
 
 API 応答は既定で6時間キャッシュされます(`~/.cache/pricediff`)。同じ日に何度回しても API は消費しません。
