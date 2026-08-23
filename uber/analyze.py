@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-"""Uber 配達実績の取引明細を読み込み、案件判断に使う指標を出す。
+"""配達1件ごとの記録から「どう動けば効率よく稼げるか」を出す。
 
-標準ライブラリのみで動く。使い方は uber/README.md を参照。
+出すのは指標ではなく行動。具体的には次の4つ。
+  1. 受注判断  — どの条件の注文を断ると時給が上がるか（閾値の総当たり）
+  2. 稼働枠    — 何曜日の何時に走るか
+  3. 待機場所  — どのエリアで待つか
+  4. 避ける店  — 待たされて損をしている受取先
 
-    python3 uber/analyze.py data/*.csv
-    python3 uber/analyze.py data/payments.csv --hours data/online.csv --target 320000
+使い方は uber/README.md を参照。
 """
 
 from __future__ import annotations
@@ -13,44 +16,35 @@ import argparse
 import csv
 import io
 import re
+import statistics
 import sys
 from collections import defaultdict
 from datetime import datetime, timedelta
 
 # ---------------------------------------------------------------- 列の検出
 
-# Uber の書き出しはロケール・年度で列名が変わるため、候補を総当たりで当てる。
 COLUMN_CANDIDATES = {
-    "datetime": [
-        "リクエスト日時", "受注日時", "開始日時", "配達日時", "取引日時", "日時", "日付",
-        "request time", "requested at", "begintrip", "begin trip time", "trip request time",
-        "local request timestamp", "datetime", "date/time", "timestamp", "date",
-    ],
-    "amount": [
-        "支払総額", "受取金額", "収益", "売上", "合計", "金額", "報酬",
-        "net earnings", "your earnings", "total earnings", "payout", "amount",
-        "total", "fare", "gross", "earnings",
-    ],
-    "type": [
-        "取引タイプ", "種類", "内容", "区分", "カテゴリ", "説明",
-        "type", "transaction type", "category", "description", "item",
-    ],
-    "duration": [
-        "所要時間", "配達時間", "稼働時間", "時間",
-        "duration", "trip duration", "duration (min)", "time online",
-    ],
-    "distance": [
-        "距離", "走行距離", "distance", "trip distance", "distance (km)", "miles",
-    ],
+    "datetime": ["受注日時", "リクエスト日時", "開始日時", "配達日時", "取引日時", "日時", "日付",
+                 "request time", "requested at", "begintrip", "trip request time", "timestamp", "date"],
+    "amount": ["報酬", "受取金額", "支払総額", "合計", "収益", "売上", "金額",
+               "net earnings", "your earnings", "total earnings", "payout", "amount", "total", "fare"],
+    "duration": ["所要時間", "配達時間", "稼働時間", "時間", "duration", "trip duration"],
+    "distance": ["距離", "走行距離", "distance", "trip distance"],
+    "pickup": ["受取場所", "受取店舗", "店舗", "レストラン", "ピックアップ", "受取",
+               "pickup", "restaurant", "merchant", "store", "pickup address"],
+    "dropoff": ["配達先", "お届け先", "エリア", "配達エリア", "dropoff", "destination", "drop off address"],
+    "tip": ["チップ", "tip", "gratuity"],
+    "promo": ["プロモ", "クエスト", "ブースト", "インセンティブ", "ボーナス",
+              "promotion", "quest", "boost", "incentive", "bonus", "surge"],
+    "wait": ["待ち時間", "待機時間", "店舗待ち", "wait time", "waiting"],
 }
 
 
-def _norm(s: str) -> str:
+def _norm(s):
     return re.sub(r"[\s_()（）\[\]/:：・-]", "", (s or "")).lower()
 
 
 def pick_column(headers, key):
-    """候補名に完全一致 → 部分一致の順で列を選ぶ。見つからなければ None。"""
     norm_map = {_norm(h): h for h in headers if h}
     for cand in COLUMN_CANDIDATES[key]:
         if _norm(cand) in norm_map:
@@ -69,8 +63,7 @@ DT_FORMATS = [
     "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d",
     "%Y/%m/%d %H:%M:%S", "%Y/%m/%d %H:%M", "%Y/%m/%d",
     "%m/%d/%Y %H:%M:%S", "%m/%d/%Y %H:%M", "%m/%d/%Y",
-    "%d/%m/%Y %H:%M", "%Y年%m月%d日 %H:%M", "%Y年%m月%d日",
-    "%m月%d日 %H:%M",
+    "%Y年%m月%d日 %H:%M", "%Y年%m月%d日",
 ]
 
 
@@ -78,32 +71,26 @@ def parse_dt(raw):
     if not raw:
         return None
     s = str(raw).strip()
-    # タイムゾーン表記・曜日・秒未満を落とす
     s = re.sub(r"\s*[+-]\d{2}:?\d{2}$", "", s)
     s = re.sub(r"\s*(UTC|GMT|JST|Z)$", "", s, flags=re.I)
     s = re.sub(r"\.\d+$", "", s)
-    s = re.sub(r"[（(][月火水木金土日][）)]", "", s)
-    s = s.replace("午前", "").replace("午後", "").strip()
+    s = re.sub(r"[（(][月火水木金土日][）)]", "", s).strip()
     for fmt in DT_FORMATS:
         try:
-            dt = datetime.strptime(s, fmt)
+            return datetime.strptime(s, fmt)
         except ValueError:
             continue
-        if dt.year == 1900:  # 年のない形式
-            return None
-        return dt
     return None
 
 
-def parse_amount(raw):
-    """'¥1,234' '1234円' '-560' '(560)' などを float にする。"""
+def parse_num(raw):
     if raw is None:
         return None
     s = str(raw).strip()
     if not s:
         return None
     neg = s.startswith("(") and s.endswith(")")
-    s = re.sub(r"[¥￥$,、\s円]", "", s).strip("()")
+    s = re.sub(r"[¥￥$,、\s円kmKM分]", "", s).strip("()")
     if not s or s in {"-", "--"}:
         return None
     try:
@@ -113,8 +100,7 @@ def parse_amount(raw):
     return -v if neg else v
 
 
-def parse_duration_min(raw):
-    """'00:12:30' '12分' '12.5' を分に直す。"""
+def parse_minutes(raw):
     if raw is None:
         return None
     s = str(raw).strip()
@@ -122,39 +108,16 @@ def parse_duration_min(raw):
         return None
     m = re.match(r"^(\d+):(\d{2})(?::(\d{2}))?$", s)
     if m:
-        h, mi, sec = int(m.group(1)), int(m.group(2)), int(m.group(3) or 0)
-        return h * 60 + mi + sec / 60
+        return int(m.group(1)) * 60 + int(m.group(2)) + int(m.group(3) or 0) / 60
     m = re.match(r"^(?:(\d+)\s*時間)?\s*(\d+)?\s*分", s)
     if m and (m.group(1) or m.group(2)):
         return int(m.group(1) or 0) * 60 + int(m.group(2) or 0)
-    v = parse_amount(s)
-    return v
-
-
-# ---------------------------------------------------------------- 種別の分類
-
-TYPE_BUCKETS = [
-    ("チップ", ["チップ", "tip", "gratuity"]),
-    ("インセンティブ", ["クエスト", "ブースト", "プロモ", "ボーナス", "インセンティブ", "キャンペーン",
-                        "quest", "boost", "promotion", "surge", "incentive", "bonus"]),
-    ("調整・その他", ["調整", "返金", "キャンセル", "参照", "紹介",
-                      "adjustment", "refund", "cancel", "referral", "miscellaneous"]),
-    ("配達", ["配達", "配送", "trip", "delivery", "fare", "order", "デリバリー"]),
-]
-
-
-def bucket_of(raw_type):
-    s = (raw_type or "").lower()
-    for name, keys in TYPE_BUCKETS:
-        if any(k.lower() in s for k in keys):
-            return name
-    return "配達" if not s else "調整・その他"
+    return parse_num(s)
 
 
 # ---------------------------------------------------------------- 読み込み
 
 def read_rows(path):
-    """エンコーディングと区切り文字を推定して dict のリストを返す。"""
     raw = open(path, "rb").read()
     text = None
     for enc in ("utf-8-sig", "utf-8", "cp932", "shift_jis", "euc_jp"):
@@ -167,99 +130,85 @@ def read_rows(path):
         raise SystemExit(f"{path}: 文字コードを判別できませんでした")
     sample = text[:8192]
     try:
-        dialect = csv.Sniffer().sniff(sample, delimiters=",\t;")
-        delim = dialect.delimiter
+        delim = csv.Sniffer().sniff(sample, delimiters=",\t;").delimiter
     except csv.Error:
         delim = "\t" if sample.count("\t") > sample.count(",") else ","
     return list(csv.DictReader(io.StringIO(text), delimiter=delim))
 
 
 def load(paths, tz_shift=0.0):
-    records, notes = [], []
+    trips, notes = [], []
     for path in paths:
         rows = read_rows(path)
         if not rows:
-            notes.append(f"{path}: 行がありません（スキップ）")
+            notes.append(f"{path}: 行がありません")
             continue
         headers = list(rows[0].keys())
         cols = {k: pick_column(headers, k) for k in COLUMN_CANDIDATES}
         if not cols["datetime"] or not cols["amount"]:
-            notes.append(f"{path}: 日時列または金額列を特定できず（列: {', '.join(h for h in headers if h)[:120]}）")
+            notes.append(f"{path}: 日時列/金額列を特定できず（列: {', '.join(h for h in headers if h)[:120]}）")
             continue
-        notes.append(
-            f"{path}: 日時={cols['datetime']} / 金額={cols['amount']}"
-            + (f" / 種別={cols['type']}" if cols["type"] else " / 種別=なし")
-        )
+        found = [f"{k}={v}" for k, v in cols.items() if v]
+        notes.append(f"{path}: " + " / ".join(found))
         kept = 0
         for r in rows:
             dt = parse_dt(r.get(cols["datetime"]))
-            amt = parse_amount(r.get(cols["amount"]))
+            amt = parse_num(r.get(cols["amount"]))
             if dt is None or amt is None:
                 continue
             if tz_shift:
                 dt += timedelta(hours=tz_shift)
-            records.append({
+            trips.append({
                 "dt": dt,
                 "amount": amt,
-                "raw_type": (r.get(cols["type"]) or "").strip() if cols["type"] else "",
-                "duration": parse_duration_min(r.get(cols["duration"])) if cols["duration"] else None,
-                "distance": parse_amount(r.get(cols["distance"])) if cols["distance"] else None,
+                "minutes": parse_minutes(r.get(cols["duration"])) if cols["duration"] else None,
+                "km": parse_num(r.get(cols["distance"])) if cols["distance"] else None,
+                "pickup": (r.get(cols["pickup"]) or "").strip() if cols["pickup"] else "",
+                "area": (r.get(cols["dropoff"]) or "").strip() if cols["dropoff"] else "",
+                "tip": parse_num(r.get(cols["tip"])) if cols["tip"] else None,
+                "promo": parse_num(r.get(cols["promo"])) if cols["promo"] else None,
+                "wait": parse_minutes(r.get(cols["wait"])) if cols["wait"] else None,
             })
             kept += 1
         notes[-1] += f" → {kept}件"
-    records.sort(key=lambda x: x["dt"])
-    return records, notes
+    trips.sort(key=lambda x: x["dt"])
+    return trips, notes
 
 
-# ---------------------------------------------------------------- 稼働時間
+# ---------------------------------------------------------------- 稼働の復元
 
-def estimate_sessions(records, gap_min=45, tail_min=20):
-    """取引の間隔から稼働セッションを復元する。
-
-    実測のオンライン時間がない場合の代替。連続する取引の間隔が gap_min を超えたら
-    別セッションとみなし、各セッションの実働 = (最終取引 - 最初の取引) + tail_min。
-    """
-    trips = [r for r in records if bucket_of(r["raw_type"]) == "配達"] or records
+def build_sessions(trips, gap_min=45):
+    """連続稼働のかたまりを復元し、各件の『次の注文までの空き時間』も埋める。"""
     if not trips:
         return []
     sessions, cur = [], [trips[0]]
-    for prev, r in zip(trips, trips[1:]):
-        if (r["dt"] - prev["dt"]).total_seconds() / 60 > gap_min:
+    for prev, t in zip(trips, trips[1:]):
+        if (t["dt"] - prev["dt"]).total_seconds() / 60 > gap_min:
             sessions.append(cur)
             cur = []
-        cur.append(r)
+        cur.append(t)
     sessions.append(cur)
-    out = []
     for s in sessions:
-        span = (s[-1]["dt"] - s[0]["dt"]).total_seconds() / 60 + tail_min
-        out.append({"start": s[0]["dt"], "end": s[-1]["dt"], "minutes": span, "trips": len(s)})
-    return out
+        for a, b in zip(s, s[1:]):
+            span = (b["dt"] - a["dt"]).total_seconds() / 60
+            a["cycle"] = span                      # 受注から次の受注までの実サイクル
+            if a["minutes"] is not None:
+                a["idle"] = max(0.0, span - a["minutes"])
+        s[-1].setdefault("cycle", s[-1]["minutes"] or 0)
+    return sessions
 
 
-def load_hours(path, tz_shift=0.0):
-    """オンライン時間の実測CSV（あれば）を日付→時間で返す。"""
-    rows = read_rows(path)
-    if not rows:
-        return {}
-    headers = list(rows[0].keys())
-    dcol = pick_column(headers, "datetime")
-    hcol = pick_column(headers, "duration")
-    if not dcol or not hcol:
-        return {}
-    per_day = defaultdict(float)
-    for r in rows:
-        dt = parse_dt(r.get(dcol))
-        mins = parse_duration_min(r.get(hcol))
-        if dt is None or mins is None:
-            continue
-        if tz_shift:
-            dt += timedelta(hours=tz_shift)
-        # 1桁台なら「時間」表記とみなす
-        per_day[dt.date()] += mins * 60 if mins < 24 else mins
-    return dict(per_day)
+def online_minutes(sessions, tail_min=20):
+    return sum((s[-1]["dt"] - s[0]["dt"]).total_seconds() / 60 + tail_min for s in sessions)
 
 
-# ---------------------------------------------------------------- 出力
+def per_min(t):
+    """1件の分あたり単価。所要時間がなければサイクルで代用。"""
+    d = t.get("minutes") or t.get("cycle")
+    return t["amount"] / d if d and d > 0 else None
+
+
+# ---------------------------------------------------------------- 出力補助
 
 WD = ["月", "火", "水", "木", "金", "土", "日"]
 
@@ -269,178 +218,307 @@ def yen(v):
 
 
 def h1(t):
-    print(f"\n{'=' * 62}\n{t}\n{'=' * 62}")
+    print(f"\n{'=' * 64}\n{t}\n{'=' * 64}")
 
 
 def h2(t):
-    print(f"\n--- {t} " + "-" * max(0, 56 - len(t)))
+    print(f"\n--- {t} " + "-" * max(0, 58 - len(t)))
 
 
-def report(records, notes, hours_by_day, target, gap_min, tail_min):
-    h1("0. 読み込み")
-    for n in notes:
-        print("  " + n)
-    if not records:
-        raise SystemExit("\n有効な取引が0件です。README.md の『取れなかったとき』を参照してください。")
+def pct(vals, p):
+    if not vals:
+        return None
+    s = sorted(vals)
+    i = min(len(s) - 1, max(0, int(round((len(s) - 1) * p / 100))))
+    return s[i]
 
-    first, last = records[0]["dt"], records[-1]["dt"]
-    days = max(1, (last.date() - first.date()).days + 1)
-    total = sum(r["amount"] for r in records)
-    print(f"\n  取引 {len(records):,} 件 / {first:%Y-%m-%d} 〜 {last:%Y-%m-%d}（{days}日間）")
-    print(f"  総額 {yen(total)}")
 
-    # ---- 収入の内訳
-    h1("1. 収入の構造")
-    by_bucket = defaultdict(float)
-    cnt_bucket = defaultdict(int)
-    for r in records:
-        b = bucket_of(r["raw_type"])
-        by_bucket[b] += r["amount"]
-        cnt_bucket[b] += 1
-    h2("種別")
-    for b, v in sorted(by_bucket.items(), key=lambda x: -x[1]):
-        print(f"  {b:<12} {yen(v):>12}  ({v / total * 100:5.1f}%)  {cnt_bucket[b]:>5}件")
-    incentive = by_bucket.get("インセンティブ", 0.0)
-    if total:
-        share = incentive / total * 100
-        print(f"\n  インセンティブ依存度: {share:.1f}%")
-        if share >= 25:
-            print("  → 依存度が高い。プロモが縮むと収入が直撃する。恒久収入として計上しないこと。")
-        elif share > 0:
-            print("  → 依存度は許容範囲。基本報酬で成立している。")
+# ---------------------------------------------------------------- 1. 受注判断
 
-    h2("月別")
-    by_month = defaultdict(float)
-    days_in_month = defaultdict(set)
-    for r in records:
-        k = f"{r['dt']:%Y-%m}"
-        by_month[k] += r["amount"]
-        days_in_month[k].add(r["dt"].date())
-    for k in sorted(by_month):
-        d = len(days_in_month[k])
-        print(f"  {k}  {yen(by_month[k]):>12}   稼働{d:>2}日   1日平均 {yen(by_month[k] / d)}")
+def accept_rules(trips, sessions, online_h):
+    """『この条件を断っていたら時給はどうなったか』を総当たりで試す。
 
-    # ---- 実効時給
-    h1("2. 実効時給（PLAN.md の基準線の検証）")
-    if hours_by_day:
-        total_hours = sum(hours_by_day.values())
-        basis = "オンライン時間の実測値"
+    断って空いた時間の扱いで結果が変わるため、上下2つの見方を両方出す。
+      働いた分の単価 = 受けた注文の 報酬合計 ÷ 所要時間合計
+                       （空き時間が同水準の注文で埋まる前提＝上限）
+      実効時給       = 受けた注文の 報酬合計 ÷ 総オンライン時間
+                       （空き時間が一切埋まらない前提＝下限）
+    2つの差が小さい条件ほど、実行しても取りこぼしが少ない。
+    """
+    h1("1. 受注判断 — どの注文を断ると時給が上がるか")
+
+    usable = [t for t in trips if per_min(t) is not None]
+    if not usable:
+        print("  所要時間の情報がないため、受注判断は算出できません。")
+        print("  → README の収集項目に『所要時間』を必ず含めてください。")
+        return None
+
+    base_amt = sum(t["amount"] for t in usable)
+    base_work = sum((t.get("minutes") or t.get("cycle") or 0) for t in usable)
+    base_permin = base_amt / base_work if base_work else 0
+    base_hourly = base_amt / online_h if online_h else 0
+    print(f"  現状（全件受注）  働いた分の単価 {yen(base_permin * 60)}/h   "
+          f"実効時給 {yen(base_hourly)}/h")
+
+    rates = sorted(per_min(t) for t in usable)
+    print(f"\n  1件の分あたり単価の分布（{len(usable)}件）")
+    for label, p in (("下位10%", 10), ("下位25%", 25), ("中央", 50), ("上位25%", 75), ("上位10%", 90)):
+        v = pct(rates, p)
+        print(f"    {label:<8} {yen(v)}/分  = {yen(v * 60)}/h 相当")
+
+    # 候補ルールを総当たり
+    cands = []
+    for p in (10, 15, 20, 25, 30, 40):
+        thr = pct(rates, p)
+        cands.append((f"分あたり {yen(thr)} 未満を断る（下位{p}%）",
+                      lambda t, thr=thr: per_min(t) >= thr))
+    kms = [t["km"] for t in usable if t.get("km")]
+    if kms:
+        for p in (75, 85, 90):
+            thr = pct(kms, p)
+            cands.append((f"{thr:.1f}km 以上を断る（上位{100 - p}%の長距離）",
+                          lambda t, thr=thr: (t.get("km") or 0) < thr))
+        per_km = [t["amount"] / t["km"] for t in usable if t.get("km")]
+        for p in (15, 25):
+            thr = pct(per_km, p)
+            cands.append((f"1kmあたり {yen(thr)} 未満を断る",
+                          lambda t, thr=thr: not t.get("km") or t["amount"] / t["km"] >= thr))
+    amts = sorted(t["amount"] for t in usable)
+    for p in (10, 20):
+        thr = pct(amts, p)
+        cands.append((f"報酬 {yen(thr)} 未満を断る", lambda t, thr=thr: t["amount"] >= thr))
+
+    print("\n  ルールを適用した場合の試算")
+    print(f"    {'ルール':<38}{'働いた分':>10}{'実効時給':>10}{'断る件数':>9}")
+    results = []
+    for name, keep in cands:
+        kept = [t for t in usable if keep(t)]
+        if not kept or len(kept) == len(usable):
+            continue
+        amt = sum(t["amount"] for t in kept)
+        work = sum((t.get("minutes") or t.get("cycle") or 0) for t in kept)
+        if not work:
+            continue
+        upper = amt / work * 60
+        lower = amt / online_h if online_h else 0
+        results.append((name, upper, lower, len(usable) - len(kept)))
+        print(f"    {name:<38}{yen(upper):>10}{yen(lower):>10}{len(usable) - len(kept):>7}件")
+
+    if not results:
+        print("    有効な閾値が見つかりませんでした。")
+        return None
+
+    # 「働いた分の単価が上がり、かつ実効時給の落ち込みが小さい」ものを推す
+    scored = [(u - base_permin * 60, u, l, n, c) for n, u, l, c in results]
+    scored.sort(key=lambda x: -(x[0] - max(0, base_hourly - x[2])))
+    gain, upper, lower, name, cnt = scored[0]
+    h2("結論")
+    print(f"  採用するルール: {name}")
+    print(f"    働いた分の単価  {yen(base_permin * 60)} → {yen(upper)}  （+{yen(gain)}）")
+    print(f"    断る件数        {cnt}件 / {len(usable)}件（{cnt / len(usable) * 100:.0f}%）")
+    if lower < base_hourly:
+        print(f"\n  ただし断った時間が全く埋まらないと実効時給は {yen(base_hourly)} → {yen(lower)} に下がる。")
+        print("  → **注文が途切れない時間帯でだけ**このルールを使うこと。")
+        print("     暇な時間帯で選り好みすると、空き時間の損の方が大きくなる。")
     else:
-        sessions = estimate_sessions(records, gap_min, tail_min)
-        total_hours = sum(s["minutes"] for s in sessions) / 60
-        basis = f"取引間隔からの推定（{gap_min}分以上空いたら別セッション / 各セッションに{tail_min}分の尾を加算）"
-        print(f"  稼働セッション {len(sessions)} 回")
-    if total_hours <= 0:
-        print("  稼働時間を算出できませんでした。")
+        print("\n  空き時間が埋まらない前提でも時給が下がらない。無条件で適用してよい。")
+    return {"rule": name, "upper": upper, "lower": lower, "base_hourly": base_hourly}
+
+
+# ---------------------------------------------------------------- 2. 稼働枠
+
+def when_to_work(trips, sessions):
+    h1("2. 稼働枠 — いつ走るか")
+
+    # 時間帯ごとに「その時間に稼働していた分数」と「稼いだ額」を積む
+    hour_amt, hour_min, hour_cnt = defaultdict(float), defaultdict(float), defaultdict(int)
+    for s in sessions:
+        for t in s:
+            hour_amt[t["dt"].hour] += t["amount"]
+            hour_min[t["dt"].hour] += t.get("cycle") or t.get("minutes") or 0
+            hour_cnt[t["dt"].hour] += 1
+
+    rows = [(h, hour_amt[h] / hour_min[h] * 60, hour_cnt[h], hour_amt[h])
+            for h in hour_amt if hour_min[h] > 0 and hour_cnt[h] >= 5]
+    rows.sort(key=lambda x: -x[1])
+    if not rows:
+        print("  データが少なく、時間帯の判断はできません。")
         return
-    hourly = total / total_hours
-    print(f"  算出根拠: {basis}")
-    print(f"  総稼働 {total_hours:,.1f} 時間 / 総額 {yen(total)}")
-    print(f"\n  ★ 実効時給 = {yen(hourly)} / 時")
+    h2("時間帯別の時給（5件以上の実績がある時間帯）")
+    print(f"    {'時':>4}{'時給':>11}{'件数':>7}{'合計':>12}")
+    for h, hourly, c, amt in rows:
+        bar = "█" * max(1, int(hourly / max(r[1] for r in rows) * 24))
+        print(f"    {h:>2}時{yen(hourly):>11}{c:>6}件{yen(amt):>12}  {bar}")
 
-    print("\n  PLAN.md の基準線との比較")
-    print(f"    保守見積 ¥2,000  → 実測は {hourly / 2000:.2f} 倍")
-    for label, mult in (("見送りライン ¥3,000（1.5倍）", 1.5), ("狙い ¥5,000（2.5倍）", 2.5)):
-        print(f"    {label:<28} 実測ベースだと {yen(hourly * mult)}")
-    if hourly < 2000:
-        print("\n  → 実測が保守見積を下回っている。PLAN.md の基準線 ¥2,000 は楽観。"
-              "\n     案件の足切りラインを引き下げるか、Uber 側の稼働枠を組み替える必要がある。")
-    elif hourly < 2500:
-        print("\n  → 実測は保守見積とほぼ同水準。基準線 ¥2,000 は妥当。据え置きでよい。")
-    else:
-        print("\n  → 実測が保守見積を上回る。基準線を ¥2,000 に据えたまま運用するのは安全側。"
-              "\n     ただし『Uber 増枠』の試算は実測値で置き直すと余力が増える。")
+    best = [h for h, _, _, _ in rows[:4]]
+    worst = [h for h, _, _, _ in rows[-3:] if len(rows) > 5]
+    h2("結論")
+    print(f"  最も濃い時間帯: {'、'.join(f'{h}時台' for h in sorted(best))}")
+    print("  → ここは何があっても走る。ここを外すと同じ稼働時間でも収入が落ちる。")
+    if worst:
+        print(f"\n  薄い時間帯: {'、'.join(f'{h}時台' for h in sorted(worst))}")
+        print("  → 稼働時間を削るならここから。走っても時給が伸びない。")
 
-    # ---- 曜日 × 時間帯
-    h1("3. どこで稼げているか（曜日 × 時間帯）")
-    cell_amt = defaultdict(float)
-    cell_cnt = defaultdict(int)
-    for r in records:
-        cell_amt[(r["dt"].weekday(), r["dt"].hour)] += r["amount"]
-        cell_cnt[(r["dt"].weekday(), r["dt"].hour)] += 1
-    hours_present = sorted({h for _, h in cell_amt})
-    if hours_present:
-        h2("売上（千円）")
-        print("      " + "".join(f"{h:>5}" for h in hours_present))
-        for w in range(7):
-            row = "".join(
-                (f"{cell_amt[(w, h)] / 1000:>5.0f}" if cell_amt.get((w, h)) else "    ·")
-                for h in hours_present
-            )
-            print(f"  {WD[w]}  {row}")
-
-    h2("時間帯別の1件単価（件数10件以上）")
-    by_hour_amt, by_hour_cnt = defaultdict(float), defaultdict(int)
-    for r in records:
-        by_hour_amt[r["dt"].hour] += r["amount"]
-        by_hour_cnt[r["dt"].hour] += 1
-    ranked = [(h, by_hour_amt[h] / by_hour_cnt[h], by_hour_cnt[h])
-              for h in by_hour_amt if by_hour_cnt[h] >= 10]
-    ranked.sort(key=lambda x: -x[1])
-    for h, per, c in ranked[:8]:
-        print(f"  {h:>2}時台  1件 {yen(per):>8}   {c:>5}件   計 {yen(by_hour_amt[h])}")
-    if not ranked:
-        print("  （データが少なく、時間帯別の判断はまだできません）")
-
-    current = set(range(18, 22))  # PLAN.md の現行デリバリー枠 18-21時
-    outside = [(h, per, c) for h, per, c in ranked if h not in current]
-    if outside:
-        h2("増枠候補（現行の 18-21 時枠の外で単価が高い時間帯）")
-        for h, per, c in outside[:5]:
-            print(f"  {h:>2}時台  1件 {yen(per):>8}（{c}件の実績）")
-        print("\n  → 増枠するならこの時間帯から。総稼働時間を増やす前に、"
-              "\n     単価の低い枠を高い枠に置き換えられないかを先に見ること。")
-
-    h2("曜日別")
-    wd_amt, wd_days = defaultdict(float), defaultdict(set)
-    for r in records:
-        wd_amt[r["dt"].weekday()] += r["amount"]
-        wd_days[r["dt"].weekday()].add(r["dt"].date())
+    # 曜日 × 時間帯
+    h2("曜日 × 時間帯の時給")
+    cell_amt, cell_min = defaultdict(float), defaultdict(float)
+    for s in sessions:
+        for t in s:
+            k = (t["dt"].weekday(), t["dt"].hour)
+            cell_amt[k] += t["amount"]
+            cell_min[k] += t.get("cycle") or t.get("minutes") or 0
+    hs = sorted({h for _, h in cell_amt})
+    print("      " + "".join(f"{h:>6}" for h in hs))
     for w in range(7):
-        if wd_days[w]:
-            print(f"  {WD[w]}  計 {yen(wd_amt[w]):>12}   稼働{len(wd_days[w]):>2}日   "
-                  f"1日平均 {yen(wd_amt[w] / len(wd_days[w]))}")
+        cells = []
+        for h in hs:
+            k = (w, h)
+            if cell_min.get(k, 0) > 0:
+                cells.append(f"{cell_amt[k] / cell_min[k] * 60 / 1000:>6.1f}")
+            else:
+                cells.append("     ·")
+        print(f"  {WD[w]}  " + "".join(cells))
+    print("  （単位: 千円/時。· は実績なし）")
 
-    # ---- 目標シミュレーション
-    h1(f"4. 目標シミュレーション（月 {yen(target)}）")
-    need_h = target / hourly
-    print(f"  実効時給 {yen(hourly)} で月 {yen(target)} を作るのに必要な稼働: {need_h:,.1f} 時間/月")
-    print(f"    週6日で割ると {need_h / 26:.1f} 時間/日")
-    print(f"    週5日で割ると {need_h / 22:.1f} 時間/日")
-    if need_h / 22 > 8:
-        print("\n  → 週5×8時間で届かない。この目標を Uber 単独で埋めるのは非現実的。"
-              "\n     PLAN.md 第3章の保険を複数本立てる前提で計画すること。")
-    elif need_h / 22 > 6:
-        print("\n  → 週5でほぼフル稼働。案件の稼働と並行させる余地はほとんど残らない。")
-    else:
-        print("\n  → 週5で1日6時間以内に収まる。案件と並行できる水準。")
+    wd_amt, wd_min = defaultdict(float), defaultdict(float)
+    for s in sessions:
+        for t in s:
+            wd_amt[t["dt"].weekday()] += t["amount"]
+            wd_min[t["dt"].weekday()] += t.get("cycle") or t.get("minutes") or 0
+    ranked = sorted(((w, wd_amt[w] / wd_min[w] * 60) for w in wd_amt if wd_min[w] > 0),
+                    key=lambda x: -x[1])
+    print("\n  曜日別の時給: " + " / ".join(f"{WD[w]} {yen(v)}" for w, v in ranked))
 
-    if by_month:
-        recent = sorted(by_month)[-1]
-        print(f"\n  直近月（{recent}）の実績 {yen(by_month[recent])} との差分: "
-              f"{yen(target - by_month[recent])}")
+
+# ---------------------------------------------------------------- 3. 待機場所
+
+def where_to_wait(trips):
+    h1("3. 待機場所 — どこで待つか")
+    areas = defaultdict(list)
+    for t in trips:
+        if t.get("area"):
+            areas[t["area"]].append(t)
+    if not areas:
+        print("  配達先エリアの情報がないため算出できません。")
+        print("  → 収集項目に『配達先エリア』を含めると、次の待機場所が決まります。")
+        return
+    rows = []
+    for a, ts in areas.items():
+        if len(ts) < 5:
+            continue
+        mins = sum((t.get("minutes") or t.get("cycle") or 0) for t in ts)
+        if mins <= 0:
+            continue
+        rows.append((a, sum(t["amount"] for t in ts) / mins * 60, len(ts)))
+    rows.sort(key=lambda x: -x[1])
+    if not rows:
+        print("  エリアごとの件数が少なく、判断できません。")
+        return
+    h2("エリア別の時給（5件以上）")
+    for a, hourly, c in rows[:12]:
+        print(f"    {a[:24]:<26}{yen(hourly):>10}{c:>6}件")
+    h2("結論")
+    print(f"  配達後に戻るべきエリア: {rows[0][0]}（{yen(rows[0][1])}/h）")
+    if len(rows) > 2:
+        print(f"  流れたら損なエリア  : {rows[-1][0]}（{yen(rows[-1][1])}/h）")
+        print("  → 下位エリアへの配達を終えたら、その場で待たずに上位エリアへ戻る。")
+
+
+# ---------------------------------------------------------------- 4. 避ける店
+
+def which_pickups(trips):
+    h1("4. 受取先 — どの店を避けるか")
+    shops = defaultdict(list)
+    for t in trips:
+        if t.get("pickup"):
+            shops[t["pickup"]].append(t)
+    if not shops:
+        print("  受取店舗の情報がないため算出できません。")
+        print("  → 収集項目に『受取場所』を含めると、待たされて損をしている店が特定できます。")
+        return
+    rows = []
+    for s, ts in shops.items():
+        if len(ts) < 3:
+            continue
+        mins = sum((t.get("minutes") or t.get("cycle") or 0) for t in ts)
+        if mins <= 0:
+            continue
+        waits = [t["wait"] for t in ts if t.get("wait") is not None]
+        rows.append((s, sum(t["amount"] for t in ts) / mins * 60, len(ts),
+                     statistics.mean(waits) if waits else None))
+    if not rows:
+        print("  店舗ごとの件数が少なく、判断できません。")
+        return
+    rows.sort(key=lambda x: x[1])
+    h2("時給が低い受取先（3件以上）")
+    for s, hourly, c, w in rows[:10]:
+        wtxt = f"  平均待ち {w:.0f}分" if w is not None else ""
+        print(f"    {s[:28]:<30}{yen(hourly):>10}{c:>5}件{wtxt}")
+    h2("結論")
+    print(f"  断る候補: {rows[0][0]}（{yen(rows[0][1])}/h）")
+    print("  → 同じ店で繰り返し低い時給が出ているなら、その店からの依頼は受けない。")
+    print("     店は選べないが、鳴った時点で店名は見える。低単価店 × 長距離は即断る。")
+
+
+# ---------------------------------------------------------------- まとめ
+
+def action_summary(rule, trips, sessions, online_h):
+    h1("まとめ — 明日からやること")
+    n = 1
+    if rule:
+        print(f"  {n}. 受注: {rule['rule']}")
+        print("     ただし注文が途切れる時間帯では全部受ける（空き時間の損の方が大きい）")
+        n += 1
+    print(f"  {n}. 稼働: 上の2節で時給が高い時間帯に寄せる。薄い時間帯から削る")
+    n += 1
+    print(f"  {n}. 移動: 配達後は時給の高いエリアへ戻る。低いエリアで待たない")
+    n += 1
+    print(f"  {n}. 記録: 2週間後にもう一度データを取り、この数字が動いたかで効果を測る")
+    print("\n  ※ 一度に全部変えないこと。まず受注ルールだけを2週間試し、")
+    print("     実効時給が上がったことを確認してから次を足す。")
 
 
 def main():
-    p = argparse.ArgumentParser(description="Uber 配達実績の取引明細を分析する")
-    p.add_argument("files", nargs="+", help="取引明細の CSV / TSV")
-    p.add_argument("--hours", help="オンライン時間の実測CSV（あれば実効時給が推定でなく実測になる）")
-    p.add_argument("--target", type=int, default=320000, help="月次の目標収入（既定: 320000）")
-    p.add_argument("--tz-shift", type=float, default=0.0,
-                   help="時刻の補正時間。Uber の書き出しがUTCなら 9 を指定")
-    p.add_argument("--gap-min", type=int, default=45, help="セッションの区切りとみなす無取引の分数")
-    p.add_argument("--tail-min", type=int, default=20, help="各セッションの末尾に加算する分数")
+    p = argparse.ArgumentParser(description="配達1件ごとの記録から効率化の行動を出す")
+    p.add_argument("files", nargs="+")
+    p.add_argument("--tz-shift", type=float, default=0.0, help="UTC書き出しなら 9")
+    p.add_argument("--gap-min", type=int, default=45, help="別セッションとみなす無注文の分数")
+    p.add_argument("--tail-min", type=int, default=20, help="各セッション末尾に加算する分数")
     a = p.parse_args()
 
-    records, notes = load(a.files, a.tz_shift)
-    hours = load_hours(a.hours, a.tz_shift) if a.hours else {}
-    report(records, notes, hours, a.target, a.gap_min, a.tail_min)
+    trips, notes = load(a.files, a.tz_shift)
+    h1("0. 読み込み")
+    for nte in notes:
+        print("  " + nte)
+    if not trips:
+        raise SystemExit("\n有効な配達記録が0件です。README の収集手順を確認してください。")
 
-    if not a.tz_shift and records:
-        night = sum(1 for r in records if r["dt"].hour in (0, 1, 2, 3, 4, 5))
-        if night > len(records) * 0.4:
-            print("\n[注意] 深夜帯の取引が異常に多い。書き出しがUTCの可能性がある。"
-                  "\n       --tz-shift 9 を付けて再実行してください。")
+    sessions = build_sessions(trips, a.gap_min)
+    online_h = online_minutes(sessions, a.tail_min) / 60
+    total = sum(t["amount"] for t in trips)
+    print(f"\n  配達 {len(trips):,} 件 / {trips[0]['dt']:%Y-%m-%d} 〜 {trips[-1]['dt']:%Y-%m-%d}")
+    print(f"  稼働 {len(sessions)} 回・{online_h:,.1f} 時間 / 総額 {yen(total)}")
+    if online_h:
+        print(f"  いまの実効時給 {yen(total / online_h)}/h")
+
+    missing = [k for k, label in (("minutes", "所要時間"), ("km", "距離"),
+                                  ("pickup", "受取場所"), ("area", "配達先エリア"))
+               if not any(t.get(k) for t in trips)]
+    if missing:
+        labels = {"minutes": "所要時間", "km": "距離", "pickup": "受取場所", "area": "配達先エリア"}
+        print(f"\n  [不足] {'、'.join(labels[m] for m in missing)} が無いため、"
+              "対応する節は算出できません。")
+
+    rule = accept_rules(trips, sessions, online_h)
+    when_to_work(trips, sessions)
+    where_to_wait(trips)
+    which_pickups(trips)
+    action_summary(rule, trips, sessions, online_h)
+
+    if not a.tz_shift:
+        night = sum(1 for t in trips if t["dt"].hour < 6)
+        if night > len(trips) * 0.4:
+            print("\n[注意] 深夜帯が多すぎます。書き出しがUTCの可能性。--tz-shift 9 で再実行してください。")
 
 
 if __name__ == "__main__":
