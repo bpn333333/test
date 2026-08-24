@@ -49,6 +49,23 @@ DLL が無い状態で `--compute-device auto`（既定）を使った場合は�
 
 CLI を覚えなくても、同じ機能をブラウザから操作できる。
 
+### ダブルクリックで起動する
+
+`start-app.cmd` をダブルクリックすればブラウザが開く。PowerShell は要らない。
+起動済みのときは二重に立ち上げず、ブラウザを開くだけで終わる。
+
+デスクトップにショートカットを置くには一度だけ次を実行する。
+`-Startup` を付けるとサインイン時に自動起動し、`-Remove` で両方消える。
+
+```powershell
+powershell -ExecutionPolicy Bypass -File install-shortcut.ps1
+```
+
+ショートカットは最小化で開くので、普段は画面に出てこない。
+止めたいときはタスクバーのウィンドウを閉じる。
+
+### コマンドから起動する
+
 ```powershell
 python webapp.py --open
 ```
