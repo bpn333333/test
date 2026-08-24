@@ -17,11 +17,10 @@ _dll_cookies: list = []
 
 
 def _nvidia_dll_dirs() -> list[str]:
-    """pip で入れた CUDA ライブラリの DLL があるディレクトリを列挙する。
+    r"""pip で入れた CUDA ライブラリの DLL があるディレクトリを列挙する。
 
-    nvidia-cublas-cu12 などは DLL を site-packages\nvidia\<lib>\bin に置くが、
-    Windows の DLL 検索パスには入らないため、そのままでは
-    「cublas64_12.dll is not found」で落ちる。
+    nvidia-cublas-cu12 などは DLL を site-packages\nvidia\<lib>\bin に置くだけで、
+    Windows の DLL 検索パスには入らない。
     """
     try:
         import nvidia
@@ -37,16 +36,32 @@ def _nvidia_dll_dirs() -> list[str]:
     return dirs
 
 
-def register_nvidia_dlls(add_dll_directory=None) -> list[str]:
-    """CUDA の DLL ディレクトリを検索対象に加える（Windows 以外では何もしない）。"""
+def register_nvidia_dlls(add_dll_directory=None, env=None) -> list[str]:
+    """CUDA の DLL を見つけられるようにする（Windows 以外では何もしない）。
+
+    os.add_dll_directory() だけでは足りない。あれは LOAD_LIBRARY_SEARCH_USER_DIRS
+    付きで読み込まれる DLL にしか効かず、ctranslate2 が内部で LoadLibrary を
+    直接呼ぶ経路には届かないため、PATH にも通す。
+    """
     if add_dll_directory is None:
         add_dll_directory = getattr(os, "add_dll_directory", None)
         if add_dll_directory is None:  # Windows 以外
             return []
 
     dirs = _nvidia_dll_dirs()
+    if not dirs:
+        return []
+
     for directory in dirs:
         _dll_cookies.append(add_dll_directory(directory))
+
+    if env is None:
+        env = os.environ
+    current = env.get("PATH", "")
+    known = current.split(os.pathsep)
+    missing = [d for d in dirs if d not in known]
+    if missing:
+        env["PATH"] = os.pathsep.join(missing + ([current] if current else []))
     return dirs
 
 

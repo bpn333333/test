@@ -1,5 +1,6 @@
 """load_model の CUDA 退避と DLL 登録を検証する（GPU も faster-whisper も不要）。"""
 
+import os
 import sys
 import tempfile
 import types
@@ -7,6 +8,9 @@ from pathlib import Path
 
 import whisper_model
 from whisper_model import load_model, register_nvidia_dlls
+
+# os.pathsep を含まない値にする（Linux でテストすると ":" で分割されるため）
+EXISTING = "existing-path-entry"
 
 CUBLAS_ERROR = RuntimeError("Library cublas64_12.dll is not found or cannot be loaded")
 
@@ -70,8 +74,8 @@ def test_construction_failure_also_falls_back():
     assert model.device == "cpu"
 
 
-def test_registers_every_directory_holding_a_cuda_dll():
-    """nvidia パッケージ配下の DLL があるディレクトリを漏れなく登録する。"""
+def _fake_nvidia_tree():
+    """nvidia パッケージを模したディレクトリを作り、sys.modules に差し込む。"""
     root = Path(tempfile.mkdtemp())
     for rel in ["cublas/bin/cublas64_12.dll", "cudnn/bin/cudnn64_9.dll",
                 "cuda_nvrtc/bin/nvrtc64_120_0.dll"]:
@@ -83,9 +87,17 @@ def test_registers_every_directory_holding_a_cuda_dll():
     fake = types.ModuleType("nvidia")
     fake.__path__ = [str(root)]
     sys.modules["nvidia"] = fake
+    return root
+
+
+def test_registers_every_directory_holding_a_cuda_dll():
+    _fake_nvidia_tree()
     try:
         added = []
-        dirs = register_nvidia_dlls(add_dll_directory=lambda d: added.append(d) or d)
+        env = {"PATH": EXISTING}
+        dirs = register_nvidia_dlls(
+            add_dll_directory=lambda d: added.append(d) or d, env=env
+        )
     finally:
         del sys.modules["nvidia"]
 
@@ -94,10 +106,37 @@ def test_registers_every_directory_holding_a_cuda_dll():
     assert len(whisper_model._dll_cookies) >= 3  # 戻り値を保持している
 
 
+def test_dll_dirs_are_prepended_to_path():
+    """add_dll_directory は ctranslate2 の LoadLibrary に届かないので PATH が要る。"""
+    _fake_nvidia_tree()
+    try:
+        env = {"PATH": EXISTING}
+        dirs = register_nvidia_dlls(add_dll_directory=lambda d: d, env=env)
+    finally:
+        del sys.modules["nvidia"]
+
+    entries = env["PATH"].split(os.pathsep)
+    assert entries[: len(dirs)] == dirs  # 既存 PATH より前に来る
+    assert entries[-1] == EXISTING  # 既存の PATH は残る
+
+
+def test_path_is_not_duplicated_on_second_call():
+    _fake_nvidia_tree()
+    try:
+        env = {"PATH": EXISTING}
+        register_nvidia_dlls(add_dll_directory=lambda d: d, env=env)
+        first = env["PATH"]
+        register_nvidia_dlls(add_dll_directory=lambda d: d, env=env)
+    finally:
+        del sys.modules["nvidia"]
+
+    assert env["PATH"] == first
+
+
 def test_no_nvidia_package_is_not_an_error():
     sys.modules["nvidia"] = None  # import nvidia が ImportError になる
     try:
-        assert register_nvidia_dlls(add_dll_directory=lambda d: d) == []
+        assert register_nvidia_dlls(add_dll_directory=lambda d: d, env={}) == []
     finally:
         del sys.modules["nvidia"]
 

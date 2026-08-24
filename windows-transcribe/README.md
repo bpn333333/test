@@ -34,7 +34,12 @@ pip install nvidia-cublas-cu12 nvidia-cudnn-cu12
 
 pip 版は DLL を `site-packages\nvidia\<lib>\bin` に置くだけで Windows の
 DLL 検索パスには入らないため、`whisper_model.py` が faster-whisper の import 前に
-`os.add_dll_directory()` で登録している。PATH を手で通す必要はない。
+その場所を `os.add_dll_directory()` と `PATH` の両方へ登録している。手で PATH を
+通す必要はない。
+
+`os.add_dll_directory()` だけでは足りない点に注意。あれは
+`LOAD_LIBRARY_SEARCH_USER_DIRS` 付きで読み込まれる DLL にしか効かず、
+ctranslate2 が内部で `LoadLibrary` を直接呼ぶ経路には届かない。
 
 DLL が無い状態で `--compute-device auto`（既定）を使った場合は、CUDA での
 短い試験推論に失敗した時点で自動的に CPU へ切り替わる。`cuda` を明示した
