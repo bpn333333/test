@@ -1,10 +1,14 @@
 <#
-  デスクトップに「文字起こし」のショートカットを作る。
+  「文字起こし」のショートカットを作る。
 
       powershell -ExecutionPolicy Bypass -File install-shortcut.ps1
 
-  -Startup を付けると Windows へのサインイン時に自動起動する。
-  -Remove を付けると両方とも削除する。
+  デスクトップとスタートメニューの両方に置く。デスクトップは OneDrive に
+  移動していることがあるため、作成先を実際のパスで表示し、最後に
+  エクスプローラーで選択状態にして開く。
+
+  -Startup  サインイン時に自動起動する
+  -Remove   作ったショートカットをすべて削除する
 #>
 param(
   [switch]$Startup,
@@ -19,11 +23,18 @@ if (-not (Test-Path $target)) {
   throw "start-app.cmd が見つかりません: $target"
 }
 
-$name    = "文字起こし.lnk"
-$desktop = Join-Path ([Environment]::GetFolderPath("Desktop")) $name
-$startup = Join-Path ([Environment]::GetFolderPath("Startup")) $name
+$name = "文字起こし.lnk"
+$paths = [ordered]@{
+  "デスクトップ"       = Join-Path ([Environment]::GetFolderPath("Desktop")) $name
+  "スタートメニュー"   = Join-Path ([Environment]::GetFolderPath("Programs")) $name
+}
+$startupPath = Join-Path ([Environment]::GetFolderPath("Startup")) $name
 
 function New-Link($path) {
+  $parent = Split-Path -Parent $path
+  if (-not (Test-Path $parent)) {
+    New-Item -ItemType Directory -Path $parent -Force | Out-Null
+  }
   $shell = New-Object -ComObject WScript.Shell
   $link = $shell.CreateShortcut($path)
   $link.TargetPath       = $target
@@ -31,21 +42,34 @@ function New-Link($path) {
   $link.Description      = "デスクトップ音声の文字起こし"
   $link.WindowStyle      = 7   # 最小化で開く。ウィンドウは停止用に残る
   $link.Save()
-  Write-Host "作成しました: $path"
 }
 
 if ($Remove) {
-  foreach ($path in @($desktop, $startup)) {
+  foreach ($path in @($paths.Values) + @($startupPath)) {
     if (Test-Path $path) {
       Remove-Item $path
       Write-Host "削除しました: $path"
     }
   }
+  Write-Host ""
+  Write-Host "ショートカットを削除しました。start-app.cmd は残っています。"
   return
 }
 
-New-Link $desktop
-if ($Startup) {
-  New-Link $startup
-  Write-Host "サインイン時に自動起動します。解除するには -Remove を付けて実行してください。"
+Write-Host ""
+foreach ($entry in $paths.GetEnumerator()) {
+  New-Link $entry.Value
+  Write-Host ("  {0,-16} {1}" -f $entry.Key, $entry.Value)
 }
+
+if ($Startup) {
+  New-Link $startupPath
+  Write-Host ("  {0,-16} {1}" -f "自動起動", $startupPath)
+}
+
+Write-Host ""
+Write-Host "デスクトップに見つからないときは、スタートメニューで「文字起こし」と入力してください。"
+Write-Host "元のファイルはこちらです: $target"
+
+# 作った場所をエクスプローラーで開き、ショートカットを選択状態にする
+Start-Process explorer.exe "/select,`"$($paths['デスクトップ'])`""
