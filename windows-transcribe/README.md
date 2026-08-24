@@ -21,8 +21,20 @@ py -m venv .venv
 pip install -r requirements.txt
 ```
 
-GPU（NVIDIA）がある場合は CUDA 版の cuDNN/cuBLAS が必要。導入済みなら
-`--compute-device cuda --compute-type float16` で数倍速くなる。
+### GPU（NVIDIA）を使う場合
+
+ctranslate2 は CUDA 12 の cuBLAS と cuDNN 9 の DLL を必要とする。pip で入るので
+CUDA Toolkit のフルインストールは不要:
+
+```powershell
+pip install nvidia-cublas-cu12 nvidia-cudnn-cu12
+```
+
+これで `--compute-device cuda --compute-type float16` が使える。
+
+DLL が無い状態で `--compute-device auto`（既定）を使った場合は、CUDA での
+短い試験推論に失敗した時点で自動的に CPU へ切り替わる。`cuda` を明示した
+場合は退避せずエラーになる。
 
 ## 使い方
 
@@ -86,13 +98,22 @@ CPU のみなら `--compute-device cpu --compute-type int8`、GPU なら
 - または OBS で「デスクトップ音声」と「マイク」を別トラック録音し、
   それぞれ `transcribe.py` にかけて話者を分ける（こちらのほうが後で扱いやすい）
 
+## よくある警告
+
+- `huggingface_hub cache-system uses symlinks ...` — モデルキャッシュが
+  シンボリックリンクを使えないという警告。ディスクを少し余分に使うだけで
+  動作に影響はない。消したい場合は開発者モードを有効にする。
+- `A new release of pip is available` — 無視してよい。
+
 ## テスト
 
-区切り判定のロジックは OS 非依存なので、Windows 以外でも実行できる。
+推論とオーディオ取り込みを含まないロジックは OS 非依存なので、
+Windows 以外でも実行できる。
 
 ```bash
 pip install numpy
-python test_segment_buffer.py
+python test_segment_buffer.py   # 無音による区切り判定
+python test_whisper_model.py    # CUDA から CPU への退避
 ```
 
 ## 注意

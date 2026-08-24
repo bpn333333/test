@@ -1,0 +1,59 @@
+"""faster-whisper のモデル読み込み（CUDA が使えなければ CPU に退避する）。
+
+ctranslate2 の device="auto" は GPU の存在だけを見て CUDA を選ぶため、
+cuBLAS / cuDNN の DLL が無い環境では *推論が始まった時点で* 落ちる。
+読み込み直後に短い推論を試して、その場で CPU に切り替える。
+"""
+
+from __future__ import annotations
+
+import numpy as np
+
+
+def _probe(model) -> None:
+    """1 秒の無音を通してエンコーダまで到達させ、CUDA の実動作を確かめる。"""
+    segments, _ = model.transcribe(
+        np.zeros(16000, dtype=np.float32),
+        language="ja",
+        vad_filter=False,
+        beam_size=1,
+    )
+    list(segments)  # ジェネレータを回さないとエンコードされない
+
+
+def load_model(
+    name: str,
+    compute_device: str = "auto",
+    compute_type: str = "default",
+    factory=None,
+    probe=_probe,
+):
+    """モデルを読み込む。auto 指定時は CUDA を試してから CPU に退避する。"""
+    if factory is None:
+        from faster_whisper import WhisperModel
+
+        factory = WhisperModel
+
+    if compute_device == "auto":
+        attempts = [("cuda", compute_type), ("cpu", compute_type)]
+    else:
+        attempts = [(compute_device, compute_type)]
+
+    for index, (device, ctype) in enumerate(attempts):
+        # CPU では default（float32）より int8 のほうが大幅に速い
+        if device == "cpu" and ctype == "default":
+            ctype = "int8"
+
+        last = index == len(attempts) - 1
+        print(f"モデル読み込み中: {name} ({device} / {ctype})")
+        try:
+            model = factory(name, device=device, compute_type=ctype)
+            probe(model)
+        except Exception as exc:
+            if last:
+                raise
+            print(f"  {device} を使えないため切り替えます: {exc}")
+            continue
+        return model
+
+    raise RuntimeError("モデルを読み込めませんでした")  # 到達しない

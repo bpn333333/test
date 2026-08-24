@@ -9,6 +9,8 @@ import argparse
 import json
 from pathlib import Path
 
+from whisper_model import load_model
+
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="faster-whisper による文字起こし")
@@ -84,15 +86,6 @@ def write_json(path: Path, segments: list[dict]) -> None:
 WRITERS = {"txt": write_txt, "srt": write_srt, "vtt": write_vtt, "json": write_json}
 
 
-def load_model(args: argparse.Namespace):
-    from faster_whisper import WhisperModel
-
-    print(f"モデル読み込み中: {args.model} ({args.compute_device})")
-    return WhisperModel(
-        args.model, device=args.compute_device, compute_type=args.compute_type
-    )
-
-
 def main() -> None:
     args = parse_args()
     formats = [f.strip() for f in args.format.split(",") if f.strip()]
@@ -104,7 +97,7 @@ def main() -> None:
     if not audio.exists():
         raise SystemExit(f"ファイルが見つかりません: {audio}")
 
-    model = load_model(args)
+    model = load_model(args.model, args.compute_device, args.compute_type)
     segments, info = model.transcribe(
         str(audio),
         language=args.language,

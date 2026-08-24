@@ -16,6 +16,7 @@ import time
 import numpy as np
 
 from loopback import LoopbackRecorder, resample_to_16k, to_mono_float
+from whisper_model import load_model
 
 
 def parse_args() -> argparse.Namespace:
@@ -140,12 +141,7 @@ def transcribe_worker(model, jobs: "queue.Queue", args: argparse.Namespace) -> N
 def main() -> None:
     args = parse_args()
 
-    from faster_whisper import WhisperModel
-
-    print(f"モデル読み込み中: {args.model} ({args.compute_device})")
-    model = WhisperModel(
-        args.model, device=args.compute_device, compute_type=args.compute_type
-    )
+    model = load_model(args.model, args.compute_device, args.compute_type)
 
     jobs: "queue.Queue" = queue.Queue()
     worker = threading.Thread(
