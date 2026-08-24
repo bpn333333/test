@@ -131,6 +131,25 @@ main {
 }
 .field em { font-style: normal; font-size: 11px; color: var(--ink-3); }
 
+/* select と併記するラベル。span と同じ見た目で label 要素として使う */
+.field-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-2);
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.with-button { display: flex; gap: 6px; min-width: 0; }
+.with-button select { flex: 1; min-width: 0; }
+.with-button button {
+  padding: 7px 12px;
+  font-size: 15px;
+  line-height: 1;
+  flex: none;
+}
+
 select, input[type="text"], input[type="number"] {
   font: inherit;
   font-size: 14px;

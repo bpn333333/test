@@ -17,12 +17,17 @@ import time
 import numpy as np
 
 from loopback import LoopbackRecorder, resample_to_16k, to_mono_float
+from process_loopback import ProcessLoopbackRecorder
 from whisper_model import load_model
 
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="リアルタイム文字起こし")
     p.add_argument("-d", "--device", help="ループバックデバイス名の一部")
+    p.add_argument(
+        "--process", type=int, metavar="PID",
+        help="このプロセスの音だけを取り込む（list_windows.py で PID を調べる）",
+    )
     p.add_argument(
         "-m", "--model", default="medium",
         help="モデル名。リアルタイム用途では small/medium が無難（既定: medium）",
@@ -179,8 +184,13 @@ def main() -> None:
     )
     worker.start()
 
-    with LoopbackRecorder(args.device) as rec:
-        print(f"録音デバイス: {rec.device['name']} ({rec.rate} Hz)")
+    recorder = (
+        ProcessLoopbackRecorder(args.process)
+        if args.process
+        else LoopbackRecorder(args.device)
+    )
+    with recorder as rec:
+        print(f"収録元: {rec.device['name']} ({rec.rate} Hz)")
         print("停止するには Ctrl+C\n")
 
         buffer = SegmentBuffer(

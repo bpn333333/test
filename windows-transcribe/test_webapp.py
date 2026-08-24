@@ -9,6 +9,7 @@ import re
 
 from fastapi.testclient import TestClient
 
+import process_loopback
 import webapp
 from webapp import Segment, Settings, app
 
@@ -39,6 +40,109 @@ def test_model_key_ignores_unrelated_settings():
     c = Settings.from_request({"model": "medium", "prompt": "甲"})
     assert a.model_key == b.model_key
     assert a.model_key != c.model_key
+
+
+# ---- 収録元 -------------------------------------------------------------
+
+
+def test_window_capture_reports_why_it_is_unavailable():
+    """Windows 以外では 500 にせず理由を返す。"""
+    body = client().get("/api/windows").json()
+    assert body["windows"] == []
+    assert "Windows" in body["error"]
+
+
+def test_process_settings_are_carried_through():
+    s = Settings.from_request({"process_id": "4242", "window_title": "会議 - Zoom"})
+    assert s.process_id == "4242"
+    assert s.window_title == "会議 - Zoom"
+    assert s.device is None
+
+
+class _FakeRecorder:
+    """録音元の最小の代役。"""
+
+    def __init__(self, name, fails=False):
+        self.device = {"name": name, "index": -1}
+        self.rate, self.channels = 48000, 2
+        self._fails = fails
+        self.entered = False
+
+    def __enter__(self):
+        if self._fails:
+            raise process_loopback.ProcessLoopbackError("この環境では使えません")
+        self.entered = True
+        return self
+
+    def __exit__(self, *exc):
+        self.entered = False
+
+
+def _with_recorders(monkey_process, monkey_device):
+    original = (webapp.ProcessLoopbackRecorder, webapp.LoopbackRecorder)
+    webapp.ProcessLoopbackRecorder = monkey_process
+    webapp.LoopbackRecorder = monkey_device
+    return original
+
+
+def _restore(original):
+    webapp.ProcessLoopbackRecorder, webapp.LoopbackRecorder = original
+
+
+def test_window_capture_falls_back_to_the_device():
+    """ウィンドウ単位が使えなくても止めず、理由を伝えてデバイス録音に退避する。"""
+    events = []
+    session = webapp.Session()
+    session.emit = events.append
+
+    original = _with_recorders(
+        lambda pid, title: _FakeRecorder(title, fails=True),
+        lambda device: _FakeRecorder("スピーカー"),
+    )
+    try:
+        rec = session.open_recorder(Settings.from_request({"process_id": "4242"}))
+    finally:
+        _restore(original)
+
+    assert rec.device["name"] == "スピーカー"
+    assert rec.entered
+    warnings = [e for e in events if e["type"] == "warning"]
+    assert len(warnings) == 1 and "デバイス全体" in warnings[0]["message"]
+
+
+def test_window_capture_is_used_when_it_works():
+    events = []
+    session = webapp.Session()
+    session.emit = events.append
+
+    original = _with_recorders(
+        lambda pid, title: _FakeRecorder(f"{title}#{pid}"),
+        lambda device: _FakeRecorder("使ってはいけない"),
+    )
+    try:
+        rec = session.open_recorder(
+            Settings.from_request({"process_id": "4242", "window_title": "Zoom"})
+        )
+    finally:
+        _restore(original)
+
+    assert rec.device["name"] == "Zoom#4242"
+    assert not [e for e in events if e["type"] == "warning"]
+
+
+def test_device_capture_never_touches_process_capture():
+    session = webapp.Session()
+    session.emit = lambda event: None
+
+    def refuse(*_args):
+        raise AssertionError("プロセス指定が無いのに呼ばれた")
+
+    original = _with_recorders(refuse, lambda device: _FakeRecorder("スピーカー"))
+    try:
+        rec = session.open_recorder(Settings.from_request({"device": "スピーカー"}))
+    finally:
+        _restore(original)
+    assert rec.device["name"] == "スピーカー"
 
 
 # ---- 画面 ---------------------------------------------------------------

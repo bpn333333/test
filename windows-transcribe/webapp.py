@@ -44,6 +44,7 @@ from loopback import (
     resample_to_16k,
     to_mono_float,
 )
+from process_loopback import ProcessLoopbackError, ProcessLoopbackRecorder, list_audio_windows
 from transcribe import WRITERS, format_timestamp
 from whisper_model import load_model
 
@@ -62,6 +63,8 @@ class Settings:
     """ブラウザから渡される設定。欠けている項目は既定値で補う。"""
 
     device: str | None = None
+    process_id: str | None = None   # 指定するとそのプロセスの音だけを取り込む
+    window_title: str | None = None
     model: str = "large-v3"
     language: str = "ja"
     compute_device: str = "auto"
@@ -228,6 +231,32 @@ class Session:
             self.segments.append(segment)
             self.emit({"type": "segment", **segment.as_dict()})
 
+    # ---- 録音元 -----------------------------------------------------------
+
+    def open_recorder(self, settings: Settings):
+        """録音元を開いて返す。呼び出し側が __exit__ する責任を持つ。
+
+        ウィンドウ（プロセス）指定が使えない環境は珍しくないので、
+        失敗しても止めずにデバイス録音へ退避し、理由を画面に出す。
+        """
+        if settings.process_id:
+            recorder = ProcessLoopbackRecorder(
+                int(settings.process_id), settings.window_title or ""
+            )
+            try:
+                recorder.__enter__()
+                return recorder
+            except (ProcessLoopbackError, OSError) as exc:
+                self.emit({
+                    "type": "warning",
+                    "message": f"ウィンドウ単位の取り込みに失敗しました（{exc}）。"
+                               "デバイス全体の録音に切り替えます。",
+                })
+
+        recorder = LoopbackRecorder(settings.device)
+        recorder.__enter__()
+        return recorder
+
     # ---- リアルタイム -----------------------------------------------------
 
     def run_live(self, settings: Settings) -> None:
@@ -238,7 +267,8 @@ class Session:
         )
         worker.start()
 
-        with LoopbackRecorder(settings.device) as rec:
+        rec = self.open_recorder(settings)
+        try:
             self.source = rec.device["name"]
             self.set_state("live", "取り込み中")
             buffer = SegmentBuffer(
@@ -273,6 +303,8 @@ class Session:
             tail = buffer.flush()
             if tail is not None:
                 jobs.put((tail, rec.rate, total - len(tail) / rec.rate))
+        finally:
+            rec.__exit__(None, None, None)
 
         self.set_state("live", "残りを処理中")
         jobs.put(None)
@@ -282,7 +314,8 @@ class Session:
 
     def run_record(self, settings: Settings) -> None:
         path = Path(tempfile.gettempdir()) / f"loopback-{int(time.time())}.wav"
-        with LoopbackRecorder(settings.device) as rec:
+        rec = self.open_recorder(settings)
+        try:
             self.source = rec.device["name"]
             self.set_state("record", "録音中")
             with wave.open(str(path), "wb") as wav:
@@ -303,6 +336,8 @@ class Session:
                         self.emit(
                             {"type": "level", "rms": rms, "elapsed": written / rec.rate}
                         )
+        finally:
+            rec.__exit__(None, None, None)
 
         self.wav_path = path
         self.emit({"type": "recorded", "path": str(path), "name": path.name})
@@ -391,6 +426,15 @@ async def devices() -> JSONResponse:
     finally:
         pa.terminate()
     return JSONResponse({"devices": found, "error": None})
+
+
+@app.get("/api/windows")
+async def windows() -> JSONResponse:
+    """音を出しうるウィンドウの一覧。取り込めない環境では理由を返す。"""
+    try:
+        return JSONResponse({"windows": list_audio_windows(), "error": None})
+    except (ProcessLoopbackError, OSError) as exc:
+        return JSONResponse({"windows": [], "error": str(exc)})
 
 
 @app.get("/api/state")

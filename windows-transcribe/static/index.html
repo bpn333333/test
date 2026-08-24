@@ -28,10 +28,15 @@
   <section class="panel controls">
 
     <div class="row">
-      <label class="field grow">
-        <span>録音するデバイス</span>
-        <select id="device"></select>
-      </label>
+      <div class="field grow">
+        <label class="field-label" for="source-select">
+          収録元<em>ウィンドウを選ぶとそのアプリの音だけを録ります</em>
+        </label>
+        <div class="with-button">
+          <select id="source-select"></select>
+          <button type="button" id="refresh" title="ウィンドウ一覧を更新">↻</button>
+        </div>
+      </div>
       <label class="field">
         <span>モデル</span>
         <select id="model">

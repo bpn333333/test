@@ -131,6 +131,30 @@ python live.py --model medium --language ja -o live.txt
 | 逆に区切られすぎる | `--noise-factor 3` |
 | 暗騒音への追従を切りたい | `--noise-factor 0` |
 
+## ウィンドウ単位で録る
+
+「収録元」でウィンドウを選ぶと、そのアプリの音だけを取り込む。Windows の
+Application Loopback API（`ActivateAudioInterfaceAsync` + `PROCESS_LOOPBACK`）を
+使うもので、OBS の「アプリケーション音声キャプチャ」と同じ仕組み。
+Windows 10 build 20348 以降が必要。
+
+**「ウィンドウ単位」ではなく「プロセス単位」である点に注意。** Chrome のように
+タブが別プロセスのアプリでは実質タブ単位になり、逆に 1 プロセスで複数の
+ウィンドウを持つアプリではそれらを分離できない。一覧は同じプロセスの
+ウィンドウを 1 件にまとめて表示する。
+
+コマンドラインからも使える。
+
+```powershell
+python list_windows.py              # PID を調べる
+python live.py --process 12345      # そのアプリの音だけ
+```
+
+使えない環境では、理由を表示したうえでデバイス全体の録音に自動で退避する。
+原因を調べるには `diagnose.cmd` をダブルクリックする。
+
+自分の声は入らない点はデバイス録音と同じ。マイクは別経路。
+
 ## モデルの選び方
 
 | モデル | CPU (int8) | GPU (float16) | 用途 |

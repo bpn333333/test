@@ -3,13 +3,14 @@
 const $ = (id) => document.getElementById(id);
 
 const el = {
-  device: $("device"), model: $("model"), language: $("language"),
+  source: $("source-select"), refresh: $("refresh"),
+  model: $("model"), language: $("language"),
   compute: $("compute"), prompt: $("prompt"),
   silence: $("silence"), min: $("min_seconds"), max: $("max_seconds"),
   threshold: $("threshold"), noise: $("noise_factor"),
   live: $("live"), record: $("record"), stop: $("stop"),
   upload: $("upload"), uploadLabel: $("upload-label"),
-  pill: $("pill"), source: $("source"),
+  pill: $("pill"), sourceName: $("source"),
   meter: $("meter"), meterFill: $("meter-fill"), meterTime: $("meter-time"),
   segments: $("segments"), empty: $("empty"), downloads: $("downloads"),
   copy: $("copy"), toast: $("toast"),
@@ -76,8 +77,13 @@ function resetSegments() {
 
 function settings() {
   const [compute_device, compute_type] = el.compute.value.split("|");
+  // 収録元は "d:<デバイス名>" か "p:<PID>" のどちらか
+  const picked = el.source.value || "";
+  const isWindow = picked.startsWith("p:");
   return {
-    device: el.device.value || null,
+    device: isWindow ? null : picked.slice(2) || null,
+    process_id: isWindow ? picked.slice(2) : null,
+    window_title: isWindow ? (titles.get(picked.slice(2)) || null) : null,
     model: el.model.value,
     language: el.language.value,
     compute_device, compute_type,
@@ -105,24 +111,57 @@ async function post(path, payload) {
 
 // ---------------------------------------------------------------- 起動
 
-async function loadDevices() {
-  const res = await fetch("/api/devices");
-  const data = await res.json();
-  if (data.error) {
-    el.device.replaceChildren(new Option("取り込めません", ""));
-    el.device.disabled = true;
+const titles = new Map();   // PID -> ウィンドウのタイトル
+
+function group(label) {
+  const g = document.createElement("optgroup");
+  g.label = label;
+  return g;
+}
+
+async function loadSources() {
+  const keep = el.source.value;
+  const [devices, windows] = await Promise.all([
+    fetch("/api/devices").then((r) => r.json()),
+    fetch("/api/windows").then((r) => r.json()).catch(() => ({ windows: [], error: null })),
+  ]);
+
+  el.source.replaceChildren();
+  titles.clear();
+
+  if (devices.error) {
+    el.source.append(new Option("取り込めません", ""));
+    el.source.disabled = true;
     el.live.disabled = true;
     el.record.disabled = true;
-    toast(data.error, "error");
+    toast(devices.error, "error");
     return;
   }
-  el.device.replaceChildren();
-  for (const dev of data.devices) {
-    const label = `${dev.name}${dev.default ? "（既定）" : ""}`;
-    const option = new Option(label, dev.name);
+
+  const deviceGroup = group("デバイス全体");
+  for (const dev of devices.devices) {
+    const option = new Option(`${dev.name}${dev.default ? "（既定）" : ""}`, `d:${dev.name}`);
     option.title = `${dev.name} — ${dev.rate} Hz / ${dev.channels} ch`;
     if (dev.default) option.selected = true;
-    el.device.append(option);
+    deviceGroup.append(option);
+  }
+  el.source.append(deviceGroup);
+
+  if (windows.windows && windows.windows.length) {
+    const windowGroup = group("ウィンドウ（そのアプリの音だけ）");
+    for (const win of windows.windows) {
+      const suffix = win.windows > 1 ? `（${win.windows} 窓）` : "";
+      const option = new Option(`${win.title}${suffix} — ${win.process}`, `p:${win.pid}`);
+      option.title = `${win.process} / PID ${win.pid}\nプロセス単位で分離します`;
+      titles.set(String(win.pid), win.title);
+      windowGroup.append(option);
+    }
+    el.source.append(windowGroup);
+  }
+
+  // 再読み込み前の選択を保てるなら保つ
+  if (keep && [...el.source.options].some((o) => o.value === keep)) {
+    el.source.value = keep;
   }
 }
 
@@ -134,7 +173,7 @@ function connect() {
     switch (msg.type) {
       case "state":
         setMode(msg.mode, msg.detail);
-        if (msg.source) el.source.textContent = msg.source;
+        if (msg.source) el.sourceName.textContent = msg.source;
         if (msg.history) {
           resetSegments();
           msg.history.forEach((seg) => addSegment(seg, false));
@@ -148,6 +187,9 @@ function connect() {
         el.meterFill.style.width =
           `${Math.min(100, Math.max(0, (20 * Math.log10(msg.rms + 1e-6) + 60) * 1.8))}%`;
         el.meterTime.textContent = clock(msg.elapsed);
+        break;
+      case "warning":
+        toast(msg.message, "error");
         break;
       case "info":
         toast(`${msg.language} / ${msg.duration.toFixed(1)} 秒 を処理します`);
@@ -214,5 +256,12 @@ el.copy.addEventListener("click", async () => {
   }
 });
 
-loadDevices();
+el.refresh.addEventListener("click", async () => {
+  el.refresh.disabled = true;
+  try { await loadSources(); toast("一覧を更新しました"); }
+  catch (err) { toast(err.message, "error"); }
+  finally { el.refresh.disabled = false; }
+});
+
+loadSources();
 connect();
