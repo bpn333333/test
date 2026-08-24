@@ -19,7 +19,7 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument("-l", "--language", default="ja", help="言語コード（既定: ja）")
     p.add_argument(
-        "--device", default="auto", choices=["auto", "cuda", "cpu"],
+        "--compute-device", default="auto", choices=["auto", "cuda", "cpu"],
         help="推論デバイス（既定: auto）",
     )
     p.add_argument(
@@ -87,9 +87,9 @@ WRITERS = {"txt": write_txt, "srt": write_srt, "vtt": write_vtt, "json": write_j
 def load_model(args: argparse.Namespace):
     from faster_whisper import WhisperModel
 
-    print(f"モデル読み込み中: {args.model} ({args.device})")
+    print(f"モデル読み込み中: {args.model} ({args.compute_device})")
     return WhisperModel(
-        args.model, device=args.device, compute_type=args.compute_type
+        args.model, device=args.compute_device, compute_type=args.compute_type
     )
 
 

@@ -27,7 +27,7 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument("-l", "--language", default="ja", help="言語コード（既定: ja）")
     p.add_argument(
-        "--device-type", default="auto", choices=["auto", "cuda", "cpu"],
+        "--compute-device", default="auto", choices=["auto", "cuda", "cpu"],
         help="推論デバイス（既定: auto）",
     )
     p.add_argument("--compute-type", default="default", help="量子化（既定: default）")
@@ -142,9 +142,9 @@ def main() -> None:
 
     from faster_whisper import WhisperModel
 
-    print(f"モデル読み込み中: {args.model} ({args.device_type})")
+    print(f"モデル読み込み中: {args.model} ({args.compute_device})")
     model = WhisperModel(
-        args.model, device=args.device_type, compute_type=args.compute_type
+        args.model, device=args.compute_device, compute_type=args.compute_type
     )
 
     jobs: "queue.Queue" = queue.Queue()

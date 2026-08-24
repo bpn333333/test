@@ -20,7 +20,7 @@ pip install -r requirements.txt
 ```
 
 GPU（NVIDIA）がある場合は CUDA 版の cuDNN/cuBLAS が必要。導入済みなら
-`--device cuda --compute-type float16` で数倍速くなる。
+`--compute-device cuda --compute-type float16` で数倍速くなる。
 
 ## 使い方
 
@@ -60,7 +60,11 @@ python live.py --model medium --language ja -o live.txt
 | `medium` | 実時間の 3〜5 倍 | 高速 | バランス型 |
 | `large-v3` | 実用外 | 実時間以下 | 日本語の精度重視 |
 
-CPU のみなら `--compute-type int8`、GPU なら `--compute-type float16` を明示すると速い。
+CPU のみなら `--compute-device cpu --compute-type int8`、GPU なら
+`--compute-device cuda --compute-type float16` を明示すると速い。
+
+なお `-d / --device` は録音するオーディオデバイス、`--compute-device` は推論を
+走らせる CPU/GPU の指定で、別物。
 
 ## 精度を上げるコツ
 
