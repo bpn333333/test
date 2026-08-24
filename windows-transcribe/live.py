@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import queue
 import threading
+from collections import deque
 import time
 
 import numpy as np
@@ -46,8 +47,12 @@ def parse_args() -> argparse.Namespace:
         help="区切りを認める最短の長さ（既定: 2.0）",
     )
     p.add_argument(
-        "--max-seconds", type=float, default=25.0,
-        help="無音が来なくてもこの長さで強制的に区切る（既定: 25.0）",
+        "--max-seconds", type=float, default=15.0,
+        help="無音が来なくてもこの長さで強制的に区切る（既定: 15.0）",
+    )
+    p.add_argument(
+        "--noise-factor", type=float, default=2.0,
+        help="暗騒音の何倍までを無音とみなすか。0 で絶対しきい値のみ（既定: 2.0）",
     )
     p.add_argument("--prompt", help="固有名詞などを与える initial_prompt")
     return p.parse_args()
@@ -58,6 +63,10 @@ class SegmentBuffer:
 
     フレームを push すると、区切りが成立したときだけ音声を返す。
     有音部分を含まないバッファは捨てる（無音だけを推論に回さない）。
+
+    無音の判定は絶対しきい値だけでは足りない。歓声や BGM が途切れない音声では
+    どのフレームも threshold を上回り、発話の切れ目を一度も検出できないため、
+    直近の暗騒音レベルにも追従させる。
     """
 
     def __init__(
@@ -67,23 +76,44 @@ class SegmentBuffer:
         silence: float,
         min_seconds: float,
         max_seconds: float,
+        noise_factor: float = 2.0,
+        noise_window: float = 5.0,
     ):
         self.rate = rate
         self.threshold = threshold
         self.silence = silence
         self.min_seconds = min_seconds
         self.max_seconds = max_seconds
+        self.noise_factor = noise_factor
+        self.noise_window = noise_window
+        self._recent: deque | None = None
         self._chunks: list[np.ndarray] = []
         self._buffered = 0.0
         self._silent_for = 0.0
         self._voiced = False
+
+    def _silence_level(self, rms: float, duration: float) -> float:
+        """このフレームを無音とみなす上限。暗騒音が大きいほど高くなる。"""
+        if not self.noise_factor:
+            return self.threshold
+
+        if self._recent is None:
+            frames = max(1, round(self.noise_window / duration))
+            self._recent = deque(maxlen=frames)
+        self._recent.append(rms)
+
+        # 直近の下位 20% を暗騒音とみなす。発話の合間も拾えるだけの窓が要る
+        if len(self._recent) < (self._recent.maxlen or 1) // 2:
+            return self.threshold
+        floor = float(np.percentile(self._recent, 20)) * self.noise_factor
+        return max(self.threshold, floor)
 
     def push(self, mono: np.ndarray) -> np.ndarray | None:
         """フレームを追加し、区切りが成立したら音声を返す。"""
         duration = len(mono) / self.rate
         rms = float(np.sqrt(np.mean(np.square(mono)))) if len(mono) else 0.0
 
-        if rms < self.threshold:
+        if rms <= self._silence_level(rms, duration):
             self._silent_for += duration
         else:
             self._silent_for = 0.0
@@ -159,6 +189,7 @@ def main() -> None:
             silence=args.silence,
             min_seconds=args.min_seconds,
             max_seconds=args.max_seconds,
+            noise_factor=args.noise_factor,
         )
         try:
             for frame in rec.frames():
