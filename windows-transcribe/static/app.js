@@ -120,6 +120,7 @@ async function loadDevices() {
   for (const dev of data.devices) {
     const label = `${dev.name}${dev.default ? "（既定）" : ""}`;
     const option = new Option(label, dev.name);
+    option.title = `${dev.name} — ${dev.rate} Hz / ${dev.channels} ch`;
     if (dev.default) option.selected = true;
     el.device.append(option);
   }

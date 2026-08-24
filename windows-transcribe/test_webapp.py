@@ -4,6 +4,9 @@
 代わりに「取り込めない環境で API が落ちずに理由を返すか」を確かめる。
 """
 
+import pathlib
+import re
+
 from fastapi.testclient import TestClient
 
 import webapp
@@ -36,6 +39,26 @@ def test_model_key_ignores_unrelated_settings():
     c = Settings.from_request({"model": "medium", "prompt": "甲"})
     assert a.model_key == b.model_key
     assert a.model_key != c.model_key
+
+
+# ---- 画面 ---------------------------------------------------------------
+
+
+def test_elements_marked_hidden_are_actually_hidden():
+    """hidden 属性は UA の display:none で効くが、作者の display:flex に負ける。
+
+    .downloads と .meter がまさにそれで、待機中でもダウンロード欄と
+    音量メーターが出てしまっていた。打ち消しの規則を消さないための番人。
+    """
+    root = pathlib.Path(__file__).parent / "static"
+    html = (root / "index.html").read_text(encoding="utf-8")
+    css = (root / "style.css").read_text(encoding="utf-8")
+
+    hidden_ids = re.findall(r'id="([\w-]+)"[^>]*\shidden', html)
+    assert hidden_ids, "hidden を使った要素が見つからない"
+
+    override = re.search(r"\[hidden\]\s*\{[^}]*display:\s*none\s*!important", css)
+    assert override, "[hidden] の display:none !important が無い"
 
 
 # ---- ルーティング -------------------------------------------------------

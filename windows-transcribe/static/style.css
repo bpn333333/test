@@ -37,6 +37,10 @@
 
 * { box-sizing: border-box; }
 
+/* hidden 属性は UA の display:none で効くが、.downloads や .meter の
+   display:flex に負ける。作者側で明示的に打ち消す */
+[hidden] { display: none !important; }
+
 body {
   margin: 0;
   background: var(--bg);
