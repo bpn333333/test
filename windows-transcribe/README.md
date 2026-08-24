@@ -13,6 +13,8 @@ VB-CABLE や VoiceMeeter を入れなくてもデスクトップ音声を録音�
 
 ## セットアップ
 
+Python 3.9〜3.14 で動作（全依存パッケージに cp314 ホイールあり）。
+
 ```powershell
 py -m venv .venv
 .venv\Scripts\activate
