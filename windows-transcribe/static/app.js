@@ -113,6 +113,26 @@ async function post(path, payload) {
 
 const titles = new Map();   // PID -> ウィンドウのタイトル
 
+async function fetchWindows() {
+  try {
+    const res = await fetch("/api/windows");
+    if (res.status === 404) {
+      // 静的ファイルだけ新しく、サーバが古いまま動いているとこうなる
+      return { windows: [], error: "アプリを再起動してください（サーバが古いままです）" };
+    }
+    if (!res.ok) return { windows: [], error: `一覧を取得できません (${res.status})` };
+    return await res.json();
+  } catch (err) {
+    return { windows: [], error: err.message };
+  }
+}
+
+function disabledOption(label) {
+  const option = new Option(label, "");
+  option.disabled = true;
+  return option;
+}
+
 function group(label) {
   const g = document.createElement("optgroup");
   g.label = label;
@@ -123,7 +143,7 @@ async function loadSources() {
   const keep = el.source.value;
   const [devices, windows] = await Promise.all([
     fetch("/api/devices").then((r) => r.json()),
-    fetch("/api/windows").then((r) => r.json()).catch(() => ({ windows: [], error: null })),
+    fetchWindows(),
   ]);
 
   el.source.replaceChildren();
@@ -147,8 +167,14 @@ async function loadSources() {
   }
   el.source.append(deviceGroup);
 
-  if (windows.windows && windows.windows.length) {
-    const windowGroup = group("ウィンドウ（そのアプリの音だけ）");
+  // ウィンドウのグループは常に出す。空のまま消すと、失敗したのか
+  // 対象が無いのか区別がつかない
+  const windowGroup = group("ウィンドウ（そのアプリの音だけ）");
+  if (windows.error) {
+    windowGroup.append(disabledOption(`利用できません — ${windows.error}`));
+  } else if (!windows.windows.length) {
+    windowGroup.append(disabledOption("対象のウィンドウがありません（↻ で更新）"));
+  } else {
     for (const win of windows.windows) {
       const suffix = win.windows > 1 ? `（${win.windows} 窓）` : "";
       const option = new Option(`${win.title}${suffix} — ${win.process}`, `p:${win.pid}`);
@@ -156,8 +182,8 @@ async function loadSources() {
       titles.set(String(win.pid), win.title);
       windowGroup.append(option);
     }
-    el.source.append(windowGroup);
   }
+  el.source.append(windowGroup);
 
   // 再読み込み前の選択を保てるなら保つ
   if (keep && [...el.source.options].some((o) => o.value === keep)) {
