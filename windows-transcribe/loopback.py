@@ -7,8 +7,6 @@ OS 標準で持っているため、VB-CABLE などの仮想オーディオデ�
 
 from __future__ import annotations
 
-import sys
-
 import numpy as np
 
 try:  # Windows 専用。他 OS では import に失敗する
@@ -19,10 +17,14 @@ except ImportError:  # pragma: no cover - 実行環境依存
 CHUNK = 2048
 
 
+class LoopbackError(RuntimeError):
+    """取り込みを開始できない。CLI は終了、サーバは 400 として扱う。"""
+
+
 def require_pyaudio():
     if pyaudio is None:
-        sys.exit(
-            "PyAudioWPatch が見つかりません（Windows 専用）。\n"
+        raise LoopbackError(
+            "PyAudioWPatch が見つかりません（Windows 専用）。"
             "  pip install PyAudioWPatch"
         )
     return pyaudio
@@ -41,7 +43,7 @@ def find_loopback_device(pa, hint: str | None = None) -> dict:
     """
     devices = list_loopback_devices(pa)
     if not devices:
-        sys.exit(
+        raise LoopbackError(
             "ループバックデバイスが見つかりません。"
             "サウンド設定で有効な再生デバイスがあるか確認してください。"
         )
@@ -52,7 +54,7 @@ def find_loopback_device(pa, hint: str | None = None) -> dict:
             if needle in dev["name"].lower():
                 return dev
         names = "\n".join(f"  [{d['index']}] {d['name']}" for d in devices)
-        sys.exit(f"'{hint}' に一致するデバイスがありません。候補:\n{names}")
+        raise LoopbackError(f"'{hint}' に一致するデバイスがありません。候補:\n{names}")
 
     wasapi = pa.get_host_api_info_by_type(pyaudio.paWASAPI)
     speakers = pa.get_device_info_by_index(wasapi["defaultOutputDevice"])
@@ -116,5 +118,5 @@ def resample_to_16k(audio: np.ndarray, rate: int) -> np.ndarray:
     try:
         import soxr
     except ImportError:  # pragma: no cover - 実行環境依存
-        sys.exit("リサンプルに soxr が必要です: pip install soxr")
+        raise LoopbackError("リサンプルに soxr が必要です: pip install soxr") from None
     return soxr.resample(audio, rate, 16000, quality="HQ").astype(np.float32)

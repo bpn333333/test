@@ -3,3 +3,8 @@ PyAudioWPatch>=0.2.12.8   # WASAPI ループバック取り込み（Windows 専�
 faster-whisper>=1.0.3     # Whisper 推論（CTranslate2 バックエンド）
 numpy>=1.24
 soxr>=0.3.7               # 48kHz -> 16kHz リサンプル
+
+# ブラウザから使う webapp.py 用
+fastapi>=0.110
+uvicorn[standard]>=0.29   # [standard] が無いと WebSocket が 404 になる
+python-multipart>=0.0.9   # 音声ファイルのアップロード

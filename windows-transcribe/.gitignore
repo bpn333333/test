@@ -3,10 +3,10 @@ __pycache__/
 *.py[cod]
 .venv/
 
-# 録音と文字起こしの成果物
-*.wav
-*.txt
-*.srt
-*.vtt
-*.json
-!requirements.txt
+# 録音と文字起こしの成果物（このディレクトリ直下のみ。static/ は対象外）
+/*.wav
+/*.txt
+/*.srt
+/*.vtt
+/*.json
+!/requirements.txt

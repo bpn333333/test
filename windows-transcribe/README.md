@@ -45,7 +45,26 @@ DLL が無い状態で `--compute-device auto`（既定）を使った場合は�
 短い試験推論に失敗した時点で自動的に CPU へ切り替わる。`cuda` を明示した
 場合は退避せずエラーになる。
 
-## 使い方
+## ブラウザから使う
+
+CLI を覚えなくても、同じ機能をブラウザから操作できる。
+
+```powershell
+python webapp.py --open
+```
+
+`http://127.0.0.1:8765` が開く。デバイスとモデルを選んで **リアルタイム開始** を押すと、
+文字が流れてくる。録音してからの文字起こし、手持ちの音声ファイルの読み込み、
+txt / srt / vtt / json のダウンロードも同じ画面から行える。
+
+**音声の取り込みはサーバ側、つまりこの PC の WASAPI ループバックで行う。**
+ブラウザ自身の `getDisplayMedia` ではタブの音しか取れず、デバイス選択も
+アプリ横断の取り込みもできないため、ブラウザは操作と表示だけを担当する。
+
+待ち受けは既定で `127.0.0.1` のみ。認証は無いので、`--host 0.0.0.0` で
+外部に開く場合は自分で保護すること。
+
+## コマンドラインで使う
 
 ### 1. デバイス確認
 
@@ -135,7 +154,14 @@ Windows 以外でも実行できる。
 ```bash
 pip install numpy
 python test_segment_buffer.py   # 無音による区切り判定
-python test_whisper_model.py    # CUDA から CPU への退避
+python test_whisper_model.py    # CUDA DLL の登録と CPU への退避
+```
+
+webapp の API テストは `httpx` が要る。
+
+```bash
+pip install httpx
+python test_webapp.py           # ルーティングと設定の変換
 ```
 
 ## 注意
