@@ -21,12 +21,9 @@ if errorlevel 1 (
 )
 
 rem 起動中のサーバは古いコードを読み込んだままなので、必ず入れ替える。
-rem ポートを掴んでいるプロセスを止めれば、ウィンドウが見えなくても確実に落ちる
-set "RUNNING="
-for /f "tokens=5" %%p in ('netstat -ano ^| findstr /r /c:":%PORT% .*LISTENING"') do (
-  set "RUNNING=1"
-  taskkill /PID %%p /F >nul 2>nul
-)
+rem netstat の出力解析は表示形式に左右されて空振りするので API を使う
+powershell -NoProfile -Command "$p = Get-NetTCPConnection -LocalPort %PORT% -State Listen -ErrorAction SilentlyContinue; if ($p) { $p | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue } ; exit 10 } ; exit 0"
+if errorlevel 10 (set "RUNNING=1") else (set "RUNNING=")
 
 echo.
 if defined RUNNING (
@@ -36,7 +33,7 @@ if defined RUNNING (
   timeout /t 2 >nul
   echo.
   echo   更新して再起動しました。
-  echo   ブラウザで Ctrl+F5 を押すと新しい画面になります。
+  echo   画面の ↻ ボタンを押すと新しい一覧になります。
 ) else (
   echo   更新しました。start-app.cmd をダブルクリックすると起動します。
 )
