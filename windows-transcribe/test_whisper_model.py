@@ -1,6 +1,12 @@
-"""load_model の CUDA 退避を検証する（GPU も faster-whisper も不要）。"""
+"""load_model の CUDA 退避と DLL 登録を検証する（GPU も faster-whisper も不要）。"""
 
-from whisper_model import load_model
+import sys
+import tempfile
+import types
+from pathlib import Path
+
+import whisper_model
+from whisper_model import load_model, register_nvidia_dlls
 
 CUBLAS_ERROR = RuntimeError("Library cublas64_12.dll is not found or cannot be loaded")
 
@@ -62,6 +68,38 @@ def test_construction_failure_also_falls_back():
 
     model = load_model("small", "auto", factory=factory_cuda_unavailable, probe=probe_ok)
     assert model.device == "cpu"
+
+
+def test_registers_every_directory_holding_a_cuda_dll():
+    """nvidia パッケージ配下の DLL があるディレクトリを漏れなく登録する。"""
+    root = Path(tempfile.mkdtemp())
+    for rel in ["cublas/bin/cublas64_12.dll", "cudnn/bin/cudnn64_9.dll",
+                "cuda_nvrtc/bin/nvrtc64_120_0.dll"]:
+        path = root / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"")
+    (root / "cublas" / "include").mkdir(parents=True)  # DLL が無いので対象外
+
+    fake = types.ModuleType("nvidia")
+    fake.__path__ = [str(root)]
+    sys.modules["nvidia"] = fake
+    try:
+        added = []
+        dirs = register_nvidia_dlls(add_dll_directory=lambda d: added.append(d) or d)
+    finally:
+        del sys.modules["nvidia"]
+
+    assert sorted(Path(d).parent.name for d in dirs) == ["cublas", "cuda_nvrtc", "cudnn"]
+    assert added == dirs  # 列挙した全ディレクトリを登録した
+    assert len(whisper_model._dll_cookies) >= 3  # 戻り値を保持している
+
+
+def test_no_nvidia_package_is_not_an_error():
+    sys.modules["nvidia"] = None  # import nvidia が ImportError になる
+    try:
+        assert register_nvidia_dlls(add_dll_directory=lambda d: d) == []
+    finally:
+        del sys.modules["nvidia"]
 
 
 if __name__ == "__main__":

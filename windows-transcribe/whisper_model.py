@@ -7,7 +7,47 @@ cuBLAS / cuDNN の DLL が無い環境では *推論が始まった時点で* �
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
+
 import numpy as np
+
+# os.add_dll_directory の戻り値は保持しないと GC 時に登録が解除される
+_dll_cookies: list = []
+
+
+def _nvidia_dll_dirs() -> list[str]:
+    """pip で入れた CUDA ライブラリの DLL があるディレクトリを列挙する。
+
+    nvidia-cublas-cu12 などは DLL を site-packages\nvidia\<lib>\bin に置くが、
+    Windows の DLL 検索パスには入らないため、そのままでは
+    「cublas64_12.dll is not found」で落ちる。
+    """
+    try:
+        import nvidia
+    except ImportError:
+        return []
+
+    dirs: list[str] = []
+    for root in nvidia.__path__:
+        for dll in Path(root).rglob("*.dll"):
+            parent = str(dll.parent)
+            if parent not in dirs:
+                dirs.append(parent)
+    return dirs
+
+
+def register_nvidia_dlls(add_dll_directory=None) -> list[str]:
+    """CUDA の DLL ディレクトリを検索対象に加える（Windows 以外では何もしない）。"""
+    if add_dll_directory is None:
+        add_dll_directory = getattr(os, "add_dll_directory", None)
+        if add_dll_directory is None:  # Windows 以外
+            return []
+
+    dirs = _nvidia_dll_dirs()
+    for directory in dirs:
+        _dll_cookies.append(add_dll_directory(directory))
+    return dirs
 
 
 def _probe(model) -> None:
@@ -30,6 +70,7 @@ def load_model(
 ):
     """モデルを読み込む。auto 指定時は CUDA を試してから CPU に退避する。"""
     if factory is None:
+        register_nvidia_dlls()  # faster_whisper の import より前に行う必要がある
         from faster_whisper import WhisperModel
 
         factory = WhisperModel

@@ -32,6 +32,10 @@ pip install nvidia-cublas-cu12 nvidia-cudnn-cu12
 
 これで `--compute-device cuda --compute-type float16` が使える。
 
+pip 版は DLL を `site-packages\nvidia\<lib>\bin` に置くだけで Windows の
+DLL 検索パスには入らないため、`whisper_model.py` が faster-whisper の import 前に
+`os.add_dll_directory()` で登録している。PATH を手で通す必要はない。
+
 DLL が無い状態で `--compute-device auto`（既定）を使った場合は、CUDA での
 短い試験推論に失敗した時点で自動的に CPU へ切り替わる。`cuda` を明示した
 場合は退避せずエラーになる。
