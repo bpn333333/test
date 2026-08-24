@@ -61,6 +61,21 @@ def test_elements_marked_hidden_are_actually_hidden():
     assert override, "[hidden] の display:none !important が無い"
 
 
+def test_powershell_script_has_a_utf8_bom():
+    """Windows PowerShell 5.1 は BOM の無い .ps1 を ANSI として読む。
+
+    日本語のコメントや文字列が Shift-JIS として解釈されて壊れ、
+    括弧の対応が崩れて MissingEndCurlyBrace で落ちた。
+    cmd 側は逆に BOM があると 1 行目を誤読するので付けない。
+    """
+    root = pathlib.Path(__file__).parent
+    ps1 = (root / "install-shortcut.ps1").read_bytes()
+    assert ps1.startswith(b"\xef\xbb\xbf"), "install-shortcut.ps1 に UTF-8 BOM が無い"
+
+    for name in ["start-app.cmd", "make-shortcut.cmd", "update.cmd"]:
+        assert not (root / name).read_bytes().startswith(b"\xef\xbb\xbf"), f"{name} に BOM がある"
+
+
 # ---- ルーティング -------------------------------------------------------
 
 

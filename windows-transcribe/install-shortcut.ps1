@@ -1,4 +1,4 @@
-<#
+﻿<#
   「文字起こし」のショートカットを作る。
 
       powershell -ExecutionPolicy Bypass -File install-shortcut.ps1
