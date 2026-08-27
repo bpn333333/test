@@ -100,6 +100,26 @@ class Settings:
 # --------------------------------------------------------------------------
 
 
+def explain(exc: Exception, settings: Settings) -> str:
+    """例外を、次に何をすればよいか分かる文にする。"""
+    text = str(exc)
+    lowered = text.lower()
+
+    memory = ("mkl_malloc", "failed to allocate", "bad_alloc", "out of memory", "cannot allocate")
+    if any(word in lowered for word in memory):
+        where = "GPU" if "cuda" in lowered or settings.compute_device == "cuda" else "CPU"
+        advice = (
+            "モデルを medium か small に下げてください"
+            if settings.model.startswith("large")
+            else "他のアプリを閉じてメモリを空けてください"
+        )
+        if where == "CPU" and settings.compute_device != "cpu":
+            advice += "（推論を GPU に切り替えるのも有効です）"
+        return f"{where} のメモリが足りません。{advice}。［{text}］"
+
+    return text
+
+
 @dataclass
 class Segment:
     start: float
@@ -175,9 +195,22 @@ class Session:
         """同じ設定なら読み込み済みのモデルを使い回す。"""
         if self._model is not None and self._model_key == settings.model_key:
             return self._model
-        self.set_state(self.mode, f"モデル読み込み中: {settings.model}")
+
+        def on_status(kind: str, message: str) -> None:
+            # どこで動いているのかを隠さない。GPU のつもりが CPU に
+            # 落ちていた、という状況が画面から分かるようにする
+            if kind == "loading":
+                self.set_state(self.mode, f"読み込み中 {message}")
+            elif kind == "fallback":
+                self.emit({"type": "warning", "message": message})
+            else:
+                self.set_state(self.mode, message)
+
         self._model = load_model(
-            settings.model, settings.compute_device, settings.compute_type
+            settings.model,
+            settings.compute_device,
+            settings.compute_type,
+            on_status=on_status,
         )
         self._model_key = settings.model_key
         return self._model
@@ -201,7 +234,7 @@ class Session:
         try:
             target(settings)
         except Exception as exc:  # noqa: BLE001 - 画面に出して知らせる
-            self.emit({"type": "error", "message": str(exc)})
+            self.emit({"type": "error", "message": explain(exc, settings)})
         finally:
             # 途中で失敗しても、そこまでの結果は残す
             saved = self.save_transcript()

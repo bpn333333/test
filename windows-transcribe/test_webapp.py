@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 
 import process_loopback
 import webapp
-from webapp import Segment, Settings, app
+from webapp import Segment, Settings, app, explain
 
 
 def client() -> TestClient:
@@ -40,6 +40,43 @@ def test_model_key_ignores_unrelated_settings():
     c = Settings.from_request({"model": "medium", "prompt": "甲"})
     assert a.model_key == b.model_key
     assert a.model_key != c.model_key
+
+
+# ---- エラーの言い換え ---------------------------------------------------
+
+
+def test_allocation_failure_says_what_to_do():
+    """mkl_malloc は CPU 推論のメモリ不足。そのまま出しても何も分からない。"""
+    message = explain(
+        RuntimeError("mkl_malloc: failed to allocate memory"),
+        Settings.from_request({"model": "large-v3", "compute_device": "auto"}),
+    )
+    assert "CPU" in message and "メモリが足りません" in message
+    assert "medium" in message          # 下げ先を示す
+    assert "GPU に切り替える" in message  # auto なら GPU も選べる
+    assert "mkl_malloc" in message      # 元の文言も残す
+
+
+def test_gpu_allocation_failure_is_named_as_gpu():
+    message = explain(
+        RuntimeError("CUDA failed with error out of memory"),
+        Settings.from_request({"model": "large-v3", "compute_device": "cuda"}),
+    )
+    assert "GPU のメモリが足りません" in message
+
+
+def test_small_model_is_not_told_to_shrink_further():
+    message = explain(
+        RuntimeError("bad_alloc"),
+        Settings.from_request({"model": "small", "compute_device": "cpu"}),
+    )
+    assert "メモリを空けて" in message
+    assert "medium" not in message
+
+
+def test_unrelated_errors_pass_through_untouched():
+    settings = Settings.from_request({})
+    assert explain(RuntimeError("何か別の失敗"), settings) == "何か別の失敗"
 
 
 # ---- 保存 ---------------------------------------------------------------

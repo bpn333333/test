@@ -141,6 +141,22 @@ def test_no_nvidia_package_is_not_an_error():
         del sys.modules["nvidia"]
 
 
+def test_status_reports_where_the_model_actually_runs():
+    """GPU のつもりが CPU に落ちていた、を画面から分かるようにする。"""
+    seen = []
+    load_model("small", "auto", factory=factory_ok, probe=probe_fails_on_cuda,
+               on_status=lambda kind, message: seen.append((kind, message)))
+
+    kinds = [kind for kind, _ in seen]
+    assert kinds == ["loading", "fallback", "loading", "ready"]
+    assert seen[-1][1] == "small / cpu / int8"     # 実際に動く場所
+    assert "cublas" in seen[1][1]                  # 落ちた理由
+
+
+def test_status_is_optional():
+    assert load_model("small", "cpu", factory=factory_ok, probe=probe_ok) is not None
+
+
 if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_"):

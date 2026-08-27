@@ -82,8 +82,16 @@ def load_model(
     compute_type: str = "default",
     factory=None,
     probe=_probe,
+    on_status=None,
 ):
-    """モデルを読み込む。auto 指定時は CUDA を試してから CPU に退避する。"""
+    """モデルを読み込む。auto 指定時は CUDA を試してから CPU に退避する。
+
+    on_status には (種別, メッセージ) が渡る。種別は "loading" / "fallback" /
+    "ready"。どこで動いているのかを画面に出すために使う。
+    """
+    def notify(kind: str, message: str) -> None:
+        if on_status:
+            on_status(kind, message)
     if factory is None:
         register_nvidia_dlls()  # faster_whisper の import より前に行う必要がある
         from faster_whisper import WhisperModel
@@ -102,6 +110,7 @@ def load_model(
 
         last = index == len(attempts) - 1
         print(f"モデル読み込み中: {name} ({device} / {ctype})")
+        notify("loading", f"{name} / {device} / {ctype}")
         try:
             model = factory(name, device=device, compute_type=ctype)
             probe(model)
@@ -109,7 +118,9 @@ def load_model(
             if last:
                 raise
             print(f"  {device} を使えないため切り替えます: {exc}")
+            notify("fallback", f"{device} を使えないため切り替えます: {exc}")
             continue
+        notify("ready", f"{name} / {device} / {ctype}")
         return model
 
     raise RuntimeError("モデルを読み込めませんでした")  # 到達しない
