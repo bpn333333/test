@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>文字起こし — windows-transcribe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230B6A73'/%3E%3Cg fill='white'%3E%3Crect x='3' y='6' width='1.6' height='4' rx='.8'/%3E%3Crect x='6' y='3.5' width='1.6' height='9' rx='.8'/%3E%3Crect x='9' y='5' width='1.6' height='6' rx='.8'/%3E%3Crect x='12' y='7' width='1.6' height='2' rx='.8'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="bar-left">
+    <h1>文字起こし</h1>
+    <span class="src" id="source"></span>
+  </div>
+  <div class="bar-right">
+    <span class="pill" id="pill" data-mode="idle">待機中</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- ---------- 操作 ---------- -->
+  <section class="panel controls">
+
+    <div class="row">
+      <div class="field grow">
+        <label class="field-label" for="source-select">
+          収録元<em>ウィンドウを選ぶとそのアプリの音だけを録ります</em>
+        </label>
+        <div class="with-button">
+          <select id="source-select"></select>
+          <button type="button" id="refresh" title="ウィンドウ一覧を更新">↻</button>
+        </div>
+      </div>
+      <label class="field">
+        <span>モデル</span>
+        <select id="model">
+          <option value="large-v3">large-v3（精度重視）</option>
+          <option value="medium">medium</option>
+          <option value="small">small（軽い）</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>言語</span>
+        <select id="language">
+          <option value="ja">日本語</option>
+          <option value="en">English</option>
+          <option value="zh">中文</option>
+          <option value="ko">한국어</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>推論</span>
+        <select id="compute">
+          <option value="auto|default">自動</option>
+          <option value="cuda|float16">GPU (float16)</option>
+          <option value="cpu|int8">CPU (int8)</option>
+        </select>
+      </label>
+    </div>
+
+    <label class="field">
+      <span>固有名詞のヒント<em>誤変換が減ります</em></span>
+      <input id="prompt" type="text" placeholder="例: 実業之日本社、田中大輝、四半期レビュー">
+    </label>
+
+    <details class="tuning">
+      <summary>リアルタイムの区切り調整</summary>
+      <div class="row">
+        <label class="field"><span>無音の長さ (秒)</span><input id="silence" type="number" step="0.1" value="0.7"></label>
+        <label class="field"><span>最短 (秒)</span><input id="min_seconds" type="number" step="0.5" value="2"></label>
+        <label class="field"><span>最長 (秒)</span><input id="max_seconds" type="number" step="1" value="15"></label>
+        <label class="field"><span>しきい値</span><input id="threshold" type="number" step="0.001" value="0.005"></label>
+        <label class="field"><span>暗騒音の倍率</span><input id="noise_factor" type="number" step="0.5" value="2"></label>
+      </div>
+    </details>
+
+    <div class="actions">
+      <button id="live" class="primary" type="button">リアルタイム開始</button>
+      <button id="record" type="button">録音して文字起こし</button>
+      <button id="stop" type="button" disabled>停止</button>
+      <label class="upload" id="upload-label">
+        音声ファイルを選ぶ
+        <input id="upload" type="file" accept="audio/*,video/*" hidden>
+      </label>
+    </div>
+
+    <div class="meter" id="meter" hidden>
+      <div class="meter-bar"><i id="meter-fill"></i></div>
+      <span class="meter-time" id="meter-time">0:00</span>
+    </div>
+  </section>
+
+  <!-- ---------- 結果 ---------- -->
+  <section class="panel result">
+    <div class="result-head">
+      <h2>結果</h2>
+      <div class="downloads" id="downloads" hidden>
+        <a href="/api/download.txt" download>txt</a>
+        <a href="/api/download.srt" download>srt</a>
+        <a href="/api/download.vtt" download>vtt</a>
+        <a href="/api/download.json" download>json</a>
+        <button type="button" id="copy">全文をコピー</button>
+        <button type="button" id="reveal">保存先を開く</button>
+      </div>
+    </div>
+
+    <p class="empty" id="empty">
+      収録元を選んで <b>リアルタイム開始</b> を押すと、いまこの PC が再生している音が
+      ここに文字として流れます。マイクは使いません。<br>
+      結果は終了時に <code>transcripts</code> フォルダへ自動保存されます。
+    </p>
+
+    <ol class="segments" id="segments"></ol>
+  </section>
+
+</main>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
