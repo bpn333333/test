@@ -14,7 +14,10 @@ import argparse
 import asyncio
 import contextlib
 import json
+import os
 import queue
+import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -50,6 +53,7 @@ from whisper_model import load_model
 
 HERE = Path(__file__).parent
 STATIC = HERE / "static"
+SAVE_DIR = HERE / "transcripts"   # 結果の自動保存先
 LEVEL_INTERVAL = 0.1  # 音量メーターの送信間隔（秒）
 
 
@@ -199,6 +203,14 @@ class Session:
         except Exception as exc:  # noqa: BLE001 - 画面に出して知らせる
             self.emit({"type": "error", "message": str(exc)})
         finally:
+            # 途中で失敗しても、そこまでの結果は残す
+            saved = self.save_transcript()
+            if saved:
+                self.emit({
+                    "type": "saved",
+                    "folder": str(SAVE_DIR),
+                    "names": [p.name for p in saved],
+                })
             self.set_state("idle", "")
 
     def stop(self) -> None:
@@ -230,6 +242,25 @@ class Session:
             segment = Segment(offset, offset + len(audio) / rate, text)
             self.segments.append(segment)
             self.emit({"type": "segment", **segment.as_dict()})
+
+    # ---- 保存 -------------------------------------------------------------
+
+    def save_transcript(self) -> list[Path]:
+        """結果を transcripts/ に書き出す。
+
+        ダウンロードを押し忘れても消えないよう、終わった時点で必ず残す。
+        """
+        if not self.segments:
+            return []
+        SAVE_DIR.mkdir(exist_ok=True)
+        stem = time.strftime("%Y-%m-%d_%H%M%S")
+        rows = [s.as_dict() for s in self.segments]
+        paths = []
+        for fmt in ("txt", "srt"):
+            path = SAVE_DIR / f"{stem}.{fmt}"
+            WRITERS[fmt](path, rows)
+            paths.append(path)
+        return paths
 
     # ---- 録音元 -----------------------------------------------------------
 
@@ -486,6 +517,19 @@ async def download(fmt: str) -> FileResponse:
     path = Path(tempfile.gettempdir()) / f"{stem}.{fmt}"
     WRITERS[fmt](path, [s.as_dict() for s in session.segments])
     return FileResponse(path, filename=path.name, media_type="text/plain")
+
+
+@app.post("/api/reveal")
+async def reveal() -> JSONResponse:
+    """保存先のフォルダをエクスプローラーで開く。"""
+    SAVE_DIR.mkdir(exist_ok=True)
+    if sys.platform == "win32":
+        os.startfile(SAVE_DIR)  # noqa: S606 - ローカル専用アプリ
+    elif sys.platform == "darwin":
+        subprocess.Popen(["open", str(SAVE_DIR)])
+    else:
+        raise HTTPException(400, f"この環境では開けません: {SAVE_DIR}")
+    return JSONResponse({"folder": str(SAVE_DIR)})
 
 
 @app.get("/healthz")

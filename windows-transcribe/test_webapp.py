@@ -42,6 +42,41 @@ def test_model_key_ignores_unrelated_settings():
     assert a.model_key != c.model_key
 
 
+# ---- 保存 ---------------------------------------------------------------
+
+
+def test_finished_runs_are_saved_without_being_asked():
+    """ダウンロードを押し忘れても結果が残ること。"""
+    session = webapp.Session()
+    session.segments = [Segment(0.0, 1.25, "こんにちは"), Segment(1.25, 3.0, "テストです")]
+    saved = session.save_transcript()
+
+    assert [p.suffix for p in saved] == [".txt", ".srt"]
+    assert all(p.parent == webapp.SAVE_DIR for p in saved)
+    try:
+        assert "こんにちは" in saved[0].read_text(encoding="utf-8")
+        assert "00:00:01,250 --> 00:00:03,000" in saved[1].read_text(encoding="utf-8")
+    finally:
+        for path in saved:
+            path.unlink()
+
+
+def test_nothing_is_written_for_an_empty_run():
+    session = webapp.Session()
+    session.segments = []
+    assert session.save_transcript() == []
+
+
+def test_reveal_reports_the_folder_when_it_cannot_open_it():
+    """Windows 以外では場所を伝えて終わる。黙って成功しない。"""
+    res = client().post("/api/reveal")
+    if res.status_code == 200:
+        assert res.json()["folder"].endswith("transcripts")
+    else:
+        assert res.status_code == 400
+        assert "transcripts" in res.json()["detail"]
+
+
 # ---- 収録元 -------------------------------------------------------------
 
 

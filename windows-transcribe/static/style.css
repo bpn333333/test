@@ -250,6 +250,11 @@ button.primary:hover:not(:disabled) { background: var(--accent-2); border-color:
 .downloads button { font-size: 12px; padding: 4px 12px; }
 
 .empty { margin: 0; color: var(--ink-3); font-size: 14px; max-width: 62ch; }
+.empty code {
+  background: var(--panel-2);
+  padding: 1px 5px;
+  border-radius: var(--radius);
+}
 
 .segments { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .segments li {

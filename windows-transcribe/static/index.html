@@ -106,12 +106,14 @@
         <a href="/api/download.vtt" download>vtt</a>
         <a href="/api/download.json" download>json</a>
         <button type="button" id="copy">全文をコピー</button>
+        <button type="button" id="reveal">保存先を開く</button>
       </div>
     </div>
 
     <p class="empty" id="empty">
-      デバイスを選んで <b>リアルタイム開始</b> を押すと、いまこの PC が再生している音が
-      ここに文字として流れます。マイクは使いません。
+      収録元を選んで <b>リアルタイム開始</b> を押すと、いまこの PC が再生している音が
+      ここに文字として流れます。マイクは使いません。<br>
+      結果は終了時に <code>transcripts</code> フォルダへ自動保存されます。
     </p>
 
     <ol class="segments" id="segments"></ol>

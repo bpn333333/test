@@ -13,7 +13,7 @@ const el = {
   pill: $("pill"), sourceName: $("source"),
   meter: $("meter"), meterFill: $("meter-fill"), meterTime: $("meter-time"),
   segments: $("segments"), empty: $("empty"), downloads: $("downloads"),
-  copy: $("copy"), toast: $("toast"),
+  copy: $("copy"), reveal: $("reveal"), toast: $("toast"),
 };
 
 let mode = "idle";
@@ -220,6 +220,10 @@ function connect() {
       case "info":
         toast(`${msg.language} / ${msg.duration.toFixed(1)} 秒 を処理します`);
         break;
+      case "saved":
+        el.downloads.hidden = false;
+        toast(`保存しました: ${msg.names.join(" / ")}`);
+        break;
       case "recorded":
         toast(`録音を保存しました: ${msg.name}`);
         break;
@@ -270,6 +274,15 @@ el.upload.addEventListener("change", async () => {
     toast(err.message, "error");
   }
   el.upload.value = "";
+});
+
+el.reveal.addEventListener("click", async () => {
+  try {
+    const body = await post("/api/reveal");
+    toast(`保存先: ${body.folder}`);
+  } catch (err) {
+    toast(err.message, "error");
+  }
 });
 
 el.copy.addEventListener("click", async () => {
