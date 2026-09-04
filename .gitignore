@@ -1,0 +1,8 @@
+
+# --- 認証情報。絶対にコミットしない ---
+*.json.key
+sa.json
+service-account*.json
+*credentials*.json
+secrets/
+*.pem
