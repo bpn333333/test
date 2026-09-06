@@ -3,7 +3,7 @@
 新設法人(株式会社・仮称)/ 代表 松田 徳義
 作成: 2026年9月6日 / 改訂: 2026年9月6日(主軸の再定義、および**人材確保を前提とした組織前提**へ変更)
 ドラフト v0.4 — 資金調達用
-数値の詳細は `MARKET_SIZING.md`、**5年の損益・資金繰りは `FINANCIAL_PLAN.md`**、中国側の調達・契約は `CHINA_SOURCING.md`、融資の実務は `FINANCING.md` を参照
+数値の詳細は `MARKET_SIZING.md`、**5年の損益・資金繰りは `FINANCIAL_PLAN.md`**、中国側の調達・契約は `CHINA_SOURCING.md`、融資の実務は `FINANCING.md`、制作オペの自動化は `AI_OPERATIONS.md` を参照
 
 > **この版の位置づけ**
 > 確定しているのは代表者の実績と市場相場だけで、売上計画は仮定に基づく試算です。
