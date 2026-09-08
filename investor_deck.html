@@ -1,0 +1,857 @@
+<title>AI映像プラットフォーム</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Serif+JP:wght@500;600;700&display=swap">
+<style>
+:root{
+  --ink:#16161A; --ink-2:#3A3A42; --paper:#FFFFFF; --soft:#F4F2EF; --soft-2:#EAE7E2;
+  --verm:#B3121B; --gold:#9A7218; --navy:#2A3563; --muted:#6E6E76; --line:#DCD9D4;
+  --panel:#FFFFFF; --chrome:#F7F5F2; --chrome-b:#E3E0DA; --shadow:0 1px 3px rgba(22,22,26,.10),0 8px 28px rgba(22,22,26,.09);
+  --sans:"Noto Sans JP",-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+  --serif:"Noto Serif JP",-apple-system,"Hiragino Mincho ProN","Yu Mincho",serif;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --ink:#EFECE7; --ink-2:#C9C5BE; --paper:#17171B; --soft:#212128; --soft-2:#2B2B33;
+  --verm:#E2555B; --gold:#D9AE4A; --navy:#8E9BD4; --muted:#93909A; --line:#33333C;
+  --panel:#17171B; --chrome:#101014; --chrome-b:#2A2A32; --shadow:0 1px 3px rgba(0,0,0,.5),0 10px 34px rgba(0,0,0,.45);
+}}
+:root[data-theme="dark"]{
+  --ink:#EFECE7; --ink-2:#C9C5BE; --paper:#17171B; --soft:#212128; --soft-2:#2B2B33;
+  --verm:#E2555B; --gold:#D9AE4A; --navy:#8E9BD4; --muted:#93909A; --line:#33333C;
+  --panel:#17171B; --chrome:#101014; --chrome-b:#2A2A32; --shadow:0 1px 3px rgba(0,0,0,.5),0 10px 34px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--chrome);color:var(--ink);font-family:var(--sans);
+  display:flex;flex-direction:column;overflow:hidden}
+
+/* ── chrome ── */
+header{display:flex;align-items:center;gap:14px;padding:9px 16px;border-bottom:1px solid var(--chrome-b);
+  background:var(--chrome);flex:0 0 auto;font-size:13px}
+.brand{font-family:var(--serif);font-weight:600;font-size:14.5px;letter-spacing:.01em}
+.brand em{font-style:normal;color:var(--muted);font-family:var(--sans);font-weight:400;font-size:12px;margin-left:8px}
+.sp{flex:1}
+button{font:inherit;font-size:12.5px;color:var(--ink);background:var(--panel);border:1px solid var(--chrome-b);
+  border-radius:6px;padding:5px 11px;cursor:pointer;font-family:var(--sans)}
+button:hover{background:var(--soft)}
+button:focus-visible{outline:2px solid var(--verm);outline-offset:2px}
+.count{font-variant-numeric:tabular-nums;color:var(--muted);min-width:56px;text-align:center;font-size:12.5px}
+.nav{display:flex;gap:6px}
+.nav button{width:32px;padding:5px 0;text-align:center}
+
+/* ── stage ── */
+#deck{flex:1 1 auto;position:relative;overflow:hidden}
+#stage{position:absolute;width:1280px;height:720px;transform-origin:top left}
+.s{position:absolute;inset:0;background:var(--paper);opacity:0;pointer-events:none;
+  transition:opacity .18s ease;box-shadow:var(--shadow)}
+.s.on{opacity:1;pointer-events:auto}
+@media (prefers-reduced-motion:reduce){.s{transition:none}}
+.s.dk{background:var(--ink);color:var(--paper)}
+.s.dk .h1,.s.dk .big{color:var(--paper)}
+
+/* ── slide grammar ── */
+.hd{position:absolute;left:62px;top:44px;right:62px;display:flex;gap:20px;align-items:flex-start}
+.chip{flex:0 0 auto;width:44px;height:44px;background:var(--verm);color:#fff;font-weight:700;font-size:17px;
+  display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.hdt{padding-top:1px}
+.h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.18;letter-spacing:.005em;
+  margin:0;text-wrap:balance}
+.sub{margin:7px 0 0;font-size:13.5px;color:var(--muted);line-height:1.5}
+.body{position:absolute;left:62px;right:62px;top:150px;bottom:74px}
+.foot{position:absolute;left:62px;right:62px;bottom:30px;display:flex;gap:16px;align-items:baseline}
+.src{font-size:10.5px;color:var(--muted);line-height:1.45;flex:1}
+.pg{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.row{display:grid;gap:20px}
+.c3{grid-template-columns:repeat(3,1fr)} .c4{grid-template-columns:repeat(4,1fr)}
+.c2{grid-template-columns:repeat(2,1fr)} .c5{grid-template-columns:repeat(5,1fr)}
+
+.stat{background:var(--soft);padding:24px 26px 22px}
+.big{font-size:36px;font-weight:700;line-height:1;letter-spacing:-.015em;font-variant-numeric:tabular-nums}
+.big.v{color:var(--verm)} .big.n{color:var(--navy)} .big.g{color:var(--gold)}
+.stat h4{margin:13px 0 5px;font-size:12.5px;font-weight:700;line-height:1.35}
+.stat p{margin:0;font-size:10.8px;color:var(--muted);line-height:1.55}
+
+.card{background:var(--soft);padding:22px 26px}
+.card h4{margin:0 0 12px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:11px;line-height:1.3}
+.card h4::before{content:"";width:10px;height:10px;background:var(--verm);flex:0 0 auto}
+.card.n h4::before{background:var(--navy)} .card.g h4::before{background:var(--gold)}
+.card ul{margin:0;padding:0;list-style:none;font-size:11.6px;color:var(--ink-2);line-height:1.72}
+.card.dk{background:var(--ink)} .card.dk h4{color:var(--gold)} .card.dk ul{color:#D4D0CA}
+
+/* table */
+table{width:100%;border-collapse:collapse;font-size:11.8px}
+thead th{font-size:11px;font-weight:700;color:var(--muted);text-align:left;padding:0 14px 9px;letter-spacing:.02em}
+tbody tr:nth-child(odd){background:var(--soft)}
+tbody td{padding:13px 14px;vertical-align:middle;line-height:1.5}
+td.k{font-weight:700}
+td.m{color:var(--muted)}
+td.a{color:var(--verm);font-weight:700}
+td.b{color:var(--navy);font-weight:700}
+.sev{display:inline-grid;place-items:center;width:26px;height:22px;font-size:10px;font-weight:700;color:#fff;background:var(--muted)}
+.sev.hi{background:var(--verm)}
+
+/* bars */
+.bars{display:grid;gap:13px}
+.bar{display:grid;grid-template-columns:150px 1fr;align-items:center;gap:14px}
+.bar span{font-size:11.5px;color:var(--ink-2);line-height:1.35}
+.bt{display:flex;align-items:center;gap:10px}
+.bf{height:26px;background:var(--navy);min-width:3px}
+.bf.v{background:var(--verm)} .bf.g{background:var(--gold)} .bf.m{background:var(--muted)}
+.bv{font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* flow */
+.flow{display:grid;grid-template-columns:1fr 62px 1fr 62px 1fr;align-items:center}
+.node{background:var(--soft);padding:20px 22px;min-height:112px}
+.node.dk{background:var(--ink);color:var(--paper)}
+.node b{display:block;font-size:15px;font-family:var(--serif);font-weight:600;line-height:1.3}
+.node p{margin:9px 0 0;font-size:10.8px;color:var(--muted);line-height:1.5}
+.node.dk p{color:#B9B5AE}
+.arr{display:grid;gap:9px;justify-items:center;font-size:9.5px;color:var(--muted)}
+.arr i{display:block;width:44px;height:2px;background:var(--verm);position:relative;font-style:normal}
+.arr i::after{content:"";position:absolute;right:-1px;top:-3px;border:4px solid transparent;border-left-color:var(--verm)}
+.arr i.r{background:var(--line)} .arr i.r::after{right:auto;left:-1px;border-left-color:transparent;border-right-color:var(--line)}
+
+/* timeline */
+.tl{position:relative;padding-top:52px}
+.tl .rail{position:absolute;left:0;right:0;top:58px;height:2px;background:var(--line)}
+.tl ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);position:relative}
+.tl li{text-align:center;padding-top:26px;position:relative}
+.tl li::before{content:"";position:absolute;left:50%;top:0;width:14px;height:14px;margin-left:-7px;
+  border-radius:50%;background:var(--line)}
+.tl li.on::before{background:var(--verm)}
+.tl b{position:absolute;top:-42px;left:0;right:0;font-size:14px;font-weight:700;color:var(--muted);
+  font-variant-numeric:tabular-nums}
+.tl li.on b{color:var(--verm)}
+.tl p{margin:0;font-size:11px;color:var(--muted);line-height:1.55}
+.tl li.on p{color:var(--ink)}
+
+/* phases */
+.ph{background:var(--soft);padding:20px}
+.ph.dk{background:var(--ink);color:var(--paper)}
+.ph b{font-size:17px;font-weight:700;color:var(--verm);display:block;line-height:1}
+.ph.dk b{color:var(--gold)}
+.ph .d{margin:10px 0 0;font-size:10.5px;color:var(--muted);line-height:1.45;font-variant-numeric:tabular-nums}
+.ph ul{margin:14px 0 0;padding:0;list-style:none;font-size:11.3px;line-height:1.65;color:var(--ink-2)}
+.ph .pt{display:block;margin:14px 0 12px;font-size:13.5px;font-weight:700;line-height:1.4}
+.ph .pb{font-size:11.3px;line-height:1.7;color:var(--ink-2)}
+.ph.dk .pt{color:#fff} .ph.dk .pb{color:#DCD8D2}
+.ph.dk .d{color:#A8A49D} .ph.dk ul{color:#DCD8D2}
+
+/* team */
+.tm{background:var(--soft);padding:30px;text-align:center}
+.tm .av{width:70px;height:70px;border-radius:50%;background:var(--soft-2);margin:0 auto 16px}
+.tm b{font-size:14px;font-weight:700;display:block}
+.tm p{margin:6px 0 0;font-size:11px;color:var(--muted)}
+
+/* title slide */
+.ti{position:absolute;left:62px;bottom:62px;right:62px}
+.ti .mark{width:52px;height:52px;background:var(--verm);margin-bottom:auto}
+.tiw{position:absolute;left:62px;top:230px;right:62px}
+.ti h1{font-family:var(--serif);font-weight:700;font-size:52px;line-height:1.16;margin:26px 0 0;letter-spacing:.01em}
+.ti .lead{margin:20px 0 0;font-size:18px;color:#D4D0CA;line-height:1.55;font-weight:400}
+.ti .meta{position:absolute;left:62px;bottom:56px;font-size:12.5px;color:var(--muted);line-height:1.9}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;position:absolute;left:62px;right:62px;bottom:56px}
+.kpi div{background:#2A2A32;padding:20px 24px}
+.kpi b{display:block;font-size:26px;font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1}
+.kpi span{display:block;margin-top:9px;font-size:11.5px;color:#C4C0B9}
+
+/* 3軸フロー */
+.axis{display:grid;grid-template-columns:40px 1fr;gap:14px;align-items:stretch}
+.axis+.axis{margin-top:14px}
+.tag{writing-mode:vertical-rl;text-orientation:upright;display:grid;place-items:center;
+  background:var(--navy);color:#fff;font-size:12px;font-weight:700;letter-spacing:.14em;padding:6px 0}
+.axis.main .tag{background:var(--verm)} .axis.dev .tag{background:var(--gold)}
+.lane{display:grid;grid-template-columns:1fr 40px 1.25fr 40px 1fr;align-items:center;
+  background:var(--soft);padding:14px 18px;gap:0}
+.axis.main .lane{background:var(--soft-2)}
+.lane .cell b{display:block;font-size:12.5px;font-weight:700;line-height:1.35}
+.lane .cell p{margin:5px 0 0;font-size:10.4px;color:var(--muted);line-height:1.45}
+.lane .cell.hub b{color:var(--verm)}
+.axis.dev .lane .cell.hub b{color:var(--gold)} .axis:not(.main):not(.dev) .lane .cell.hub b{color:var(--navy)}
+.ar{display:grid;place-items:center}
+.ar i{display:block;width:26px;height:2px;background:var(--muted);position:relative;font-style:normal}
+.ar i::after{content:"";position:absolute;right:-1px;top:-3px;border:4px solid transparent;border-left-color:var(--muted)}
+.axmeta{display:flex;gap:22px;margin-top:9px;font-size:10.5px;color:var(--muted)}
+.axmeta b{color:var(--ink)}
+
+/* mini chart */
+.mini{display:grid;grid-template-columns:1fr 1fr;gap:26px;background:var(--soft);padding:20px 24px}
+.mini h5{margin:0 0 12px;font-size:11.5px;font-weight:700}
+.mb{display:grid;grid-template-columns:88px 1fr;gap:12px;align-items:center;margin-bottom:9px}
+.mb span{font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.mb .f{height:20px;background:var(--muted);display:flex;align-items:center}
+.mb .f.v{background:var(--verm)}
+.mb b{font-size:11px;font-weight:700;margin-left:8px;color:#fff;font-variant-numeric:tabular-nums}
+.pie{display:flex;align-items:center;gap:16px}
+.pie svg{flex:0 0 auto}
+.pie p{margin:0;font-size:10.8px;color:var(--muted);line-height:1.55}
+.pie strong{display:block;font-size:20px;color:var(--verm);font-weight:700;margin-bottom:4px}
+
+/* 技術移転の対比図 */
+.xfer{display:grid;gap:12px}
+.xrow{display:grid;grid-template-columns:104px 1fr 46px 1fr 46px 1fr;align-items:center;
+  background:var(--soft);padding:14px 18px;gap:0}
+.xrow.now{background:var(--ink);color:var(--paper)}
+.xrow .y{font-size:12.5px;font-weight:700;color:var(--verm);font-variant-numeric:tabular-nums}
+.xrow.now .y{color:var(--gold)}
+.xrow .c{font-size:12px;line-height:1.4}
+.xrow .c em{display:block;font-style:normal;font-size:10.3px;color:var(--muted);margin-top:4px}
+.xrow.now .c em{color:#A8A49D}
+.xarr{display:grid;place-items:center;gap:3px}
+.xarr i{display:block;width:30px;height:2px;background:var(--verm);position:relative;font-style:normal}
+.xarr i::after{content:"";position:absolute;right:-1px;top:-3px;border:4px solid transparent;border-left-color:var(--verm)}
+.xrow.now .xarr i{background:var(--gold)}
+.xrow.now .xarr i::after{background:transparent;border-left-color:var(--gold)}
+.xarr span{font-size:9.5px;color:var(--muted)}
+.xrow.now .xarr span{color:#A8A49D}
+
+.note{background:var(--soft);padding:18px 24px}
+.note b{display:block;font-size:12.5px;color:var(--verm);margin-bottom:7px}
+.note p{margin:0;font-size:11.3px;color:var(--ink-2);line-height:1.65}
+.warn{font-size:11px;font-weight:700;color:var(--verm)}
+.thesis{font-family:var(--serif);font-weight:600;font-size:23px;line-height:1.4;margin:0 0 22px;
+  padding-left:18px;border-left:4px solid var(--verm);text-wrap:balance}
+.thesis em{font-style:normal;color:var(--verm)}
+/* 事業計画↔上場 の帯 */
+.gates{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}
+.gate{background:var(--soft);padding:11px 13px}
+.gate b{display:block;font-size:10.5px;font-weight:700;color:var(--verm);margin-bottom:5px}
+.gate p{margin:0;font-size:10.2px;color:var(--ink-2);line-height:1.45}
+.gate.ipo{background:var(--ink);color:var(--paper)} .gate.ipo b{color:var(--gold)} .gate.ipo p{color:#D4D0CA}
+
+/* svg chart text inherits tokens */
+svg text{font-family:var(--sans)}
+.ax{fill:var(--muted);font-size:10.5px}
+.dl{fill:var(--ink);font-size:11px;font-weight:700}
+.gl{stroke:var(--line);stroke-width:1}
+
+/* toc */
+#toc{position:absolute;inset:0;background:color-mix(in srgb,var(--chrome) 96%,transparent);
+  backdrop-filter:blur(3px);padding:26px;overflow:auto;display:none;z-index:5}
+#toc.on{display:block}
+#toc ol{list-style:none;margin:0 auto;padding:0;max-width:660px;display:grid;gap:2px}
+#toc li button{width:100%;text-align:left;display:flex;gap:14px;align-items:baseline;padding:10px 14px;
+  background:transparent;border:0;border-radius:5px;font-size:13.5px}
+#toc li button:hover{background:var(--soft)}
+#toc li button.cur{background:var(--soft);font-weight:700}
+#toc .n{color:var(--verm);font-weight:700;font-variant-numeric:tabular-nums;min-width:26px;font-size:12px}
+#toc .t{flex:1}
+#toc .p{color:var(--muted);font-size:11.5px;font-variant-numeric:tabular-nums}
+#toc h2{max-width:660px;margin:4px auto 16px;font-family:var(--serif);font-size:17px;font-weight:600}
+</style>
+
+<header>
+  <span class="brand">AI映像プラットフォーム<em>投資家向け企画書 ／ 2026年9月</em></span>
+  <span class="sp"></span>
+  <button id="tocb" aria-expanded="false">目次</button>
+  <span class="nav">
+    <button id="prev" aria-label="前のスライド">‹</button>
+    <button id="next" aria-label="次のスライド">›</button>
+  </span>
+  <span class="count"><b id="cur">1</b> / 19</span>
+</header>
+
+<div id="deck">
+  <div id="stage">
+
+  <!-- 1 表紙 -->
+  <section class="s dk on">
+    <div class="tiw">
+      <div class="mark" style="width:52px;height:52px;background:var(--verm)"></div>
+      <h1>AI映像プラットフォーム</h1>
+      <p class="lead">世界のクリエイターが作り、稼ぐ場所をつくる。企業案件は、私たちが取ってくる。</p>
+    </div>
+    <div class="meta">投資家向け企画書 ／ 2026年9月<br>新設法人（株式会社・仮称）</div>
+  </section>
+
+  <!-- 2 サマリー -->
+  <section class="s">
+    <div class="hd"><div class="chip">0</div><div class="hdt">
+      <h2 class="h1">エグゼクティブサマリー</h2>
+      <p class="sub">クリエイターに「再生数ゼロでも稼げる理由」を先に渡し、そこからプラットフォームを立ち上げます</p></div></div>
+    <div class="body">
+      <p class="thesis"><em>5年後・2031年、東証グロース市場への上場を目指す。</em><br>
+        中国を中心に世界のAIクリエイターを集め、課金とマッチングの両輪で回すプラットフォームをつくる。</p>
+      <div class="row c3">
+        <div class="stat"><div class="big v">2,400億元〜</div><h4>AI短劇の市場規模（推計）</h4><p>海外市場は500億ドル超との推計。ユーザー28億人</p></div>
+        <div class="stat"><div class="big n">2本立て</div><h4>収益の柱</h4><p>企業案件の仲介（初日から）＋ 視聴課金の分配（6ヶ月目〜）</p></div>
+        <div class="stat"><div class="big g">1.5億円</div><h4>今回の調達目標</h4><p>資本金800万 + シード1.42億。<strong>融資は使いません</strong></p></div>
+      </div>
+      <div class="row c3" style="margin-top:20px">
+        <div class="card"><h4>何をするか</h4><ul>
+          <li><strong>①クリエイターが自由に投稿し、課金と視聴で稼げるプラットフォーム</strong>を運営する。</li>
+          <li><strong>②企業案件は当社が受注し、登録クリエイターに配分する。</strong>再生数がゼロでも稼げる。</li>
+          <li>溜まった制作データで生成AI関連の特許を取得し、モデル開発へ。</li></ul></div>
+        <div class="card n"><h4>なぜ勝てるか</h4><ul>
+          <li><strong>2026年、中国の大手PFは純AIコンテンツの分成を圧縮し、最低保証を廃止しました。</strong>AI専業のクリエイターは行き場を探しています。</li>
+          <li><strong>②があるので、トラフィックがゼロの初日からクリエイターに報酬を出せます。</strong>分成率で殴り合わずに済む唯一の設計です。</li></ul></div>
+        <div class="card g"><h4>どこへ向かうか</h4><ul>
+          <li>1年目に基盤を作り、2〜3年目は投資期間。<strong>4年目に単月黒字化、5年目に年商25億。</strong></li>
+          <li>自動車産業が輸入技術を4年で国産化したのと同じ道筋を、3年で。</li></ul></div>
+      </div>
+    </div>
+    <div class="foot"><span class="src">数値の出所は各章に記載。市場規模・収支は［仮置き］を含む計画値です。</span><span class="pg">1</span></div>
+  </section>
+
+  <!-- 3 なぜ今 -->
+  <section class="s">
+    <div class="hd"><div class="chip">1</div><div class="hdt">
+      <h2 class="h1">なぜ今なのか</h2>
+      <p class="sub">出遅れた日本、淘汰が始まった中国。そしてAIクリエイターが行き場を失った瞬間</p></div></div>
+    <div class="body">
+      <div class="row c4" style="height:308px">
+        <div class="ph"><b>1</b><strong class="pt">日本は出遅れている</strong><div class="pb">政府がAI推進法を制定し、AI基本計画を閣議決定するほどの危機感。映像制作の現場にAIはまだ入っていない。</div></div>
+        <div class="ph"><b>2</b><strong class="pt">中国では淘汰が始まった</strong><div class="pb">AI漫劇の制作会社は2026年Q1に1,216社→698社（−42%）。約90%が赤字。最大コストは制作費ではなく広告出稿で全体の約70%。</div></div>
+        <div class="ph"><b>3</b><strong class="pt">AIクリエイターが行き場を失った</strong><div class="pb">2026年、中国の大手PFは純AIコンテンツの分成を圧縮し、最低保証を廃止。リソースは実写へ移った。</div></div>
+        <div class="ph dk"><b>4</b><strong class="pt">受け皿をつくる</strong><div class="pb">彼らに「AIを冷遇しない場所」と「再生数ゼロでも稼げる企業案件」を渡す。そこから日本の技術資産へ。</div></div>
+      </div>
+      <div class="mini" style="margin-top:20px">
+        <div>
+          <h5>中国のAI漫劇 制作会社数（活躍承制方）</h5>
+          <div class="mb"><span>2025年 Q4</span><div class="f" style="width:100%"><b>1,216社</b></div></div>
+          <div class="mb"><span>2026年 Q1</span><div class="f v" style="width:57.4%"><b>698社</b></div></div>
+          <p style="margin:8px 0 0;font-size:10.5px;color:var(--muted)">1四半期で <strong style="color:var(--verm)">−42%</strong>。制作力が市場に溢れ出しています。</p>
+        </div>
+        <div class="pie">
+          <svg width="86" height="86" viewBox="0 0 42 42" role="img" aria-label="約90%が赤字">
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="var(--soft-2)" stroke-width="7"/>
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="var(--verm)" stroke-width="7"
+              stroke-dasharray="90 10" stroke-dashoffset="25"/>
+          </svg>
+          <p><strong>約90%</strong>が赤字。最大コストは制作費ではなく<b style="color:var(--ink)">広告出稿で全体の約70%</b>。<br>
+             彼らに足りないのは「作る力」ではなく「売る力」です。</p>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span class="src">出所: 内閣府 AI戦略 ／ 第一財経・搜狐（中国AI短劇の淘汰） ／ 网易「2026短劇分账新政」 ／ 経済産業省</span><span class="pg">2</span></div>
+  </section>
+
+  <!-- 4 自動車 -->
+  <section class="s">
+    <div class="hd"><div class="chip">1</div><div class="hdt">
+      <h2 class="h1">日本は一度、これをやっている</h2>
+      <p class="sub">輸入した技術を4年で国産化し、輸出産業に変えた</p></div></div>
+    <div class="body">
+      <div class="tl">
+        <div class="rail"></div>
+        <ol>
+          <li><b>1949</b><p>GHQの生産制限が解除</p></li>
+          <li class="on"><b>1952</b><p>日産＝オースチン技術提携<br>日野＝ルノー、いすゞ＝ルーツ</p></li>
+          <li><b>1955-57</b><p>吸収した技術を<br>ダットサン110・210へ</p></li>
+          <li class="on"><b>1956-57</b><p>4社が相次いで<br>完全国産化</p></li>
+          <li><b>その後</b><p>輸出産業へ</p></li>
+        </ol>
+      </div>
+      <div class="xfer" style="margin-top:34px">
+        <div class="xrow">
+          <div class="y">1952 → 1956</div>
+          <div class="c">オースチン（英）<em>完成した技術を持つ側</em></div>
+          <div class="xarr"><i></i><span>技術</span></div>
+          <div class="c">日産・日野・いすゞ<em>ノックダウン生産で修得</em></div>
+          <div class="xarr"><i></i><span>4年</span></div>
+          <div class="c">ダットサン110・210<em>完全国産化。のちに輸出産業へ</em></div>
+        </div>
+        <div class="xrow now">
+          <div class="y">2026 → 2029</div>
+          <div class="c">世界のAIクリエイター<em>行き場を失っている側</em></div>
+          <div class="xarr"><i></i><span>制作力</span></div>
+          <div class="c">当社プラットフォーム<em>案件・課金・データで抱える</em></div>
+          <div class="xarr"><i></i><span>3年</span></div>
+          <div class="c">自社モデル・特許<em>内製化。プロダクトとして外販へ</em></div>
+        </div>
+      </div>
+      <div class="card dk" style="margin-top:16px;padding:20px 28px">
+        <h4 style="font-size:19px;font-family:var(--serif);margin-bottom:10px">提携から完全国産化まで 4年</h4>
+        <ul style="font-size:11.8px;line-height:1.75">
+          <li><strong>当社が見込む優位期間は3年。ほぼ同じスケールです。</strong></li>
+          <li>ただし当時は政府の保護（輸入制限・関税・技術移転の後押し）がありました。<strong>今のAI映像にはありません。だからより短い時間で内製化まで到達する必要があります。</strong></li></ul>
+      </div>
+    </div>
+    <div class="foot"><span class="src">出所: 日産自動車 企業情報 ／ トヨタ博物館 ／ GAZOO「ノックダウン生産の時代」</span><span class="pg">3</span></div>
+  </section>
+
+  <!-- 5 政策 -->
+  <section class="s">
+    <div class="hd"><div class="chip">1</div><div class="hdt">
+      <h2 class="h1">政策も同じ方向を向いている</h2>
+      <p class="sub">国はコンテンツを輸出産業にすると決め、予算を3倍にした</p></div></div>
+    <div class="body">
+      <div class="row c3">
+        <div class="stat"><div class="big v">20兆円</div><h4>コンテンツ海外売上 目標（2033年）</h4><p>経産省「エンタメ・クリエイティブ産業戦略2026」</p></div>
+        <div class="stat"><div class="big n">3.5倍</div><h4>経産省の財政支援規模</h4><p>令和6年度補正 101.1億円 → 令和7年度補正 350.2億円</p></div>
+        <div class="stat"><div class="big g">+26%</div><h4>アニメの海外売上（2024年）</h4><p>2兆1,700億円。市場全体は3兆8,400億円</p></div>
+      </div>
+      <div class="row c2" style="margin-top:20px">
+        <div class="card"><h4>AI政策</h4><ul>
+          <li>AI推進法（人工知能関連技術の研究開発及び活用の推進に関する法律）<br>2025年5月28日成立 ／ 6月4日公布。日本初のAI基本法。</li>
+          <li>AI基本計画を2025年12月23日に閣議決定。内閣にAI戦略本部を設置。</li></ul></div>
+        <div class="card n"><h4>当社が実際に狙える支援</h4><ul>
+          <li><strong>東京都 創業助成事業</strong>　上限400万円・助成率2/3・最長2年</li>
+          <li><strong>特許料等の減免</strong>　設立10年未満・資本金3億円以下なら1/3に軽減</li>
+          <li><strong>JLOX+</strong>　「制作の生産性向上に資するシステムの開発・実証」枠</li></ul></div>
+      </div>
+      <p class="warn" style="margin:18px 0 0">※ 補助金はすべて後払い（精算払い）のため、本計画の資金繰りには一切算入していません。</p>
+    </div>
+    <div class="foot"><span class="src">出所: 経済産業省「エンタメ・クリエイティブ産業戦略2026」／ 内閣府 AI戦略 ／ 東京都中小企業振興公社 ／ 特許庁</span><span class="pg">4</span></div>
+  </section>
+
+  <!-- 6 市場規模 -->
+  <section class="s">
+    <div class="hd"><div class="chip">2</div><div class="hdt">
+      <h2 class="h1">市場規模</h2>
+      <p class="sub">市場は制約になりません。制約はクリエイター獲得と視聴者獲得の資金です</p></div></div>
+    <div class="body" style="display:grid;grid-template-columns:1fr 372px;gap:34px;align-content:start">
+      <div>
+        <div class="bars" style="gap:20px">
+          <div class="bar" style="grid-template-columns:210px 1fr"><span>AI短劇 市場規模（中国・推計）</span>
+            <div class="bt"><div class="bf" style="width:100%"></div><b class="bv">2,400〜5,200億元</b></div></div>
+          <div class="bar" style="grid-template-columns:210px 1fr"><span>同 海外市場（推計）</span>
+            <div class="bt"><div class="bf n" style="width:65%"></div><b class="bv">500億ドル超</b></div></div>
+          <div class="bar" style="grid-template-columns:210px 1fr"><span>日本のショートドラマ市場</span>
+            <div class="bt"><div class="bf v" style="width:12%"></div><b class="bv">1,530億円（2026年予測）</b></div></div>
+          <div class="bar" style="grid-template-columns:210px 1fr"><span>日本の映像制作市場（企業案件）</span>
+            <div class="bt"><div class="bf g" style="width:36%"></div><b class="bv">4,580億円</b></div></div>
+        </div>
+        <p style="margin:20px 0 0;font-size:11px;color:var(--muted);line-height:1.6">
+          <strong style="color:var(--ink)">市場規模の推計は出所により幅が大きく、参考値として扱っています。</strong>
+          事業計画の根拠に使っているのは、実測値のある日本の映像制作市場と動画広告市場です。</p>
+      </div>
+      <div style="display:grid;gap:16px;align-content:start">
+        <div class="card n"><h4>追い風は実測できている</h4><ul>
+          <li>動画広告市場　2025年 8,855億円 → 2026年 1兆437億円</li>
+          <li>縦型動画広告は前年比 155.9%</li></ul></div>
+        <div class="card g"><h4>当社が取りに行く順序</h4><ul>
+          <li>初日は<strong>企業案件（4,580億円の市場）</strong>。ここは実測値があります。</li>
+          <li>6ヶ月目から<strong>視聴課金</strong>。ここは推計値の世界です。</li></ul></div>
+      </div>
+    </div>
+    <div class="note" style="position:absolute;left:62px;right:62px;bottom:74px">
+      <b>⚠ 制作原価の下落は、プラットフォーム側にとっては追い風です。</b>
+      <p>米国では企業動画の制作費中央値がAI導入で $4,200 → $2,500/分 に下落済み。受託事業にとっては単価下落の脅威ですが、<strong>投稿されるコンテンツの量が増えるという意味では、プラットフォームにとっては供給が厚くなるということです。</strong>だから受託ではなくプラットフォームを主軸に据えます。</p>
+    </div>
+    <div class="foot"><span class="src">出所: サイバーエージェント 国内動画広告の市場調査 ／ TVtalk「AI短劇深度調研報告」／ nowhere film ／ Vidico（米国相場）。推計値は幅が大きく参考値です</span><span class="pg">5</span></div>
+  </section>
+  <!-- 7 ビジネスモデル -->
+  <section class="s">
+    <div class="hd"><div class="chip">3</div><div class="hdt">
+      <h2 class="h1">ビジネスモデル</h2>
+      <p class="sub">両面市場です。ただし②があるため、視聴者がゼロの初日からクリエイターに報酬を出せます</p></div></div>
+    <div class="body">
+      <div class="axis main">
+        <div class="tag">①</div>
+        <div class="lane">
+          <div class="cell"><b>世界のクリエイター</b><p>中国を中心に、自由に投稿</p></div>
+          <div class="ar"><i></i></div>
+          <div class="cell hub"><b>当社プラットフォーム</b><p>配信・課金・分配・審査・権利処理</p></div>
+          <div class="ar"><i></i></div>
+          <div class="cell"><b>視聴者</b><p>課金・視聴 → 収益をクリエイターへ分配</p></div>
+        </div>
+      </div>
+      <div class="axis">
+        <div class="tag">②</div>
+        <div class="lane">
+          <div class="cell"><b>日本の発注企業</b><p>事業会社・広告代理店・制作会社</p></div>
+          <div class="ar"><i></i></div>
+          <div class="cell hub"><b>当社が受注し、配分</b><p>要件定義・品質保証・契約・与信・請求</p></div>
+          <div class="ar"><i></i></div>
+          <div class="cell"><b>登録クリエイター</b><p><strong>再生数ゼロでも稼げる</strong></p></div>
+        </div>
+      </div>
+      <div class="axis dev">
+        <div class="tag">③</div>
+        <div class="lane">
+          <div class="cell"><b>①②で溜まる制作データ</b><p>指示→初稿→修正→承認／視聴維持率</p></div>
+          <div class="ar"><i></i></div>
+          <div class="cell hub"><b>内製化してモデル開発</b><p>工程のツール化・生成AI関連の特許取得</p></div>
+          <div class="ar"><i></i></div>
+          <div class="cell"><b>プロダクト外販</b><p>粗利率80%以上・人数に比例しない</p></div>
+        </div>
+      </div>
+      <div class="card dk" style="margin-top:20px;padding:20px 28px">
+        <h4 style="font-size:15px;font-family:var(--serif)">②が①のコールドスタートを解きます</h4>
+        <ul style="font-size:11.5px;line-height:1.75">
+          <li>両面市場の宿命は「クリエイターは視聴者がいないと来ない、視聴者はコンテンツがないと来ない」。</li>
+          <li><strong>②は視聴者を必要としません。</strong>案件を配ればクリエイターは集まり、その作品が①の初期コンテンツになります。<strong>だから②を先に、①と並走させます。</strong></li></ul>
+      </div>
+    </div>
+    <div class="foot"><span class="src">クリエイター調達の設計は CHINA_SOURCING ／ プラットフォームの設計判断は PLATFORM_PIVOT を参照</span><span class="pg">6</span></div>
+  </section>
+
+  <!-- 8 収益モデル -->
+  <section class="s">
+    <div class="hd"><div class="chip">3</div><div class="hdt">
+      <h2 class="h1">収益モデルと、最初の設計判断</h2>
+      <p class="sub">分配の原資を「広告」ではなく「課金」に置きます。理由は下段の試算です</p></div></div>
+    <div class="body">
+      <table><thead><tr><th style="width:64px"></th><th style="width:250px">収益ライン</th><th style="width:150px">型</th>
+        <th style="width:170px">開始</th><th>備考</th></tr></thead>
+      <tbody>
+        <tr><td class="a">P1</td><td class="k">企業案件の受注 → クリエイターへ配分</td><td class="m">フロー・差益</td>
+          <td class="b">初日から</td><td class="m">単価48万・粗利率54%。実測前提が使える唯一のライン</td></tr>
+        <tr><td class="a">P2</td><td class="k">視聴課金の当社取り分</td><td class="m">ストック</td>
+          <td class="b">6ヶ月目〜</td><td class="m">数話無料＋以降は都度課金。ReelShort・DramaBox と同型</td></tr>
+        <tr><td class="a">P3</td><td class="k">広告収益</td><td class="m">非連動</td>
+          <td class="b">2年目〜</td><td class="m"><strong style="color:var(--verm)">補助的に置く。</strong>主にしない理由は下段</td></tr>
+        <tr><td class="a">P4</td><td class="k">制作ツール・モデルの外販</td><td class="m">ストック</td>
+          <td class="b">3年目〜</td><td class="m">粗利率80%以上。上場に必要な「読める収益」</td></tr>
+      </tbody></table>
+      <div class="row c2" style="margin-top:22px">
+        <div class="card"><h4>⚠ 広告分配だと、再生が伸びるほど赤字が膨らみうる</h4><ul>
+          <li>1再生あたりの配信コスト（縦型1分・約20MB）　<strong>0.06〜0.24円</strong></li>
+          <li>1再生あたりの広告収益（ショートRPM ¥20〜80）　<strong>0.02〜0.08円</strong></li>
+          <li><strong style="color:var(--verm)">広告単価が配信コストを下回る領域があります。</strong>だから課金を主に置きます。</li></ul></div>
+        <div class="card n"><h4>先行例も、分配開始には時間をかけている</h4><ul>
+          <li>YouTube　2005年創業 → <strong>2007年</strong>にパートナープログラム開始（2年後）</li>
+          <li>TikTok　Creator Fund は <strong>$2億のコミット</strong>で立ち上げ</li>
+          <li><strong>だから当社は、分配原資を調達額に明示的に積んでいます</strong>（第10章）。</li></ul></div>
+      </div>
+    </div>
+    <div class="foot"><span class="src">配信コストは CDN $0.02〜0.08/GB からの概算［仮置き］。課金率・ARPPU は未実測で、1年目に実測して差し替えます</span><span class="pg">7</span></div>
+  </section>
+
+  <!-- 9 日本IP -->
+  <section class="s">
+    <div class="hd"><div class="chip">3</div><div class="hdt">
+      <h2 class="h1">日本IPを使った作品制作 — 4つの入口</h2>
+      <p class="sub">プラットフォームに載せる「当社発の看板コンテンツ」の作り方。版権コストの安い順に着手します</p></div></div>
+    <div class="body">
+      <table><thead><tr><th style="width:56px"></th><th style="width:230px">対象IP</th><th style="width:270px">座組</th>
+        <th style="width:150px">版権コスト</th><th>出口</th></tr></thead>
+      <tbody>
+        <tr><td class="a">D</td><td class="k">パブリックドメイン<br>（青空文庫・古典）</td>
+          <td>権利処理が不要。単独で制作できる</td><td class="b">ゼロ</td>
+          <td class="m">自社PFの初期コンテンツ・実績づくり</td></tr>
+        <tr><td class="a">B</td><td class="k">自治体・企業の<br>キャラクター</td>
+          <td>受託（②と同じ）。先方が権利者</td><td class="b">ゼロ（先方負担）</td>
+          <td class="m">自治体PR・企業広報・ふるさと納税</td></tr>
+        <tr><td class="a">C</td><td class="k">個人作家・Web小説<br>（なろう系・pixiv）</td>
+          <td>作家と直接レベニューシェア。権利者が1人で交渉が速い</td><td class="b">ほぼゼロ<br>（成功報酬型）</td>
+          <td class="m">自社PFの課金コンテンツ</td></tr>
+        <tr><td class="a">A</td><td class="k">中小出版社の既刊マンガ<br>（未映像化作品）</td>
+          <td>原作使用許諾＋レベニューシェア。制作費は当社負担</td><td class="b">数万〜数十万／作品</td>
+          <td class="m">自社PFの看板作品・海外展開</td></tr>
+      </tbody></table>
+      <div class="row c2" style="margin-top:20px">
+        <div class="card g"><h4>着手の順序は D → B → C → A</h4><ul>
+          <li><strong>D は版権コストがゼロなので、プラットフォーム公開前から積み上げられます。</strong>ローンチ時に「見るものがある」状態をつくる唯一の方法です。</li>
+          <li>A は看板になりますが前払いが必要なため、課金収益が立ってから。</li></ul></div>
+        <div class="card"><h4>⚠ IPホルダーはAI生成を警戒します</h4><ul>
+          <li>原作ファンの反発が、原作そのものの価値を毀損しかねません。<strong>契約に「AI利用の可否と開示方法」を必ず明記します。</strong></li>
+          <li>JIAA調査でも受容条件1位は「AI利用が明記されている」37.6%。<strong>開示を前提に設計します。</strong></li></ul></div>
+      </div>
+    </div>
+    <div class="foot"><span class="src">出所: 日本動画協会 アニメ産業レポート（制作市場4,662億円・海外売上2兆1,700億円）／ JIAA「2026年インターネット広告に関するユーザー意識調査」</span><span class="pg">8</span></div>
+  </section>
+
+  <!-- 10 競合 -->
+  <section class="s">
+    <div class="hd"><div class="chip">4</div><div class="hdt">
+      <h2 class="h1">競合 — クリエイター側の相手は TikTok ではありません</h2>
+      <p class="sub">快手・抖音・Bilibili・百度が、いまAIクリエイター獲得競争をしています</p></div></div>
+    <div class="body">
+      <table><thead><tr><th style="width:150px">プラットフォーム</th><th style="width:290px">プログラム</th>
+        <th style="width:170px">分成率</th><th>トラフィック支援</th></tr></thead>
+      <tbody>
+        <tr><td class="k">快手</td><td>「灵感新纪元」AIGC投資計画</td><td class="a">最大 90%</td><td class="b">1億</td></tr>
+        <tr><td class="k">抖音</td><td>「漫画星河」計画（IP改編）</td><td class="a">純収益の 90%</td><td class="m">—</td></tr>
+        <tr><td class="k">抖音</td><td>AI漫劇 ／ AI実写短劇</td><td class="a">30〜50% ／ 40〜60%</td><td class="m">上位作品は月10万〜50万元</td></tr>
+        <tr><td class="k">Bilibili</td><td>「觉醒计划」</td><td class="a">最大 80%</td><td class="b">数百万</td></tr>
+        <tr><td class="k">百度</td><td>「AI星河計画」</td><td class="a">3倍分成</td><td class="b">10億級のトラフィックプール</td></tr>
+      </tbody></table>
+      <div class="row c2" style="margin-top:20px">
+        <div class="card"><h4>⚠ 分成率では勝てません</h4><ul>
+          <li>トラフィックがゼロの新規PFが「うちに投稿してください」と言っても、経済合理性がありません。<strong>正面から分成率で殴り合う設計にはしません。</strong></li></ul></div>
+        <div class="card g"><h4>ただし2026年、隙間が開きました</h4><ul>
+          <li><strong>中国のPFは純AIコンテンツの分成を圧縮し、最低保証を廃止。</strong>リソースは実写短劇へ（有料実写は70%→80%に引き上げ）。</li>
+          <li><strong>AI専業のクリエイターは相対的に冷遇され始めています。</strong>ここが唯一の入口です。ただし方針が戻れば消える時限付きです。</li></ul></div>
+      </div>
+    </div>
+    <div class="foot"><span class="src">出所: Bilibili「2026熱門AI漫劇/短劇創作平台」／ 中伝英才「AI短劇制作平台 2026主流平台全解析」／ 网易「2026短劇分账新政」。条件は頻繁に変わるため、提携前に公式条件の確認が必要です</span><span class="pg">9</span></div>
+  </section>
+
+  <!-- 11 なぜ来るか -->
+  <section class="s">
+    <div class="hd"><div class="chip">4</div><div class="hdt">
+      <h2 class="h1">では、なぜクリエイターは当社に来るのか</h2>
+      <p class="sub">分成率ではなく、3つの別の理由で選ばれる設計にします</p></div></div>
+    <div class="body">
+      <div class="row c3">
+        <div class="stat"><div class="big v">再生数ゼロでも</div><h4>企業案件という別の収入</h4><p>大手PFには無い。当社が受注して配分するので、視聴者がいなくても報酬が出ます</p></div>
+        <div class="stat"><div class="big n">AIを冷遇しない</div><h4>2026年の分成圧縮への受け皿</h4><p>中国PFが下げた分成と廃止した最低保証。そこを埋めます</p></div>
+        <div class="stat"><div class="big g">日本市場への窓</div><h4>個人では越えられない壁</h4><p>日本語の要件定義・稟議・与信・請求。当社が代行します</p></div>
+      </div>
+      <div class="row c2" style="margin-top:22px">
+        <div class="card"><h4>視聴者側の競合は、さらに厳しい</h4><ul>
+          <li>日本のショートドラマアプリは <strong>BUMP（DL400万・国内1位）／POPCORN（累計120億再生）／FANY:D／FOD SHORT／SWIPEDRAMA／UniReel</strong> など最低8サービス。</li>
+          <li><strong style="color:var(--verm)">中国発アプリが日本のアプリ市場シェア9割超。</strong>市場は1,530億円規模（2026年予測）で、民放キー局も参入を模索。</li></ul></div>
+        <div class="card n"><h4>だから、視聴者は「後から」取ります</h4><ul>
+          <li>初日はクリエイター側だけを取りに行きます。<strong>②の企業案件が、その口実と原資になります。</strong></li>
+          <li>視聴者獲得（流量投放）は6ヶ月目のPF公開以降に集中投下します。<strong>ここが最大の支出項目です</strong>（第10章）。</li></ul></div>
+      </div>
+    </div>
+    <div class="foot"><span class="src">出所: GOKKO ／ nowhere film ／ BUMP公式 ／ 36Kr Japan（中国発アプリの日本シェア）。詳細は COMPETITORS.md</span><span class="pg">10</span></div>
+  </section>
+  <!-- 12 課題と解決 -->
+  <section class="s">
+    <div class="hd"><div class="chip">5</div><div class="hdt">
+      <h2 class="h1">課題と、その解決方法</h2>
+      <p class="sub">プラットフォーム事業に転換したことで生じた課題を含めて開示します</p></div></div>
+    <div class="body">
+      <table><tbody>
+        <tr><td class="k" style="width:390px">両面市場のコールドスタート</td><td>②の企業案件を先に回す。視聴者ゼロでもクリエイターに報酬が出る状態を初日から作る</td></tr>
+        <tr><td class="k">分成率で大手に勝てない</td><td>分成率では戦わない。企業案件・AIを冷遇しない方針・日本市場への窓の3点で選ばれる設計にする</td></tr>
+        <tr><td class="k">分配の原資が初期はゼロ</td><td>調達額に分配原資を明示的に積む（1年目1,500万）。課金モデルを主にし、広告分配は補助に置く</td></tr>
+        <tr><td class="k">視聴者獲得が最大の支出</td><td>PF公開（6ヶ月目）まで投下しない。公開後に集中投下し、CPIを実測してから増減させる</td></tr>
+        <tr><td class="k">中国本土から当社PFに接続できない可能性</td><td>投稿・決済の経路を設計段階で検証。国内向けミラーまたは提携PF経由の投稿導線を用意する</td></tr>
+        <tr><td class="k">「AIっぽさ」が視聴維持率を下げる</td><td>審査基準に組み込み、品質判定の自動化を特許①として出願。視聴維持率データを学習側に回す</td></tr>
+      </tbody></table>
+    </div>
+    <div class="foot"><span class="src">各課題の詳細と数値根拠は PLATFORM_PIVOT ／ COMPETITORS ／ MOAT_TIMELINE ／ CHINA_SOURCING に記載</span><span class="pg">11</span></div>
+  </section>
+
+  <!-- 13 チーム -->
+  <section class="s">
+    <div class="hd"><div class="chip">6</div><div class="hdt">
+      <h2 class="h1">チーム</h2>
+      <p class="sub">（記入予定）</p></div></div>
+    <div class="body">
+      <div class="row c3">
+        <div class="tm"><div class="av"></div><b>代表取締役</b><p>経歴 ／ 実績</p></div>
+        <div class="tm"><div class="av"></div><b>CTO／開発責任者</b><p>採用計画</p></div>
+        <div class="tm"><div class="av"></div><b>クリエイター獲得責任者</b><p>採用計画</p></div>
+      </div>
+      <div class="card dk" style="margin-top:26px;padding:26px 32px">
+        <h4 style="font-size:17px;font-family:var(--serif)">この章は記入予定です</h4>
+        <ul style="font-size:12.5px;line-height:1.85">
+          <li>代表の経歴と実績　／　これから採用する職種・時期・採用チャネル　／　アドバイザー・顧問</li>
+          <li><strong>プラットフォーム事業への転換により、1年目からエンジニアが必要になりました。</strong>1年目は6名体制（代表・エンジニア2・運営2・営業1）を想定しています。</li></ul>
+      </div>
+    </div>
+    <div class="foot"><span class="src"></span><span class="pg">12</span></div>
+  </section>
+
+  <!-- 14 事業計画 -->
+  <section class="s">
+    <div class="hd"><div class="chip">7</div><div class="hdt">
+      <h2 class="h1">事業計画</h2>
+      <p class="sub">プラットフォーム型のため3年目まで赤字が前提。単月黒字化は4年目、上場申請は5期です</p></div></div>
+    <div class="body" style="display:grid;grid-template-columns:1fr 356px;gap:34px;bottom:180px">
+      <div>
+        <h4 style="margin:0 0 8px;font-size:13px;font-weight:700">売上高と営業利益の推移（単位 百万円・<span style="color:var(--verm)">計画値</span>）</h4>
+        <svg viewBox="0 0 700 400" width="100%" height="272" role="img" aria-label="1期から5期の売上高と営業利益の推移">
+          <g class="gl">
+            <line x1="60" y1="300" x2="690" y2="300"/><line x1="60" y1="240" x2="690" y2="240"/>
+            <line x1="60" y1="180" x2="690" y2="180"/><line x1="60" y1="120" x2="690" y2="120"/>
+            <line x1="60" y1="60"  x2="690" y2="60"/>
+          </g>
+          <line x1="60" y1="300" x2="690" y2="300" stroke="var(--muted)" stroke-width="1.4"/>
+          <g class="ax" text-anchor="end">
+            <text x="52" y="304">0</text><text x="52" y="244">600</text><text x="52" y="184">1,200</text>
+            <text x="52" y="124">1,800</text><text x="52" y="64">2,400</text><text x="52" y="328">−200</text>
+          </g>
+          <g>
+            <rect x="84"  y="297" width="34" height="3"   fill="var(--navy)"/><rect x="122" y="300" width="34" height="11" fill="var(--verm)"/>
+            <rect x="212" y="282" width="34" height="18"  fill="var(--navy)"/><rect x="250" y="300" width="34" height="14" fill="var(--verm)"/>
+            <rect x="340" y="250" width="34" height="50"  fill="var(--navy)"/><rect x="378" y="300" width="34" height="8"  fill="var(--verm)"/>
+            <rect x="468" y="180" width="34" height="120" fill="var(--navy)"/><rect x="506" y="295" width="34" height="5"  fill="var(--verm)"/>
+            <rect x="596" y="50"  width="34" height="250" fill="var(--navy)"/><rect x="634" y="270" width="34" height="30" fill="var(--verm)"/>
+          </g>
+          <g class="dl" text-anchor="middle">
+            <text x="101" y="289">30</text><text x="229" y="274">180</text><text x="357" y="242">500</text>
+            <text x="485" y="172">1,200</text><text x="613" y="42">2,500</text>
+          </g>
+          <g class="ax" text-anchor="middle">
+            <text x="139" y="325">−113</text><text x="267" y="328">−140</text><text x="395" y="322">−80</text>
+            <text x="523" y="290">+50</text><text x="651" y="264">+300</text>
+          </g>
+          <g class="ax" text-anchor="middle">
+            <text x="120" y="352">1期</text><text x="120" y="366">2027/9</text>
+            <text x="248" y="352">2期</text><text x="248" y="366">2028/9</text>
+            <text x="376" y="352">3期</text><text x="376" y="366">2029/9</text>
+            <text x="504" y="352">4期</text><text x="504" y="366">2030/9</text>
+            <text x="632" y="352">5期</text><text x="632" y="366">2031/9</text>
+          </g>
+          <g><rect x="410" y="14" width="11" height="11" fill="var(--navy)"/><text x="428" y="24" class="ax" text-anchor="start">売上高</text>
+             <rect x="484" y="14" width="11" height="11" fill="var(--verm)"/><text x="502" y="24" class="ax" text-anchor="start">営業利益</text></g>
+        </svg>
+      </div>
+      <div style="display:grid;gap:16px;align-content:start">
+        <div class="card"><h4>1期 ― 基盤をつくる</h4><ul>
+          <li>PF開発と公開（6ヶ月目）。企業案件で2,700万、課金で300万。<strong>営業利益 ▲1.1億は計画通りの投資です。</strong></li></ul></div>
+        <div class="card n"><h4>2〜3期 ― 投資期間</h4><ul>
+          <li>視聴者獲得に集中投下。赤字は2期に最大化し、3期から縮小に転じます。</li></ul></div>
+        <div class="card g"><h4>4〜5期 ― 回収</h4><ul>
+          <li>4期に単月黒字化、5期に年商25億・営業利益3億。上場申請の水準へ。</li></ul></div>
+      </div>
+    </div>
+    <div class="gates" style="position:absolute;left:62px;right:62px;bottom:72px">
+      <div class="gate"><b>1期</b><p>PF公開・登録100名<br>企業案件 月300万</p></div>
+      <div class="gate"><b>2期</b><p>MAU・課金率の実測<br>監査法人ショートレビュー</p></div>
+      <div class="gate"><b>3期（N-2期）</b><p>監査開始<br>赤字が縮小に転じる</p></div>
+      <div class="gate"><b>4期（N-1期）</b><p>単月黒字化<br>内部管理体制の構築</p></div>
+      <div class="gate ipo"><b>5期（N期）→ 2031年 上場</b><p>年商25億・営業利益3億<br>流通株式時価総額5億円</p></div>
+    </div>
+    <div class="foot"><span class="src"><strong>計画値。</strong>P2（課金）の課金率・ARPPU は未実測です。1期に実測して差し替えます。プラットフォーム型のため赤字期間が長く、追加調達を前提としています（第10章）</span><span class="pg">13</span></div>
+  </section>
+
+  <!-- 15 上場までの流れ -->
+  <section class="s">
+    <div class="hd"><div class="chip">8</div><div class="hdt">
+      <h2 class="h1">上場までの流れ</h2>
+      <p class="sub">5期（2031年）での上場を逆算。N-2期の監査開始は3期・2028年10月です</p></div></div>
+    <div class="body">
+      <div class="row c5" style="gap:14px">
+        <div class="ph"><b>1期</b><p class="d">2026/10<br>-2027/9</p><ul><li>PF開発・公開<br>クリエイター100名<br>企業案件の立ち上げ</li></ul></div>
+        <div class="ph"><b>2期</b><p class="d">2027/10<br>-2028/9</p><ul><li>視聴者獲得に集中<br>課金率の実測<br><strong>監査法人SR</strong></li></ul></div>
+        <div class="ph"><b>3期 N-2</b><p class="d">2028/10<br>-2029/9</p><ul><li><strong>監査開始</strong><br>赤字が縮小へ<br>主幹事証券の選定</li></ul></div>
+        <div class="ph"><b>4期 N-1</b><p class="d">2029/10<br>-2030/9</p><ul><li><strong>単月黒字化</strong><br>内部管理体制の構築<br>資本政策の確定</li></ul></div>
+        <div class="ph dk"><b>5期 N期</b><p class="d">2030/10<br>-2031/9</p><ul><li><strong>上場申請</strong><br>2031年・東証グロース</li></ul></div>
+      </div>
+      <div class="row c2" style="margin-top:24px">
+        <div class="card n"><h4>資本政策の想定</h4><ul>
+          <li>シード1.5億（今回）→ ESOP枠10% → シリーズA 3億（2期）→ シリーズB 8億（4期）</li>
+          <li>IPO公募20%を経て、上場時の創業者持分は <strong>35%前後</strong>を想定。</li>
+          <li>1ラウンドで33%超は放出しません（特別決議の拒否権を渡さないため）。</li></ul></div>
+        <div class="card"><h4>⚠ 5年で上場するための条件</h4><ul>
+          <li><strong>2期目（2028年）に監査法人のショートレビューを受ける必要があります。</strong>赤字が最大化する期に監査法人を確保できるかが最初の関門です。</li>
+          <li>グロースは2030年3月以降「上場5年経過後に時価総額100億円」の維持基準が新設。<strong>2031年上場なら2036年に100億円。ゴールは上場ではありません。</strong></li></ul></div>
+      </div>
+    </div>
+    <div class="foot"><span class="src">出所: 日本取引所グループ 上場維持基準。上場基準は改定が続くため、準備期に入る前に最新基準を再確認します</span><span class="pg">14</span></div>
+  </section>
+  <!-- 16 マイルストーン -->
+  <section class="s">
+    <div class="hd"><div class="chip">9</div><div class="hdt">
+      <h2 class="h1">マイルストーン</h2>
+      <p class="sub">各フェーズを、次へ進むための「ゲート条件」で管理します</p></div></div>
+    <div class="body">
+      <table><thead><tr><th style="width:110px">時期</th><th style="width:360px">やること</th><th>次へ進むゲート条件</th></tr></thead>
+      <tbody>
+        <tr><td class="a">〜2026/12</td><td>法人設立・PF要件定義・クリエイター20名と先行契約</td><td class="b">クリエイター20名の登録／PF仕様の確定</td></tr>
+        <tr><td class="a">2027/1-3</td><td>PF開発（アプリ・Web・課金・分配）／企業案件の受注開始</td><td class="b">企業案件 累計5本／粗利率55%以上</td></tr>
+        <tr><td class="a">2027/4-9</td><td><strong>PF公開（6ヶ月目）</strong>・視聴者獲得の開始・D案IPの投入</td><td class="b">登録100名／公開作品500本／課金率の初回実測</td></tr>
+        <tr><td class="a">2期</td><td>視聴者獲得に集中投下・課金モデルの最適化</td><td class="b">MAUとCPIの実測／監査法人ショートレビュー</td></tr>
+        <tr><td class="a">3期</td><td>赤字の縮小・プロダクト（P4）の開発着手</td><td class="b">監査開始／赤字が縮小に転じる</td></tr>
+        <tr><td class="a">4期</td><td>単月黒字化・内部管理体制の構築</td><td class="b">単月黒字化／プロダクト比率10%以上</td></tr>
+        <tr><td class="a">5期</td><td>上場申請</td><td class="b">年商25億・営業利益3億</td></tr>
+      </tbody></table>
+    </div>
+    <div class="foot"><span class="src">ゲート条件を満たさない場合は次フェーズに進まず、前提を引き直します。<strong>とくに「課金率の初回実測」は、以降のすべての売上計画が乗る数字です。</strong></span><span class="pg">15</span></div>
+  </section>
+
+  <!-- 17 資金計画 -->
+  <section class="s">
+    <div class="hd"><div class="chip">10</div><div class="hdt">
+      <h2 class="h1">資金計画</h2>
+      <p class="sub">調達目標 1.5億円。融資を使わず、全額をエクイティで調達します</p></div></div>
+    <div class="body" style="display:grid;grid-template-columns:400px 1fr;gap:34px">
+      <div>
+        <h4 style="margin:0 0 10px;font-size:13px;font-weight:700">1年目の使途（単位 万円・合計14,280万）</h4>
+        <div class="bars" style="gap:11px">
+          <div class="bar" style="grid-template-columns:160px 1fr"><span><strong>視聴者獲得（流量投放）</strong></span><div class="bt"><div class="bf v" style="width:100%"></div><b class="bv">4,800</b></div></div>
+          <div class="bar" style="grid-template-columns:160px 1fr"><span>PF開発（アプリ・Web・課金）</span><div class="bt"><div class="bf" style="width:73%"></div><b class="bv">3,500</b></div></div>
+          <div class="bar" style="grid-template-columns:160px 1fr"><span>人件費（6名）</span><div class="bt"><div class="bf" style="width:63%"></div><b class="bv">3,000</b></div></div>
+          <div class="bar" style="grid-template-columns:160px 1fr"><span><strong>分配原資の補填</strong></span><div class="bt"><div class="bf g" style="width:31%"></div><b class="bv">1,500</b></div></div>
+          <div class="bar" style="grid-template-columns:160px 1fr"><span>オフィス・SaaS・その他</span><div class="bt"><div class="bf m" style="width:10%"></div><b class="bv">480</b></div></div>
+          <div class="bar" style="grid-template-columns:160px 1fr"><span>法務（資金決済法・規約・UGC対応）</span><div class="bt"><div class="bf m" style="width:6.3%"></div><b class="bv">300</b></div></div>
+          <div class="bar" style="grid-template-columns:160px 1fr"><span>インフラ（配信・ストレージ）</span><div class="bt"><div class="bf m" style="width:6.3%"></div><b class="bv">300</b></div></div>
+          <div class="bar" style="grid-template-columns:160px 1fr"><span>設立・機材・その他初期</span><div class="bt"><div class="bf m" style="width:8.4%"></div><b class="bv">400</b></div></div>
+        </div>
+      </div>
+      <div style="display:grid;gap:16px;align-content:start">
+        <div class="row c2" style="gap:16px">
+          <div class="stat"><div class="big v">800万</div><h4>資本金（創業者出資）</h4><p>1,000万未満に抑え、初年度の消費税課税事業者化を回避</p></div>
+          <div class="stat"><div class="big n">1.42億</div><h4>シード（創業時）</h4><p>放出20〜27%を想定。J-KISSでの価格先送りも選択肢</p></div>
+        </div>
+        <div class="card n"><h4>⚠ 追加調達を前提にしています</h4><ul>
+          <li><strong>1.5億は1年目を賄う額です。</strong>2期は視聴者獲得が通年になるため、支出は1年目を上回ります。</li>
+          <li><strong>2期にシリーズA 3億、4期にシリーズB 8億</strong>を想定しています。累計調達は12.5億規模です。</li>
+          <li>プラットフォーム型は数年の赤字が構造的な前提であり、それを織り込んだ資本政策にしています。</li></ul></div>
+        <p class="warn" style="margin:0">⚠ 補助金は後払い（精算払い）で入金が1年以上先のため、資金繰りには一切算入していません。</p>
+      </div>
+    </div>
+    <div class="foot"><span class="src">［仮置き］。<strong>視聴者獲得のCPIが未実測なので、最大費目である流量投放4,800万の精度が最も低い数字です。</strong>PF公開後に実測して増減させます</span><span class="pg">16</span></div>
+  </section>
+
+  <!-- 18 リスク -->
+  <section class="s">
+    <div class="hd"><div class="chip">11</div><div class="hdt">
+      <h2 class="h1">リスクと対策</h2>
+      <p class="sub">把握しているリスクを、影響度の高い順に開示します</p></div></div>
+    <div class="body">
+      <table><tbody>
+        <tr><td style="width:44px"><span class="sev hi">高</span></td><td class="k" style="width:230px">視聴者が集まらない</td>
+          <td class="m" style="width:250px">中国発アプリが日本のシェア9割超。CPIが未実測</td>
+          <td class="b">PF公開まで流量投放を投下しない。公開後にCPIを実測し、閾値を超えたら企業案件（②）に軸足を戻す</td></tr>
+        <tr><td><span class="sev hi">高</span></td><td class="k">クリエイターが集まらない</td>
+          <td class="m">快手は最大90%分成＋1億トラフィックを提示</td>
+          <td class="b">分成率で戦わない。企業案件・AIを冷遇しない方針・日本市場への窓の3点で選ばれる設計にする</td></tr>
+        <tr><td><span class="sev hi">高</span></td><td class="k">中国PFが分成圧縮を撤回する</td>
+          <td class="m">2026年の隙間は時限付き。方針が戻れば消える</td>
+          <td class="b">四半期ごとに各PFの分成条件を追跡。撤回の兆候が出たら獲得を前倒しする</td></tr>
+        <tr><td><span class="sev hi">高</span></td><td class="k">追加調達が続かない</td>
+          <td class="m">3期まで赤字。シリーズA・Bが前提</td>
+          <td class="b">企業案件（②）を単独で黒字化できる水準まで育て、最悪ケースでも事業が止まらない構造にする</td></tr>
+        <tr><td><span class="sev">中</span></td><td class="k">資金決済法・UGC対応の義務</td>
+          <td class="m">前払式支払手段の届出／登録、削除要請・発信者情報開示</td>
+          <td class="b">PF設計の前に弁護士へ確認。法務費用300万を初年度に計上済み</td></tr>
+        <tr><td><span class="sev">中</span></td><td class="k">中国本土から当社PFに接続できない</td>
+          <td class="m">投稿・決済の経路がGFWの影響を受けうる</td>
+          <td class="b">設計段階で検証。国内向けミラーまたは提携PF経由の投稿導線を用意</td></tr>
+      </tbody></table>
+    </div>
+    <div class="foot"><span class="src">全リスクと対策は PLATFORM_PIVOT ／ COMPETITORS ／ MOAT_TIMELINE ／ CHINA_SOURCING に記載しています</span><span class="pg">17</span></div>
+  </section>
+
+  <!-- 19 クロージング -->
+  <section class="s dk">
+    <div class="tiw" style="top:180px">
+      <div style="width:52px;height:52px;background:var(--verm)"></div>
+      <h1 style="font-family:var(--serif);font-weight:700;font-size:40px;line-height:1.24;margin:28px 0 0">行き場を失ったクリエイターに、稼ぐ場所を。</h1>
+      <p class="lead" style="font-size:16px">中国の大手がAIを冷遇し始めた今が、受け皿をつくる唯一の窓です。</p>
+    </div>
+    <div class="kpi">
+      <div><b>1.5億円</b><span>今回の調達目標</span></div>
+      <div><b>3年</b><span>この窓が開いている期間</span></div>
+      <div><b>2031年</b><span>東証グロース上場</span></div>
+    </div>
+  </section>
+
+  <div id="toc" role="dialog" aria-label="目次">
+    <h2>目次</h2>
+    <ol id="toclist"></ol>
+  </div>
+</div>
+
+<script>
+const TITLES=[["","表紙"],["0","エグゼクティブサマリー"],["1","なぜ今なのか"],["1","日本は一度、これをやっている"],
+ ["1","政策も同じ方向を向いている"],["2","市場規模"],["3","ビジネスモデル"],["3","収益モデルと、最初の設計判断"],
+ ["3","日本IPを使った作品制作"],["4","競合 — クリエイター側の相手"],["4","なぜクリエイターは当社に来るのか"],
+ ["5","課題と、その解決方法"],["6","チーム"],["7","事業計画"],["8","上場までの流れ"],["9","マイルストーン"],
+ ["10","資金計画"],["11","リスクと対策"],["","行き場を失ったクリエイターに、稼ぐ場所を。"]];
+const slides=[...document.querySelectorAll('.s')], stage=document.getElementById('stage'),
+      deck=document.getElementById('deck'), cur=document.getElementById('cur'),
+      toc=document.getElementById('toc'), tocb=document.getElementById('tocb'), list=document.getElementById('toclist');
+let i=0;
+function fit(){const r=deck.getBoundingClientRect(),s=Math.min(r.width/1280,r.height/720);
+  stage.style.transform='scale('+s+')';
+  stage.style.left=((r.width-1280*s)/2)+'px'; stage.style.top=((r.height-720*s)/2)+'px';}
+function go(n){i=Math.max(0,Math.min(slides.length-1,n));
+  slides.forEach((s,k)=>s.classList.toggle('on',k===i));
+  cur.textContent=i+1;
+  [...list.children].forEach((li,k)=>li.firstElementChild.classList.toggle('cur',k===i));}
+TITLES.forEach((t,k)=>{const li=document.createElement('li'),b=document.createElement('button');
+  b.innerHTML='<span class="n">'+(t[0]||'')+'</span><span class="t">'+t[1]+'</span><span class="p">'+(k+1)+'</span>';
+  b.onclick=()=>{go(k);toc.classList.remove('on');tocb.setAttribute('aria-expanded','false');};
+  li.appendChild(b);list.appendChild(li);});
+document.getElementById('prev').onclick=()=>go(i-1);
+document.getElementById('next').onclick=()=>go(i+1);
+tocb.onclick=()=>{const o=toc.classList.toggle('on');tocb.setAttribute('aria-expanded',o);};
+addEventListener('keydown',e=>{
+  if(e.key==='Escape'){toc.classList.remove('on');tocb.setAttribute('aria-expanded','false');return;}
+  if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){e.preventDefault();go(i+1);}
+  if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1);}
+  if(e.key==='Home')go(0); if(e.key==='End')go(slides.length-1);});
+addEventListener('resize',fit); fit(); go(0);
+</script>
