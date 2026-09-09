@@ -485,7 +485,7 @@ svg text{font-family:var(--sans)}
   <section class="s">
     <div class="hd"><div class="chip">3</div><div class="hdt">
       <h2 class="h1">収益モデルと、最初の設計判断</h2>
-      <p class="sub">分配の原資を「広告」ではなく「課金」に置きます。理由は下段の試算です</p></div></div>
+      <p class="sub">1話の解放を「待つ／広告／課金」の3択にします。国内1位の BUMP と同じ形です</p></div></div>
     <div class="body">
       <table><thead><tr><th style="width:64px"></th><th style="width:250px">収益ライン</th><th style="width:150px">型</th>
         <th style="width:170px">開始</th><th>備考</th></tr></thead>
@@ -494,23 +494,24 @@ svg text{font-family:var(--sans)}
           <td class="b">初日から</td><td class="m">単価48万・粗利率54%。実測前提が使える唯一のライン</td></tr>
         <tr><td class="a">P2</td><td class="k">視聴課金の当社取り分</td><td class="m">ストック</td>
           <td class="b">6ヶ月目〜</td><td class="m">数話無料＋以降は都度課金。ReelShort・DramaBox と同型</td></tr>
-        <tr><td class="a">P3</td><td class="k">広告収益</td><td class="m">非連動</td>
-          <td class="b">2年目〜</td><td class="m"><strong style="color:var(--verm)">補助的に置く。</strong>主にしない理由は下段</td></tr>
+        <tr><td class="a">P3</td><td class="k">広告収益（リワードで1話アンロック）</td><td class="m">非連動</td>
+          <td class="b">6ヶ月目〜</td><td class="m">非課金層の収益化。<strong>実効eCPM ¥1,200</strong>。BUMPと同型</td></tr>
         <tr><td class="a">P4</td><td class="k">制作ツール・モデルの外販</td><td class="m">ストック</td>
           <td class="b">3年目〜</td><td class="m">粗利率80%以上。上場に必要な「読める収益」</td></tr>
       </tbody></table>
       <div class="row c2" style="margin-top:22px">
-        <div class="card"><h4>⚠ 広告分配だと、再生が伸びるほど赤字が膨らみうる</h4><ul>
-          <li>1再生あたりの配信コスト（縦型1分・約20MB）　<strong>0.06〜0.24円</strong></li>
-          <li>1再生あたりの広告収益（ショートRPM ¥20〜80）　<strong>0.02〜0.08円</strong></li>
-          <li><strong style="color:var(--verm)">広告単価が配信コストを下回る領域があります。</strong>だから課金を主に置きます。</li></ul></div>
-        <div class="card n"><h4>先行例も、分配開始には時間をかけている</h4><ul>
-          <li>YouTube　2005年創業 → <strong>2007年</strong>にパートナープログラム開始（2年後）</li>
-          <li>TikTok　Creator Fund は <strong>$2億のコミット</strong>で立ち上げ</li>
-          <li><strong>だから当社は、分配原資を調達額に明示的に積んでいます</strong>（第10章）。</li></ul></div>
+        <div class="card g"><h4>1話の解放は3択にします（BUMP型）</h4><ul>
+          <li><strong>① 待つ</strong>　24時間で1話無料。収益はゼロだが、<strong>離脱を止める</strong></li>
+          <li><strong>② 広告を見る</strong>　リワード広告1本で1話。<strong>1日3回まで</strong>。実効eCPM ¥1,200</li>
+          <li><strong>③ 課金する</strong>　1話97円／コイン。ARPPU ¥3,000/月。<strong>ここが主力</strong></li>
+          <li style="margin-top:8px;display:block">国内1位の <strong>BUMP（累計400万DL）</strong>が、すでにこの形で成立しています。</li></ul></div>
+        <div class="card n"><h4>1MAUあたりの当社収益が +43%</h4><ul>
+          <li>課金のみの設計 ¥324/年 → <strong>BUMP型 ¥464/年</strong></li>
+          <li><strong style="color:var(--verm)">損益分岐となる「流量投放 ÷ 課金GMV」が 40% → 50% に上がります。</strong>リワード広告は、既にアプリにいる非課金層から取るため追加の獲得費用がゼロです。</li>
+          <li style="margin-top:8px;display:block">⚠ フィード型広告（RPM ¥20〜80＝1話 0.02〜0.08円）なら配信原価 0.225円/話 に負けます。<strong>リワード型（1話 0.60円＝原価の2.7倍）だから成立します。</strong></li></ul></div>
       </div>
     </div>
-    <div class="foot"><span class="src">配信コストは CDN $0.02〜0.08/GB からの概算［仮置き］。課金率・ARPPU は未実測で、1年目に実測して差し替えます</span><span class="pg">7</span></div>
+    <div class="foot"><span class="src">出所: BUMP公式（emole）／ Playio・Tenjin 2026年eCPMベンチマーク（日本のリワードeCPMは $17.35）。実効eCPM・課金率・カニバリ率は未実測で、1期に実測して差し替えます</span><span class="pg">7</span></div>
   </section>
 
   <!-- 9 日本IP -->
