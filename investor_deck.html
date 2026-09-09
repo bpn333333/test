@@ -6,6 +6,7 @@
 :root{
   --ink:#16161A; --ink-2:#3A3A42; --paper:#FFFFFF; --soft:#F4F2EF; --soft-2:#EAE7E2;
   --verm:#B3121B; --gold:#9A7218; --navy:#2A3563; --muted:#6E6E76; --line:#DCD9D4;
+  --dark:#D9601A; --ondk:#FBE2D2; --ondk-2:#FBE0CE;
   --panel:#FFFFFF; --chrome:#F7F5F2; --chrome-b:#E3E0DA; --shadow:0 1px 3px rgba(22,22,26,.10),0 8px 28px rgba(22,22,26,.09);
   --sans:"Noto Sans JP",-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
   --serif:"Noto Serif JP",-apple-system,"Hiragino Mincho ProN","Yu Mincho",serif;
@@ -13,11 +14,13 @@
 @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
   --ink:#EFECE7; --ink-2:#C9C5BE; --paper:#17171B; --soft:#212128; --soft-2:#2B2B33;
   --verm:#E2555B; --gold:#D9AE4A; --navy:#8E9BD4; --muted:#93909A; --line:#33333C;
+  --dark:#DB6A26; --ondk:#FCE6D8; --ondk-2:#FBE0CE;
   --panel:#17171B; --chrome:#101014; --chrome-b:#2A2A32; --shadow:0 1px 3px rgba(0,0,0,.5),0 10px 34px rgba(0,0,0,.45);
 }}
 :root[data-theme="dark"]{
   --ink:#EFECE7; --ink-2:#C9C5BE; --paper:#17171B; --soft:#212128; --soft-2:#2B2B33;
   --verm:#E2555B; --gold:#D9AE4A; --navy:#8E9BD4; --muted:#93909A; --line:#33333C;
+  --dark:#DB6A26; --ondk:#FCE6D8; --ondk-2:#FBE0CE;
   --panel:#17171B; --chrome:#101014; --chrome-b:#2A2A32; --shadow:0 1px 3px rgba(0,0,0,.5),0 10px 34px rgba(0,0,0,.45);
 }
 *{box-sizing:border-box}
@@ -46,8 +49,8 @@ button:focus-visible{outline:2px solid var(--verm);outline-offset:2px}
   transition:opacity .18s ease;box-shadow:var(--shadow)}
 .s.on{opacity:1;pointer-events:auto}
 @media (prefers-reduced-motion:reduce){.s{transition:none}}
-.s.dk{background:var(--ink);color:var(--paper)}
-.s.dk .h1,.s.dk .big{color:var(--paper)}
+.s.dk{background:var(--dark);color:#fff}
+.s.dk .h1,.s.dk .big{color:#fff}
 
 /* ── slide grammar ── */
 .hd{position:absolute;left:62px;top:44px;right:62px;display:flex;gap:20px;align-items:flex-start}
@@ -77,7 +80,7 @@ button:focus-visible{outline:2px solid var(--verm);outline-offset:2px}
 .card h4::before{content:"";width:10px;height:10px;background:var(--verm);flex:0 0 auto}
 .card.n h4::before{background:var(--navy)} .card.g h4::before{background:var(--gold)}
 .card ul{margin:0;padding:0;list-style:none;font-size:11.6px;color:var(--ink-2);line-height:1.72}
-.card.dk{background:var(--ink)} .card.dk h4{color:var(--gold)} .card.dk ul{color:#D4D0CA}
+.card.dk{background:var(--dark)} .card.dk h4{color:#fff} .card.dk h4::before{background:#fff} .card.dk ul{color:var(--ondk)} .card.dk strong{color:#fff}
 
 /* table */
 table{width:100%;border-collapse:collapse;font-size:11.8px}
@@ -103,10 +106,10 @@ td.b{color:var(--navy);font-weight:700}
 /* flow */
 .flow{display:grid;grid-template-columns:1fr 62px 1fr 62px 1fr;align-items:center}
 .node{background:var(--soft);padding:20px 22px;min-height:112px}
-.node.dk{background:var(--ink);color:var(--paper)}
+.node.dk{background:var(--dark);color:#fff}
 .node b{display:block;font-size:15px;font-family:var(--serif);font-weight:600;line-height:1.3}
 .node p{margin:9px 0 0;font-size:10.8px;color:var(--muted);line-height:1.5}
-.node.dk p{color:#B9B5AE}
+.node.dk p{color:var(--ondk)}
 .arr{display:grid;gap:9px;justify-items:center;font-size:9.5px;color:var(--muted)}
 .arr i{display:block;width:44px;height:2px;background:var(--verm);position:relative;font-style:normal}
 .arr i::after{content:"";position:absolute;right:-1px;top:-3px;border:4px solid transparent;border-left-color:var(--verm)}
@@ -128,15 +131,15 @@ td.b{color:var(--navy);font-weight:700}
 
 /* phases */
 .ph{background:var(--soft);padding:20px}
-.ph.dk{background:var(--ink);color:var(--paper)}
+.ph.dk{background:var(--dark);color:#fff}
 .ph b{font-size:17px;font-weight:700;color:var(--verm);display:block;line-height:1}
-.ph.dk b{color:var(--gold)}
+.ph.dk b{color:#fff}
 .ph .d{margin:10px 0 0;font-size:10.5px;color:var(--muted);line-height:1.45;font-variant-numeric:tabular-nums}
 .ph ul{margin:14px 0 0;padding:0;list-style:none;font-size:11.3px;line-height:1.65;color:var(--ink-2)}
 .ph .pt{display:block;margin:14px 0 12px;font-size:13.5px;font-weight:700;line-height:1.4}
 .ph .pb{font-size:11.3px;line-height:1.7;color:var(--ink-2)}
-.ph.dk .pt{color:#fff} .ph.dk .pb{color:#DCD8D2}
-.ph.dk .d{color:#A8A49D} .ph.dk ul{color:#DCD8D2}
+.ph.dk .pt{color:#fff} .ph.dk .pb{color:var(--ondk)}
+.ph.dk .d{color:var(--ondk-2)} .ph.dk ul{color:var(--ondk)}
 
 /* team */
 .tm{background:var(--soft);padding:30px;text-align:center}
@@ -149,12 +152,12 @@ td.b{color:var(--navy);font-weight:700}
 .ti .mark{width:52px;height:52px;background:var(--verm);margin-bottom:auto}
 .tiw{position:absolute;left:62px;top:230px;right:62px}
 .ti h1{font-family:var(--serif);font-weight:700;font-size:52px;line-height:1.16;margin:26px 0 0;letter-spacing:.01em}
-.ti .lead{margin:20px 0 0;font-size:18px;color:#D4D0CA;line-height:1.55;font-weight:400}
-.ti .meta{position:absolute;left:62px;bottom:56px;font-size:12.5px;color:var(--muted);line-height:1.9}
+.ti .lead{margin:20px 0 0;font-size:18px;color:var(--ondk);line-height:1.55;font-weight:400}
+.s.dk .meta{position:absolute;left:62px;bottom:56px;font-size:12.5px;color:var(--ondk);line-height:1.9}
 .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;position:absolute;left:62px;right:62px;bottom:56px}
-.kpi div{background:#2A2A32;padding:20px 24px}
-.kpi b{display:block;font-size:26px;font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1}
-.kpi span{display:block;margin-top:9px;font-size:11.5px;color:#C4C0B9}
+.kpi div{background:rgba(255,255,255,.15);padding:20px 24px}
+.kpi b{display:block;font-size:26px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;line-height:1}
+.kpi span{display:block;margin-top:9px;font-size:11.5px;color:var(--ondk)}
 
 /* 3軸フロー */
 .axis{display:grid;grid-template-columns:40px 1fr;gap:14px;align-items:stretch}
@@ -192,19 +195,19 @@ td.b{color:var(--navy);font-weight:700}
 .xfer{display:grid;gap:12px}
 .xrow{display:grid;grid-template-columns:104px 1fr 46px 1fr 46px 1fr;align-items:center;
   background:var(--soft);padding:14px 18px;gap:0}
-.xrow.now{background:var(--ink);color:var(--paper)}
+.xrow.now{background:var(--dark);color:#fff}
 .xrow .y{font-size:12.5px;font-weight:700;color:var(--verm);font-variant-numeric:tabular-nums}
-.xrow.now .y{color:var(--gold)}
+.xrow.now .y{color:#fff}
 .xrow .c{font-size:12px;line-height:1.4}
 .xrow .c em{display:block;font-style:normal;font-size:10.3px;color:var(--muted);margin-top:4px}
-.xrow.now .c em{color:#A8A49D}
+.xrow.now .c em{color:var(--ondk)}
 .xarr{display:grid;place-items:center;gap:3px}
 .xarr i{display:block;width:30px;height:2px;background:var(--verm);position:relative;font-style:normal}
 .xarr i::after{content:"";position:absolute;right:-1px;top:-3px;border:4px solid transparent;border-left-color:var(--verm)}
-.xrow.now .xarr i{background:var(--gold)}
-.xrow.now .xarr i::after{background:transparent;border-left-color:var(--gold)}
+.xrow.now .xarr i{background:#fff}
+.xrow.now .xarr i::after{background:transparent;border-left-color:#fff}
 .xarr span{font-size:9.5px;color:var(--muted)}
-.xrow.now .xarr span{color:#A8A49D}
+.xrow.now .xarr span{color:var(--ondk)}
 
 .note{background:var(--soft);padding:18px 24px}
 .note b{display:block;font-size:12.5px;color:var(--verm);margin-bottom:7px}
@@ -218,7 +221,7 @@ td.b{color:var(--navy);font-weight:700}
 .gate{background:var(--soft);padding:11px 13px}
 .gate b{display:block;font-size:10.5px;font-weight:700;color:var(--verm);margin-bottom:5px}
 .gate p{margin:0;font-size:10.2px;color:var(--ink-2);line-height:1.45}
-.gate.ipo{background:var(--ink);color:var(--paper)} .gate.ipo b{color:var(--gold)} .gate.ipo p{color:#D4D0CA}
+.gate.ipo{background:var(--dark);color:#fff} .gate.ipo b{color:#fff} .gate.ipo p{color:var(--ondk)}
 
 /* svg chart text inherits tokens */
 svg text{font-family:var(--sans)}
@@ -258,7 +261,7 @@ svg text{font-family:var(--sans)}
   <!-- 1 表紙 -->
   <section class="s dk on">
     <div class="tiw">
-      <div class="mark" style="width:52px;height:52px;background:var(--verm)"></div>
+      <div class="mark" style="width:52px;height:52px;background:#fff"></div>
       <h1>AI映像プラットフォーム</h1>
       <p class="lead">世界のクリエイターが作り、稼ぐ場所をつくる。企業案件は、私たちが取ってくる。</p>
     </div>
@@ -274,9 +277,9 @@ svg text{font-family:var(--sans)}
       <p class="thesis"><em>5年後・2031年、東証グロース市場への上場を目指す。</em><br>
         中国を中心に世界のAIクリエイターを集め、課金とマッチングの両輪で回すプラットフォームをつくる。</p>
       <div class="row c3">
-        <div class="stat"><div class="big v">2,400億元〜</div><h4>AI短劇の市場規模（推計）</h4><p>海外市場は500億ドル超との推計。ユーザー28億人</p></div>
+        <div class="stat"><div class="big v">約340億ドル〜</div><h4>AI短劇の市場規模（中国・推計）</h4><p>海外市場は500億ドル超との推計。ユーザー28億人</p></div>
         <div class="stat"><div class="big n">2本立て</div><h4>収益の柱</h4><p>企業案件の仲介（初日から）＋ 視聴課金の分配（6ヶ月目〜）</p></div>
-        <div class="stat"><div class="big g">1.5億円</div><h4>今回の調達目標</h4><p>資本金800万 + シード1.42億。<strong>融資は使いません</strong></p></div>
+        <div class="stat"><div class="big g">1.5億円</div><h4>今回の調達目標</h4><p></p></div>
       </div>
       <div class="row c3" style="margin-top:20px">
         <div class="card"><h4>何をするか</h4><ul>
@@ -291,7 +294,7 @@ svg text{font-family:var(--sans)}
           <li>自動車産業が輸入技術を4年で国産化したのと同じ道筋を、3年で。</li></ul></div>
       </div>
     </div>
-    <div class="foot"><span class="src">数値の出所は各章に記載。市場規模・収支は［仮置き］を含む計画値です。</span><span class="pg">1</span></div>
+    <div class="foot"><span class="src">数値の出所は各章に記載。市場規模・収支は［仮置き］を含む計画値です。中国の推計値は1ドル=7.1元で換算しています。</span><span class="pg">1</span></div>
   </section>
 
   <!-- 3 なぜ今 -->
@@ -331,16 +334,16 @@ svg text{font-family:var(--sans)}
   <section class="s">
     <div class="hd"><div class="chip">1</div><div class="hdt">
       <h2 class="h1">日本は一度、これをやっている</h2>
-      <p class="sub">輸入した技術を4年で国産化し、輸出産業に変えた</p></div></div>
+      <p class="sub">輸入した技術を4年で国産化し、その後20年以上の改善で世界一の品質に到達した</p></div></div>
     <div class="body">
       <div class="tl">
         <div class="rail"></div>
         <ol>
-          <li><b>1949</b><p>GHQの生産制限が解除</p></li>
-          <li class="on"><b>1952</b><p>日産＝オースチン技術提携<br>日野＝ルノー、いすゞ＝ルーツ</p></li>
-          <li><b>1955-57</b><p>吸収した技術を<br>ダットサン110・210へ</p></li>
-          <li class="on"><b>1956-57</b><p>4社が相次いで<br>完全国産化</p></li>
-          <li><b>その後</b><p>輸出産業へ</p></li>
+          <li><b>1952</b><p>日産＝オースチン技術提携<br>日野＝ルノー、いすゞ＝ルーツ</p></li>
+          <li><b>1956-57</b><p>4社が相次いで完全国産化<br>ここまで4年</p></li>
+          <li class="on"><b>1960s-70s</b><p>QCサークル・トヨタ生産方式<br>改善を20年以上回し続ける</p></li>
+          <li class="on"><b>1980s</b><p>品質と燃費で世界市場を取る<br>米国メーカーが学びに来る側へ</p></li>
+          <li><b>示唆</b><p>国産化は入口にすぎない<br>本当の資産はその後の改善</p></li>
         </ol>
       </div>
       <div class="xfer" style="margin-top:34px">
@@ -350,7 +353,7 @@ svg text{font-family:var(--sans)}
           <div class="xarr"><i></i><span>技術</span></div>
           <div class="c">日産・日野・いすゞ<em>ノックダウン生産で修得</em></div>
           <div class="xarr"><i></i><span>4年</span></div>
-          <div class="c">ダットサン110・210<em>完全国産化。のちに輸出産業へ</em></div>
+          <div class="c">完全国産化<em>ただし入口。以後の改善で世界一の品質へ</em></div>
         </div>
         <div class="xrow now">
           <div class="y">2026 → 2029</div>
@@ -358,17 +361,17 @@ svg text{font-family:var(--sans)}
           <div class="xarr"><i></i><span>制作力</span></div>
           <div class="c">当社プラットフォーム<em>案件・課金・データで抱える</em></div>
           <div class="xarr"><i></i><span>3年</span></div>
-          <div class="c">自社モデル・特許<em>内製化。プロダクトとして外販へ</em></div>
+          <div class="c">自社モデル・特許<em>内製化。ここから改善で品質差をつける</em></div>
         </div>
       </div>
       <div class="card dk" style="margin-top:16px;padding:20px 28px">
-        <h4 style="font-size:19px;font-family:var(--serif);margin-bottom:10px">提携から完全国産化まで 4年</h4>
+        <h4 style="font-size:19px;font-family:var(--serif);margin-bottom:10px">ポイントは国産化の速さではありません</h4>
         <ul style="font-size:11.8px;line-height:1.75">
-          <li><strong>当社が見込む優位期間は3年。ほぼ同じスケールです。</strong></li>
-          <li>ただし当時は政府の保護（輸入制限・関税・技術移転の後押し）がありました。<strong>今のAI映像にはありません。だからより短い時間で内製化まで到達する必要があります。</strong></li></ul>
+          <li><strong>その後20年以上の改善で、世界一の品質を築いたことです。</strong>日産・トヨタは国産化をゴールにせず、生産方式と品質管理を磨き続けました。1980年代には米国メーカーが日本の生産方式を学びに来る側に回ります。</li>
+          <li><strong>当社も同じです。内製化（3年）は出発点にすぎません。</strong>①②で溜まった制作データで改善を回し続けることが、模倣されない資産になります。ただし当時は政府の保護（輸入制限・関税）がありました。今のAI映像にはないので、改善のサイクルをより速く回す必要があります。</li></ul>
       </div>
     </div>
-    <div class="foot"><span class="src">出所: 日産自動車 企業情報 ／ トヨタ博物館 ／ GAZOO「ノックダウン生産の時代」</span><span class="pg">3</span></div>
+    <div class="foot"><span class="src">出所: 日産自動車 企業情報 ／ トヨタ博物館 ／ GAZOO「ノックダウン生産の時代」／ 日本科学技術連盟（QCサークル・デミング賞）</span><span class="pg">3</span></div>
   </section>
 
   <!-- 5 政策 -->
@@ -391,7 +394,6 @@ svg text{font-family:var(--sans)}
           <li><strong>特許料等の減免</strong>　設立10年未満・資本金3億円以下なら1/3に軽減</li>
           <li><strong>JLOX+</strong>　「制作の生産性向上に資するシステムの開発・実証」枠</li></ul></div>
       </div>
-      <p class="warn" style="margin:18px 0 0">※ 補助金はすべて後払い（精算払い）のため、本計画の資金繰りには一切算入していません。</p>
     </div>
     <div class="foot"><span class="src">出所: 経済産業省「エンタメ・クリエイティブ産業戦略2026」／ 内閣府 AI戦略 ／ 東京都中小企業振興公社 ／ 特許庁</span><span class="pg">4</span></div>
   </section>
@@ -405,16 +407,17 @@ svg text{font-family:var(--sans)}
       <div>
         <div class="bars" style="gap:20px">
           <div class="bar" style="grid-template-columns:210px 1fr"><span>AI短劇 市場規模（中国・推計）</span>
-            <div class="bt"><div class="bf" style="width:100%"></div><b class="bv">2,400〜5,200億元</b></div></div>
+            <div class="bt"><div class="bf" style="width:100%"></div><b class="bv">約5.0兆〜10.9兆円</b></div></div>
           <div class="bar" style="grid-template-columns:210px 1fr"><span>同 海外市場（推計）</span>
-            <div class="bt"><div class="bf n" style="width:65%"></div><b class="bv">500億ドル超</b></div></div>
+            <div class="bt"><div class="bf n" style="width:69%"></div><b class="bv">約7.5兆円超</b></div></div>
           <div class="bar" style="grid-template-columns:210px 1fr"><span>日本のショートドラマ市場</span>
-            <div class="bt"><div class="bf v" style="width:12%"></div><b class="bv">1,530億円（2026年予測）</b></div></div>
+            <div class="bt"><div class="bf v" style="width:1.4%"></div><b class="bv">1,530億円（2026年予測）</b></div></div>
           <div class="bar" style="grid-template-columns:210px 1fr"><span>日本の映像制作市場（企業案件）</span>
-            <div class="bt"><div class="bf g" style="width:36%"></div><b class="bv">4,580億円</b></div></div>
+            <div class="bt"><div class="bf g" style="width:4.2%"></div><b class="bv">4,580億円</b></div></div>
         </div>
         <p style="margin:20px 0 0;font-size:11px;color:var(--muted);line-height:1.6">
-          <strong style="color:var(--ink)">市場規模の推計は出所により幅が大きく、参考値として扱っています。</strong>
+          <strong style="color:var(--ink)">棒の長さは金額に比例しています。日本市場は中国・海外の推計に対して2桁小さい規模です。</strong>
+          ただし市場の定義が異なります（上2つは視聴側の流通額、下2つは日本国内の制作・視聴市場）。推計は出所により幅が大きいため参考値として扱い、
           事業計画の根拠に使っているのは、実測値のある日本の映像制作市場と動画広告市場です。</p>
       </div>
       <div style="display:grid;gap:16px;align-content:start">
@@ -428,9 +431,9 @@ svg text{font-family:var(--sans)}
     </div>
     <div class="note" style="position:absolute;left:62px;right:62px;bottom:74px">
       <b>⚠ 制作原価の下落は、プラットフォーム側にとっては追い風です。</b>
-      <p>米国では企業動画の制作費中央値がAI導入で $4,200 → $2,500/分 に下落済み。受託事業にとっては単価下落の脅威ですが、<strong>投稿されるコンテンツの量が増えるという意味では、プラットフォームにとっては供給が厚くなるということです。</strong>だから受託ではなくプラットフォームを主軸に据えます。</p>
+      <p>米国では企業動画の制作費中央値がAI導入で 1分あたり約63万円 → 約38万円 に下落済み。受託事業にとっては単価下落の脅威ですが、<strong>投稿されるコンテンツの量が増えるという意味では、プラットフォームにとっては供給が厚くなるということです。</strong>だから受託ではなくプラットフォームを主軸に据えます。</p>
     </div>
-    <div class="foot"><span class="src">出所: サイバーエージェント 国内動画広告の市場調査 ／ TVtalk「AI短劇深度調研報告」／ nowhere film ／ Vidico（米国相場）。推計値は幅が大きく参考値です</span><span class="pg">5</span></div>
+    <div class="foot"><span class="src">出所: サイバーエージェント 国内動画広告の市場調査 ／ TVtalk「AI短劇深度調研報告」／ nowhere film ／ Vidico（米国相場）。推計値は幅が大きく参考値です。為替は1ドル=150円・1元=21円で換算</span><span class="pg">5</span></div>
   </section>
   <!-- 7 ビジネスモデル -->
   <section class="s">
@@ -838,7 +841,7 @@ svg text{font-family:var(--sans)}
   <!-- 19 クロージング -->
   <section class="s dk">
     <div class="tiw" style="top:180px">
-      <div style="width:52px;height:52px;background:var(--verm)"></div>
+      <div style="width:52px;height:52px;background:#fff"></div>
       <h1 style="font-family:var(--serif);font-weight:700;font-size:40px;line-height:1.24;margin:28px 0 0">行き場を失ったクリエイターに、稼ぐ場所を。</h1>
       <p class="lead" style="font-size:16px">中国の大手がAIを冷遇し始めた今が、受け皿をつくる唯一の窓です。</p>
     </div>
