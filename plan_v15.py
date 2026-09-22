@@ -10,7 +10,22 @@ Ver1.4 からの変更は ① 映像制作だけ。②③ は据え置き。
 結果として ① は 33.6億 → 35.7億。売上はほぼ変わらないが、
 本数が 5,594 → 3,780本 に減るため、AX倍率への依存が下がる。
 
-⚠ AX倍率・担当社数・リピート本数・契約数・GMVはすべて［仮置き］。
+【Ver1.4から変えたもの】指示されたもの
+  単価   60万（見積サイトの相場帯）→ 94.5万（企業の現行支払×50%）  … pricing.py
+  本数   SAMの1.5%からの逆算 → アカウント×リピートの積み上げ        … sales.py
+
+【Ver1.4から変えたもの】私の判断で入れたもの ★要判断
+  原価   一律 20.5万 → 難度係数 × 基準原価（5期 31.8万）
+         理由: 単価だけ1.57倍にして原価を据え置くと粗利率が65.8%→78.3%に跳ね、
+         利益を水増しすることになる。難度係数は新しい定義なので、使うかを決めてほしい。
+  費用   代理店手数料を新設（①売上 × 代理店経由比率 × 15%）
+         理由: sales.pyで代理店チャネルを置いたため。獲得費率6%は変えていない。
+
+【変えていないもの】
+  ② ツール外販、③ C2C、社員数・人件費、研究開発費、BPO、獲得費率6%、
+  その他販管費率4%、AX倍率、シード持分14.5%
+
+⚠ AX倍率・担当社数・リピート本数・契約数・GMV・難度係数はすべて［仮置き］。
 """
 
 Y = ["1期", "2期", "3期", "4期", "5期"]
@@ -53,7 +68,9 @@ HEADS = {
 }
 BPO = [0, 10, 120, 450, 1000]
 RND = [30, 120, 450, 1000, 1600]
-ACQ1 = 0.08      # ①売上に対する獲得費率。代理店手数料を含む
+ACQ1 = 0.06      # ①売上に対する獲得費率。Ver1.4から変えない
+AGENCY_SHARE = [0.0, 0.053, 0.099, 0.147, 0.159]  # ①売上に占める代理店経由の割合（sales.py）
+AGENCY_FEE = 0.15                                 # 代理店手数料率［仮置き］
 ACQ2 = 0.15
 ACQF = [6, 40, 90, 150, 200]
 
@@ -72,11 +89,12 @@ def calc():
         heads = sum(HEADS[r][i] for r in ROLE)
         pay = sum(HEADS[r][i] * ROLE[r] * BURDEN for r in ROLE) / 100.0
         acq = p1 * ACQ1 + TOOL[i] * ACQ2 + ACQF[i]
+        agf = p1 * AGENCY_SHARE[i] * AGENCY_FEE   # 新設。獲得費とは別に立てる
         sga = rev * 0.04
-        op = gp - pay - BPO[i] - RND[i] - acq - sga
+        op = gp - pay - BPO[i] - RND[i] - acq - agf - sga
         ns = TOOL[i] + C2C[i] + p1 * (1 - 1.0 / AX[i])
         out.append(dict(p1=p1, rev=rev, gp=gp, cu=cu, heads=heads, pay=pay, op=op, ns=ns,
-                        gig=UNITS[i] * PY_PER_UNIT / AX[i], acq=acq, sga=sga,
+                        gig=UNITS[i] * PY_PER_UNIT * DIFF[i] / AX[i], acq=acq, agf=agf, sga=sga,
                         saving=UNITS[i] * PRICE[i] / 100.0))
     return out
 
@@ -108,6 +126,7 @@ row("  人件費（社員）", [r["pay"] for r in R])
 row("  研究開発費", RND)
 row("  BPO（CS・運用）", BPO)
 row("  獲得費", [r["acq"] for r in R])
+row("  代理店手数料（新設）", [r["agf"] for r in R])
 row("  その他販管費", [r["sga"] for r in R])
 row("営業利益", [r["op"] for r in R])
 row("  営業利益率(%)", [r["op"] / r["rev"] * 100 for r in R], "{:>9.1f}")
@@ -116,7 +135,7 @@ row("★ 社員数", [r["heads"] for r in R])
 row("★ 売上/社員(万円)", [r["rev"] * 100 / r["heads"] for r in R])
 row("研究開発費 ÷ 売上(%)", [a / r["rev"] * 100 for a, r in zip(RND, R)], "{:>9.1f}")
 row("★ 人手に比例しない(%)", [r["ns"] / r["rev"] * 100 for r in R], "{:>9.1f}")
-row("業務委託ディレクション", [r["gig"] for r in R])
+row("業務委託ディレクション", [r["gig"] for r in R], "{:>9.1f}")
 row("★ 顧客が浮かせる額", [r["saving"] for r in R])
 print("=" * 92)
 print()
@@ -137,7 +156,8 @@ print("  %-24s %12.1f億 %15.1f億" % ("売上高", V14["rev"] / 100, r["rev"] /
 print("  %-24s %12.1f億 %15.1f億" % ("営業利益", V14["op"] / 100, r["op"] / 100))
 print("  %-24s %12.1f%% %15.1f%%" % ("営業利益率", V14["op"] / V14["rev"] * 100,
                                      r["op"] / r["rev"] * 100))
-print("  %-24s %12.0f名 %15.0f名" % ("業務委託ディレクション", V14["gig"], r["gig"]))
+print("  %-24s %12.1f名 %15.1f名  %s" % ("業務委託ディレクション", V14["gig"], r["gig"],
+      "← 難度係数は工数にも効く。減らない" if r["gig"] >= V14["gig"] * 0.95 else ""))
 print("  %-24s %12.1f%% %15.1f%%" % ("人手に比例しない", V14["ns"], r["ns"] / r["rev"] * 100))
 print("  %-24s %12s %15.0f億" % ("顧客が浮かせる額", "—", r["saving"] / 100))
 print()
@@ -150,7 +170,7 @@ print("  " + "-" * 74)
 for k in [1.0, 2.0, 3.0, 4.0]:
     cu = cost_unit(k, DIFF[-1])
     gp = r["p1"] * (1 - cu / PRICE[-1]) + TOOL[-1] * 0.80 + C2C[-1] * 0.85
-    op = gp - r["pay"] - BPO[-1] - RND[-1] - r["acq"] - r["sga"]
+    op = gp - r["pay"] - BPO[-1] - RND[-1] - r["acq"] - r["agf"] - r["sga"]
     mk = "  ←計画" if k == 4.0 else ("  ←ここでも成立" if k == 3.0 else "")
     print("  %.1f倍    %8.1f万          %7.1f万     %5.1f%%   %+8.0f百万   %6.1f%%%s"
           % (k, DIRECTION_BASE / k * DIFF[-1], cu, (1 - cu / PRICE[-1]) * 100,
@@ -164,7 +184,7 @@ print("  人手に比例しない収益 %.0f%%" % (r["ns"] / r["rev"] * 100))
 for ps, pc, pp in [(6, 4, 1.5), (7, 5, 2.0), (8, 6, 2.5)]:
     v = TOOL[-1] * ps + C2C[-1] * pc + r["p1"] * pp
     print("     ツール%d倍+C2C%d倍+制作%.1f倍 = %6.1f億   シード %4.1f倍"
-          % (ps, pc, pp, v / 100.0, v * 0.1453 / 142))
+          % (ps, pc, pp, v / 100.0, v * 0.145 / 142))
 for psr in [4, 5]:
     v = r["rev"] * psr
-    print("     全社PSR%d倍                  = %6.1f億   シード %4.1f倍" % (psr, v / 100.0, v * 0.1453 / 142))
+    print("     全社PSR%d倍                  = %6.1f億   シード %4.1f倍" % (psr, v / 100.0, v * 0.145 / 142))
