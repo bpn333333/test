@@ -92,5 +92,36 @@ for lab in ["ライン別・保守", "ライン別・中庸", "ライン別・�
           % (lab, v[0], v[1], v[2], v[3] * 100))
 
 print()
+print("=" * 96)
+print("資本構成の推移 — CAP_TABLE.md 第5章と突き合わせ")
+print("=" * 96)
+WALK = [
+    ("設立（資本金800万）",      [100.0, 0.0,  0.0,  0.0,  0.0]),
+    ("ESOP枠を設計",            [90.0, 10.0,  0.0,  0.0,  0.0]),
+    ("J-KISS 発行（未転換）",    [90.0, 10.0,  0.0,  0.0,  0.0]),
+    ("シリーズA ＋ J-KISS転換",  [54.9,  6.1, 18.9, 20.0,  0.0]),
+    ("ESOP補充",                [52.7,  9.9, 18.1, 19.2,  0.0]),
+    ("IPO 公募",                [42.2,  7.9, 14.5, 15.4, 20.0]),
+]
+print("    %-24s %8s %7s %7s %8s %7s %8s" % ("イベント", "創業者", "ESOP", "シード", "シリーズA", "公募", "合計"))
+for label, exp in WALK:
+    r = find("資本構成の推移", label, col=2)
+    got = [cell("資本構成の推移", "%s%d" % (c, r)) for c in ["D", "E", "F", "G", "H", "I"]]
+    pct = [g * 100 for g in got]
+    bad = any(abs(pct[i] - exp[i]) > 0.15 for i in range(5)) or abs(pct[5] - 100) > 0.1
+    if bad:
+        OK[0] = False
+    print("%s%-24s" % ("NG  " if bad else "OK  ", label)
+          + "%8.1f%%%6.1f%%%6.1f%%%7.1f%%%6.1f%%%7.1f%%" % tuple(pct))
+    if bad:
+        print("    %-24s" % "  CAP_TABLE" + "".join("%8.1f%%" % e for e in exp))
+print()
+print("    転換時のシード持分  %.1f%%   （＝1.42億÷6億。ポストマネー・キャップ）"
+      % (cell("資本構成の推移", "C13") * 100))
+print("    流通株式比率        %.1f%%   基準25%%に対して %+.1fポイント"
+      % (cell("資本構成の推移", "H%d" % find("資本構成の推移", "IPO 公募", col=2)) * 100,
+         (cell("資本構成の推移", "H%d" % find("資本構成の推移", "IPO 公募", col=2)) - 0.25) * 100))
+
+print()
 print("判定:", "全て一致" if OK[0] else "不一致あり")
 sys.exit(0 if OK[0] else 1)
