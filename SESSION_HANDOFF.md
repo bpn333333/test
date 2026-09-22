@@ -77,10 +77,17 @@
 | 18 | リスク表のヘッダーが1列ずれている疑い（影響度の列に見出しが無い・要目視確認） |
 | 19 | 「ＬoRA」の全角L |
 
-### 3-2. ⚠️ PPTXが生成できない（node未導入）
+### 3-2. ✅ PPTXは生成できます（2026-09-22 にNode導入済み）
 
-**この環境には Node.js が入っていません。**`deck/build.js` を実行できないため、**PPTXを作れません。**
-対処は 5-3 を参照。**ユーザーの承諾なしに winget で入れないこと。**
+```bash
+export PATH="$LOCALAPPDATA/Programs/nodejs:$PATH"
+cd deck && node build.js && python slim.py deck.pptx ../投資家向け企画書.pptx
+python check_layout.py ../投資家向け企画書.pptx     # 座標の検査
+```
+
+**ただしレンダリングの目視はできません。**LibreOffice も PowerPoint もこの環境にありません。
+`check_layout.py` は宣言された座標しか見ないので、**表が中身に合わせて伸びる分は捕まりません**（`deck/README.md` の既知の罠）。
+**投資家に出す前に、必ず PowerPoint で開いて目視してください。**
 
 ### 3-3. チーム章が空欄
 
@@ -150,17 +157,16 @@
 **別ブランチに別案件（trading-tools 等）が入っています。**
 本件のブランチは `claude/china-ai-japan-market-fkwvr8`。**チェックアウト前に他ブランチの未コミットを確認すること。**
 
-### 5-2. ⚠️ Node.js が入っていません → PPTXを生成できない
+### 5-2. Node.js は導入済み。ただし winget では入りませんでした
 
-`deck/build.js` は pptxgenjs で動きますが、**node も npm もこの環境にありません。**
-`winget` は使えるので導入自体は可能ですが、**システムへの変更なのでユーザーに必ず確認してから。**
+**2026-09-22 に Node 24.21.0 を `%LOCALAPPDATA%\Programs\nodejs` へ導入**（ユーザー承諾済み）。
+ユーザー環境変数の PATH にも追加してあるので、新しいシェルなら `node` が通ります。
 
-```bash
-# 確認を取ってから
-winget install OpenJS.NodeJS.LTS
-```
+> ⚠️ **`winget install OpenJS.NodeJS.LTS` は数分待っても進みませんでした。**
+> 公式zip（`https://nodejs.org/dist/index.json` から LTS を引いて `node-<ver>-win-x64.zip`）を
+> ダウンロードして展開する方が確実です。
 
-`soffice`（LibreOffice）も無いので、**PDF化とレンダリング確認もこの環境では完結しません。**
+`soffice`（LibreOffice）と PowerPoint は**無いまま**なので、**PDF化とレンダリング目視はこの環境で完結しません。**
 
 ### 5-3. ⚠️ Python の標準出力が cp950 で落ちる
 
@@ -204,6 +210,42 @@ PR の状態確認は `gh` ではできません。ブラウザか、ユーザ�
 
 セッション専用です。**残すものは必ずリポジトリへ。**
 （`deck/` と `financial_model.py` を退避したのはこのため）
+
+---
+
+### 5-10. ⚠️⚠️ 挿入画像は build.js に書く。Googleスライド側で挿しても消える
+
+**2026-09-22、これで一度ユーザーの画像を消しかけました。**
+
+`deck/build.js` はネイティブ図形しか生成しないので、**Googleスライド／PowerPoint 側で直接挿入した画像は、
+次に `node build.js` を回した瞬間に消えます。**リポジトリの PPTX には一度も画像が入っていませんでした。
+
+**画像はすべて `deck/assets/` に置き、`build.js` の `img()`（= `addImage`）で貼ること。**
+現在入っているのは5枚です。
+
+| ファイル | 貼る場所 | 中身 |
+|---|---|---|
+| `assets/image5.jpg` | 表紙・全面背景 | Hollywood×AI のイラスト。**OpenArt の透かし入り**（5-11） |
+| `assets/image3.png` | なぜ今なのか・カード2の下 | 雷とビル（危機感） |
+| `assets/image2.png` | なぜ今なのか・カード3の下 | 頭を抱える人（淘汰） |
+| `assets/image1.png` | なぜ今なのか・カード4の下 | 跳ぶ人々（受け皿） |
+| `assets/image4.png` | 政策・右上 | 国会議事堂 |
+
+**座標は松田さんが Googleスライド上で決めたものをそのまま使っています。**動かさないこと。
+
+> **Drive 側のファイルから画像を取り出す方法。** Drive の MCP は 1.5MB を Base64 でインライン返ししようとして
+> 破綻します。**ユーザーに「ファイル → ダウンロード → .pptx」でローカル保存してもらい、`zipfile` で
+> `ppt/media/` を抜く**のが唯一現実的な手順です。配置は `ppt/slides/slideN.xml` の `<p:pic>` の
+> `<a:off>` / `<a:ext>`（EMU。914400 で割るとインチ）から読めます。
+
+### 5-11. ⚠️ 表紙の画像に OpenArt の透かしが入っています
+
+`assets/image5.jpg` の中央に **OpenArt のウォーターマーク**が横断しています。
+投資家に出す資料の表紙としては体裁が悪く、**ライセンス上も有償版で書き出し直すべき**です。
+**松田さんに差し替えの要否を確認してください。**（2026-09-22 時点で未確認）
+
+なお、この写真の上に白文字を置くと読めないため、**半透明の黒スクリム（52%）を1枚挟んでいます。**
+透かしを消した画像に差し替えるときは、スクリムの濃さも見直してください。
 
 ---
 

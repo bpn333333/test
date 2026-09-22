@@ -70,13 +70,19 @@ function table(s, x, y, w, rows, colW, fs, rowH){
   });
 }
 function hrow(cells){ return cells.map(t=>({ text:t, options:{ bold:true, color:PAPER, fill:{color:ORANGE}, fontSize:9.5 } })); }
-function warn(s, x, y, w, h, title, lines){
+function img(s, path, x, y, w, h){
+  s.addImage({ path, x, y, w, h });
+}
+function sec(s,x,y,w,t){
+  s.addText(t,{x,y,w,h:0.3,fontFace:F,fontSize:11.5,bold:true,color:INK,valign:"middle",margin:0,isTextBox:true});
+}
+function warn(s, x, y, w, h, title, lines, fs){
   s.addShape(p.ShapeType.rect, { x, y, w, h, fill:{color:"FBF1F1"} });
   s.addShape(p.ShapeType.rect, { x, y, w:0.05, h, fill:{color:VERM} });
   s.addText("⚠ "+title, { x:x+0.28, y:y+0.16, w:w-0.5, h:0.3, fontFace:F, fontSize:12, bold:true,
     color:VERM, valign:"middle", margin:0, isTextBox:true });
   s.addText(lines.map((t,i)=>({text:t, options:{breakLine:i<lines.length-1}})),
-    { x:x+0.28, y:y+0.52, w:w-0.5, h:h-0.68, fontFace:F, fontSize:10, color:INKSOFT,
+    { x:x+0.28, y:y+0.52, w:w-0.5, h:h-0.68, fontFace:F, fontSize:fs||10, color:INKSOFT,
       lineSpacingMultiple:1.26, valign:"top", margin:0, isTextBox:true });
 }
 
@@ -108,19 +114,22 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
 /* ═══════════ 1. 表紙 ═══════════ */
 {
   const s = base(true);
+  img(s, "assets/image5.jpg", -0.04, 0, 13.44, 7.50);
+  // 写真の上に白文字を置くため、可読性用のスクリム（半透明の黒）を敷く
+  s.addShape(p.ShapeType.rect, { x:0, y:0, w:13.333, h:7.5, fill:{color:"000000", transparency:52} });
   s.addShape(p.ShapeType.rect, { x:M, y:2.05, w:0.62, h:0.62, fill:{color:PAPER} });
-  s.addText("AI映像制作", { x:M, y:2.95, w:11.9, h:0.95, fontFace:F, fontSize:42, bold:true,
+  s.addText("次世代AI映像制作会社の設立", { x:M, y:2.82, w:11.90, h:1.51, fontFace:F, fontSize:40, bold:true,
     color:PAPER, valign:"middle", margin:0, isTextBox:true });
-  s.addText("日本で受注し、中国のAIクリエイターで作る。溜まった制作データを、模倣されない資産に変える。",
-    { x:M, y:3.98, w:11.9, h:0.5, fontFace:F, fontSize:16, color:ONDARK, valign:"middle", margin:0, isTextBox:true });
-  s.addText("投資家向け企画書  ／  2026年9月", { x:M, y:5.6, w:7, h:0.36, fontFace:F, fontSize:12, color:ONORG, valign:"middle", margin:0, isTextBox:true });
-  s.addText("新設法人（株式会社・仮称）", { x:M, y:5.96, w:7, h:0.36, fontFace:F, fontSize:12, color:ONORG, valign:"middle", margin:0, isTextBox:true });
+  s.addText("東アジアを21世紀のハリウッドにするためのAI映像制作ハブとなるAI映像制作会社のシード投資のご案内",
+    { x:M, y:4.61, w:11.90, h:0.50, fontFace:F, fontSize:15, color:ONDARK, valign:"middle", margin:0, isTextBox:true });
+  s.addText("投資家向け企画書  ／  2026年9月", { x:M, y:6.48, w:7, h:0.36, fontFace:F, fontSize:12, color:ONORG, valign:"middle", margin:0, isTextBox:true });
+  s.addText("新設法人（株式会社・仮称）", { x:M, y:6.84, w:7, h:0.36, fontFace:F, fontSize:12, color:ONORG, valign:"middle", margin:0, isTextBox:true });
 }
 
 /* ═══════════ 2. エグゼクティブサマリー ═══════════ */
 {
   const s = base(false);
-  head(s, 0, "エグゼクティブサマリー", "映像制作でキャッシュと顧客とデータを作り、人手に比例しない収益へ移します");
+  head(s, 0, "エグゼクティブサマリー", "中華圏の最先端技術に日本のクオリティーコントロールとIPを融合させ、世界市場を取りに行く企業を設立");
   lede(s, 1.50, ["5年後・2031年、東証グロース市場への上場を目指す。",
     "日本企業から映像制作を受注し、中国を中心とする登録クリエイターで作る。制作データを特許とモデルに変える。"]);
   const y0=2.56, h=1.52, w=(W-0.6)/3;
@@ -131,7 +140,7 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   card(s, M,            y1, w2, h2, "何をするか",
     ["① 日本企業から映像制作を受注し、中国を中心とする登録クリエイターに配分する。",
      "② 制作した作品と日本IPを、自社プラットフォームに載せて課金・広告で回収する。",
-     "③ 溜まった制作データで生成AI関連の特許を取得し、ツール・モデルを外販する。"]);
+     "③ 溜まった制作データで生成AI関連の特許を取得し、チェックポイント・LoRA・モデル開発へ。"]);
   card(s, M+w2+0.3,     y1, w2, h2, "なぜ勝てるか",
     ["生成AIで制作原価は下がったが、日本企業の発注価格は下がっていない。この差が粗利。",
      "日本企業は中華圏に直接発注できない。言語・商習慣・品質保証・契約が壁。",
@@ -146,79 +155,62 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
 /* ═══════════ 3. なぜ今なのか ═══════════ */
 {
   const s = base(false);
-  head(s, 1, "なぜ今なのか", "中国で制作力が余り、日本ではまだAIが現場に入っていない。この差が開いているのは数年です");
-  const y0=1.58, w=(W-0.9)/4, h=1.62;
+  head(s, 1, "なぜ今なのか", "出遅れている日本、淘汰が始まった中国。そして優秀なAIクリエイターが行き場を失っている今がチャンス");
+  const y0=1.46, w=(W-0.9)/4, h=1.52;
   card(s, M,             y0, w, h, "1  日本は出遅れている",
-    ["政府がAI推進法を制定し、AI基本計画を閣議決定するほどの危機感。","映像制作の現場にAIはまだ入っていない。"], VERM, 9.5);
+    ["政府がAI推進法を制定し、AI基本計画を閣議決定するほどの危機感。","映像制作の現場にAIはまだ入っていない。"], VERM, 9);
   card(s, M+w+0.3,       y0, w, h, "2  中国では淘汰が始まった",
-    ["AI映像の制作会社は2026年Q1に 1,216社→698社（−42%）。","約90%が赤字。最大コストは制作費ではなく広告出稿で約70%。"], VERM, 9.5);
+    ["AI映像の制作会社は2026年Q1に 1,216社→698社（−42%）。","約90%が赤字。最大コストは広告出稿で約70%。"], VERM, 9);
   card(s, M+(w+0.3)*2,   y0, w, h, "3  制作力が余っている",
-    ["中国PFは純AIコンテンツの分成を圧縮し、最低保証を廃止。","足りないのは「作る力」ではなく「売る力」。"], NAVY, 9.5);
+    ["中国PFは純AIコンテンツの分成を圧縮し、最低保証を廃止。","足りないのは「作る力」ではなく「売る力」。"], NAVY, 9);
   card(s, M+(w+0.3)*3,   y0, w, h, "4  当社が売る力になる",
-    ["日本の発注を取り、要件定義・品質保証・契約・請求を引き受ける。","彼らは作るだけでよくなる。"], GOLD, 9.5);
-  s.addText("中国のAI映像制作会社数", { x:M, y:3.44, w:5.6, h:0.3, fontFace:F, fontSize:11, bold:true, color:INK, margin:0, isTextBox:true });
-  box(s, M,      3.80, 1.9, 1.0, "2025年 Q4", "1,216社", SOFT, MUTED, INK, 10, 17);
-  arw(s, "r", M+2.02, 4.12, 0.5, 0.36);
-  box(s, M+2.66, 3.80, 1.9, 1.0, "2026年 Q1", "698社", SOFT, MUTED, VERM, 10, 17);
-  s.addText("1四半期で −42%", { x:M+4.72, y:4.06, w:1.6, h:0.48, fontFace:F, fontSize:13, bold:true, color:VERM, valign:"middle", margin:0, isTextBox:true });
-  warn(s, M+6.5, 3.44, W-6.5, 1.36, "ただし、これは「安く買い叩ける」という話ではありません",
-    ["淘汰されているのは、広告出稿で視聴者を取りに行った会社です。作る力そのものは市場に残っています。",
-     "当社が取るのは制作力であって、彼らが負けた土俵（視聴者獲得の消耗戦）には乗りません。"]);
-  const rows=[
-    hrow(["","中国のAI制作会社","当社"]),
-    ["収益の取り方","自社作品を投稿し、再生数で分成を取る","日本企業から受注して納品する"],
-    ["最大コスト","広告出稿（全体の約70%）","制作原価（売上の40%）"],
-    ["負ける理由","広告費を先に張れる側が勝つ消耗戦","―（この土俵に乗らない）"],
-  ];
-  table(s, M, 4.96, W, rows, [2.4,4.8,4.83], 10, 0.34);
+    ["日本の発注を取り、要件定義・品質保証・契約・請求を引き受ける。","彼らは作るだけでよくなる。"], GOLD, 9);
+
+  /* 松田さんが挿入した3枚。カード2・3・4の真下に置く（座標は編集版のまま） */
+  img(s, "assets/image3.png",  4.11, 3.15, 2.03, 1.52);
+  img(s, "assets/image2.png",  7.15, 3.18, 2.03, 1.46);
+  img(s, "assets/image1.png", 10.19, 3.18, 2.20, 1.46);
+
+  s.addShape(p.ShapeType.rect, { x:M, y:4.84, w:W, h:1.66, fill:{color:SOFT} });
+  s.addText("中国のAI映像制作会社数", { x:1.05, y:4.91, w:6.00, h:0.30, fontFace:F, fontSize:11, bold:true, color:INK, margin:0, isTextBox:true });
+  s.addText("2025年 Q4", { x:1.05, y:5.35, w:2.20, h:0.28, fontFace:F, fontSize:10, color:MUTED, margin:0, isTextBox:true });
+  s.addText("1,216社", { x:1.05, y:5.63, w:2.40, h:0.60, fontFace:F, fontSize:22, bold:true, color:INK, valign:"middle", margin:0, isTextBox:true });
+  s.addText("→", { x:3.65, y:5.63, w:0.70, h:0.60, fontFace:F, fontSize:18, color:MUTED, align:"center", valign:"middle", margin:0, isTextBox:true });
+  s.addText("2026年 Q1", { x:4.45, y:5.35, w:2.20, h:0.28, fontFace:F, fontSize:10, color:MUTED, margin:0, isTextBox:true });
+  s.addText("698社", { x:4.45, y:5.63, w:2.40, h:0.60, fontFace:F, fontSize:22, bold:true, color:VERM, valign:"middle", margin:0, isTextBox:true });
+  s.addText([{text:"1四半期で −42%。制作力が市場に溢れ出しています。", options:{breakLine:true, bold:true, color:VERM}},
+             {text:"ただし淘汰されているのは、広告出稿で視聴者を取りに行った会社です。作る力そのものは市場に残っています。", options:{breakLine:true}},
+             {text:"当社が取るのは制作力であって、彼らが負けた土俵（視聴者獲得の消耗戦）には乗りません。", options:{}}],
+    { x:7.65, y:4.97, w:4.53, h:1.40, fontFace:F, fontSize:9.5, color:INKSOFT, lineSpacingMultiple:1.26, valign:"top", margin:0, isTextBox:true });
   foot(s, "出所: 内閣府 AI戦略 ／ 第一財経・搜狐（中国AI短劇の淘汰）／ 网易「2026短劇分账新政」／ 経済産業省");
 }
 
-/* ═══════════ 4. 日本は一度、これをやっている ═══════════ */
+/* ═══════════ 4. 最終ゴール ═══════════ */
 {
   const s = base(false);
-  head(s, 1, "日本は一度、これをやっている", "輸入した技術を4年で国産化し、その後20年以上の改善で世界一の品質に到達した");
-  const y0=1.62, w=(W-0.9)/4, h=1.30;
-  card(s, M,           y0, w, h, "1952", ["日産＝オースチン技術提携","日野＝ルノー、いすゞ＝ルーツ"], MUTED, 9.5);
-  card(s, M+w+0.3,     y0, w, h, "1956-57", ["4社が相次いで完全国産化","ここまで4年"], VERM, 9.5);
-  card(s, M+(w+0.3)*2, y0, w, h, "1960s-70s", ["QCサークル・トヨタ生産方式","改善を20年以上回し続ける"], NAVY, 9.5);
-  card(s, M+(w+0.3)*3, y0, w, h, "1980s", ["品質と燃費で世界市場を取る","米国メーカーが学びに来る側へ"], GOLD, 9.5);
-  const rows=[
-    hrow(["","持っている側","","修得する側","期間","到達点"]),
-    ["1952 → 1956","オースチン（英）","技術 →","日産・日野・いすゞ","4年","完全国産化。ただしこれは入口"],
-    [{text:"2026 → 2029",options:{bold:true,color:VERM}},"世界のAIクリエイター","制作力 →",{text:"当社",options:{bold:true}},{text:"3年",options:{bold:true}},{text:"内製化。ここから改善を回す",options:{bold:true}}],
-  ];
-  table(s, M, 3.22, W, rows, [1.8,2.9,1.0,2.9,0.8,2.63], 9.5, 0.40);
-  warn(s, M, 4.62, W, 1.16, "ポイントは国産化の速さではありません。その後の改善で世界一の品質を築いたことです",
-    ["日産・トヨタは国産化をゴールにせず、以後20年以上かけて生産方式と品質管理を磨き続けました。",
-     "当社も同じです。内製化（3年）は出発点で、制作データで改善を回し続けることが模倣されない資産になります。"]);
-  s.addText("⚠ 当時は政府の保護（輸入制限・関税）がありました。今のAI映像にはありません。だから改善のサイクルをより速く回す必要があります。",
-    { x:M, y:5.94, w:W, h:0.34, fontFace:F, fontSize:10, bold:true, color:VERM, valign:"middle", margin:0, isTextBox:true });
-  foot(s, "出所: 日産自動車 企業情報 ／ トヨタ博物館 ／ GAZOO「ノックダウン生産の時代」／ 日本科学技術連盟（QCサークル・デミング賞）");
+  head(s, 1, "最終ゴール", "日本に制作ハブを置き、中華圏の技術を束ねて世界市場を取りに行く");
+  lede(s, 1.52, ["AI映像制作ハブを日本に置く。",
+    "中華圏の最先端技術に、日本のクオリティーコントロールとIPを載せて世界へ出す。"]);
+  const y0=2.66, w=(W-0.6)/3, h=2.16;
+  card(s, M,           y0, w, h, "① 日本の企業案件",
+    ["4,580億円の実測市場。法人が発注し、与信と請求が必要な領域。",
+     "個人クリエイターには越えられない壁を当社が引き受ける。",
+     "初日から現金を生む主軸。"], VERM, 10);
+  card(s, M+w+0.3,     y0, w, h, "② 自社プラットフォーム",
+    ["①で作った作品と日本IPを載せる出口。",
+     "課金と広告で回収し、視聴維持率のデータを制作側へ戻す。",
+     "6ヶ月目から。副次ライン。"], NAVY, 10);
+  card(s, M+(w+0.3)*2, y0, w, h, "③ 日本の個人案件",
+    ["ウエディング・終活など、個人が発注する領域。単価5〜20万。",
+     "法人案件の閑散期を埋める調整弁。",
+     "要求が定型的で件数が出るため、最良の学習データ源になる。"], GOLD, 10);
+  warn(s, M, 5.02, W, 1.22, "3つとも「制作」が土台です",
+    ["②のプラットフォームは、①③で作った作品が無ければ載せるものがありません。プラットフォームが先ではなく、制作が先です。",
+     "そして①②③で溜まった制作データが、内製化・特許・モデル外販（P4）の原料になります。ここが企業価値の本体です。"]);
+  foot(s, "市場規模の出所は次ページ以降。個人案件は「個人が発注する市場」であり、クリエイターエコノミー（個人が受け取る市場）とは別物です");
 }
 
-/* ═══════════ 5. 政策も同じ方向を向いている ═══════════ */
-{
-  const s = base(false);
-  head(s, 1, "政策も同じ方向を向いている", "国はコンテンツを輸出産業にすると決め、予算を3倍にした");
-  const y0=1.62, h=1.52, w=(W-0.6)/3;
-  stat(s, M,           y0, w, h, "20兆円", "コンテンツ海外売上 目標（2033年）", "経産省「エンタメ・クリエイティブ産業戦略2026」");
-  stat(s, M+w+0.3,     y0, w, h, "3.5倍",  "経産省の財政支援規模", "令和6年度補正 101.1億円 → 令和7年度補正 350.2億円", NAVY);
-  stat(s, M+(w+0.3)*2, y0, w, h, "+26%",   "アニメの海外売上（2024年）", "2兆1,700億円。市場全体は3兆8,400億円", GOLD);
-  const y1=3.32, w2=(W-0.3)/2;
-  card(s, M, y1, w2, 1.62, "AI政策",
-    ["AI推進法（人工知能関連技術の研究開発及び活用の推進に関する法律）","2025年5月28日成立 ／ 6月4日公布。日本初のAI基本法。",
-     "AI基本計画を2025年12月23日に閣議決定。内閣にAI戦略本部を設置。"], NAVY, 9.5);
-  card(s, M+w2+0.3, y1, w2, 1.62, "当社が実際に狙える支援",
-    ["東京都 創業助成事業 — 上限400万円・助成率2/3・最長2年","特許料等の減免 — 設立10年未満・資本金3億円以下なら1/3に軽減",
-     "JLOX+ — 「制作の生産性向上に資するシステムの開発・実証」枠"], GOLD, 9.5);
-  warn(s, M, 5.14, W, 1.10, "補助金は資金計画に算入していません",
-    ["いずれも後払い（精算払い）で、入金が1年以上先になります。資金繰りの当てにはできません。",
-     "取れた場合は上振れとして扱います。"]);
-  foot(s, "出所: 経済産業省「エンタメ・クリエイティブ産業戦略2026」／ 内閣府 AI戦略 ／ 東京都中小企業振興公社 ／ 特許庁");
-}
-
-/* ═══════════ 6. 市場規模 ═══════════ */
+/* ═══════════ 5. 市場規模 ═══════════ */
 {
   const s = base(false);
   head(s, 2, "市場規模", "本丸は国内の映像制作市場です。ここは推計ではなく実測値があります");
@@ -240,7 +232,79 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   foot(s, "出所: 矢野経済研究所（動画コンテンツビジネス調査2025）／ サイバーエージェント 国内動画広告の市場調査 ／ Vidico（米国の1分単価）／ nowhere film。AI後の単価は工程別削減率からの当社試算です");
 }
 
-/* ═══════════ 7. ビジネスモデル ═══════════ */
+/* ═══════════ 6. 企業案件と個人案件 — 発注市場の規模 ═══════════ */
+{
+  const s = base(false);
+  head(s, 2, "企業案件と個人案件 — 発注市場の規模", "「誰がお金を払うのか」で見ると、法人と個人では市場の性質がまったく違います");
+  const w3=(W-0.6)/3, y0=1.50, h0=1.50;
+  stat(s,M,            y0,w3,h0,"4,580億円","企業案件｜法人が発注する市場",
+    "国内動画制作サービス市場（2025年度予測）。2024年度 4,238億円 → 2027年度 5,400億円\n【実測値・矢野経済研究所】",VERM,26);
+  stat(s,M+w3+0.3,     y0,w3,h0,"6,800億円","個人案件｜個人が発注する市場",
+    "スキルシェア市場全体の2028年予測。動画編集はこのうちの一部にすぎず、\n【直接の統計は存在しません】",NAVY,26);
+  stat(s,M+(w3+0.3)*2, y0,w3,h0,"2兆894億円","参考｜個人が「受け取る」市場",
+    "クリエイターエコノミー（2024年）。これは発注市場ではなく報酬市場です。\n【混同しないこと】",MUTED,26);
+  sec(s,M,3.14,W,"同じ「1本の動画」でも、取引の形が違います");
+  const rows=[
+    hrow(["","企業案件（法人が発注）","個人案件（個人が発注）"]),
+    [{text:"1件あたり単価",options:{bold:true,color:INK}},{text:"20万〜200万円（制作会社）／代理店経由は100万〜1,000万円",options:{color:VERM,bold:true}},{text:"5,000円〜30万円。簡易編集は1,000円台も",options:{color:NAVY,bold:true}}],
+    [{text:"発注者",options:{bold:true,color:INK}},"事業会社の広報・マーケ部門／広告代理店／制作会社","YouTuber・配信者・インフルエンサー・個人事業主"],
+    [{text:"取引の場",options:{bold:true,color:INK}},"相見積 → 稟議 → 発注書 → 検収 → 請求","ココナラ・ランサーズ・クラウドワークス（PFが仲介）"],
+    [{text:"与信・請求",options:{bold:true,color:INK}},{text:"必要。ここが個人クリエイターには越えられない壁",options:{bold:true}},"原則プラットフォームが代行するため不要"],
+    [{text:"市場の性質",options:{bold:true,color:INK}},"単価が高く件数が少ない。参入障壁が高い","単価が低く件数が多い。初級案件は完全な買い手市場"],
+  ];
+  table(s,M,3.46,W,rows,[1.9,5.1,5.03],9.5,0.40);
+  warn(s,M,5.96,W,0.88,"主戦場は法人です。個人案件は「取らない」のではなく「別の役割で取る」",
+    ["個人が発注する市場は小さく、統計すら整備されていません。だから売上の主軸は法人（①）に置きます。",
+     "個人案件（③）は閑散期の調整弁であり、要求が定型的で件数が出るため学習データ源として取ります。"],9.5);
+  foot(s,"出所: 矢野経済研究所（動画コンテンツビジネス調査2025）／ Business Insider Japan（スキルシェア市場2028年予測）／ クリエイターエコノミー協会（2025年版調査）／ ココナラ・ランサーズ公開単価。企業案件は実測値、個人案件は推計値です");
+}
+
+/* ═══════════ 7. AI導入で、制作費はいくらになり、いくら浮くのか ═══════════ */
+{
+  const s = base(false);
+  head(s,2,"AI導入で、制作費はいくらになり、いくら浮くのか","削減が効くのは「人が動く工程」です。撮影・機材・出演で費用の55%。ここが1/5になると単価が根本から変わります");
+  sec(s,M,1.48,W,"用途別｜現状の制作費 → AI導入後の制作費 → コストメリット");
+  const rows=[
+    hrow(["用途","現状の制作費","AI導入後","コストメリット（削減額）","削減率","AIの効き方"]),
+    ["映画（実写）","3〜5億円","2.4〜4億円",{text:"▲6,000万〜1億円",options:{bold:true,color:VERM}},{text:"▲20%",options:{bold:true,align:"center"}},"部分適用のみ。VFX・群衆・背景"],
+    ["アニメ映画","1〜20億円","7,000万〜14億円",{text:"▲3,000万〜6億円",options:{bold:true,color:VERM}},{text:"▲30%",options:{bold:true,align:"center"}},"中割・背景・彩色の自動化"],
+    ["テレビCM（制作費）","1,000万〜1億円","500万〜5,000万円",{text:"▲500万〜5,000万円",options:{bold:true,color:VERM}},{text:"▲50%",options:{bold:true,align:"center"}},"実写×生成AIのハイブリッド"],
+    [{text:"★ 企業VP・会社紹介",options:{bold:true,color:INK}},{text:"50〜150万円",options:{bold:true}},{text:"18〜52万円",options:{bold:true,color:TEAL}},{text:"▲32〜98万円",options:{bold:true,color:VERM}},{text:"▲65%",options:{bold:true,color:VERM,align:"center"}},{text:"フル生成AIが成立。撮影が消える",options:{bold:true}}],
+    [{text:"★ 展示会・社内イベント映像",options:{bold:true,color:INK}},{text:"20〜100万円",options:{bold:true}},{text:"6〜30万円",options:{bold:true,color:TEAL}},{text:"▲14〜70万円",options:{bold:true,color:VERM}},{text:"▲70%",options:{bold:true,color:VERM,align:"center"}},{text:"同上。ループ素材は特に効く",options:{bold:true}}],
+    [{text:"★ PR素材・SNS縦型",options:{bold:true,color:INK}},{text:"10〜50万円",options:{bold:true}},{text:"2〜10万円",options:{bold:true,color:TEAL}},{text:"▲8〜40万円",options:{bold:true,color:VERM}},{text:"▲80%",options:{bold:true,color:VERM,align:"center"}},{text:"量産前提。1本あたりが最も下がる",options:{bold:true}}],
+  ];
+  table(s,M,1.78,W,rows,[2.30,1.95,1.95,2.25,0.95,2.63],9.5,0.40);
+  s.addText("★ 下3行がフル生成AIの成立帯です。当社が取りに行くのはこの帯です。映画・CMは部分適用にとどまり、桁は変わりません。",
+    {x:M,y:4.62,w:W,h:0.28,fontFace:F,fontSize:10,bold:true,color:VERM,valign:"middle",margin:0,isTextBox:true});
+  sec(s,M,4.98,5.9,"内訳はこう変わる｜企業VP 1本　100万円 → 35万円");
+  const parts=[["企画",15,7.5,NAVY],["撮影",38,7.6,VERM],["機材",10,2.0,"8C1F26"],
+               ["出演",7,0.7,ORANGE],["編集",20,10.0,TEAL],["諸経費",10,7.0,MUTED]];
+  const bx=M+1.10, bw=4.15;
+  [["現状",5.34,1],["AI後",5.76,2]].forEach(function(r){
+    let cx=bx;
+    s.addText(r[0],{x:M,y:r[1],w:1.02,h:0.30,fontFace:F,fontSize:9.5,bold:true,color:INK,valign:"middle",margin:0,isTextBox:true});
+    parts.forEach(function(t){ const v=r[2]===1?t[1]:t[2], w=bw*v/100;
+      s.addShape(p.ShapeType.rect,{x:cx,y:r[1],w,h:0.30,fill:{color:t[3]}});
+      if(v>=12) s.addText(String(v),{x:cx,y:r[1],w,h:0.30,fontFace:F,fontSize:8.5,bold:true,color:PAPER,align:"center",valign:"middle",margin:0,isTextBox:true});
+      cx+=w; });
+    s.addText(r[2]===1?"100万円":"35万円",{x:cx+0.08,y:r[1],w:1.0,h:0.30,fontFace:F,fontSize:10,bold:true,
+      color:r[2]===1?INK:TEAL,valign:"middle",margin:0,isTextBox:true});
+  });
+  parts.forEach(function(t,i){ const x=M+i*0.98;
+    s.addShape(p.ShapeType.rect,{x,y:6.20,w:0.13,h:0.13,fill:{color:t[3]}});
+    s.addText(t[0],{x:x+0.19,y:6.13,w:0.78,h:0.26,fontFace:F,fontSize:8,color:MUTED,valign:"middle",margin:0,isTextBox:true});
+  });
+  s.addText("撮影38＋機材10＋出演7＝55%が 10.3 まで落ちます。編集と諸経費は残ります。",
+    {x:M,y:6.44,w:5.9,h:0.26,fontFace:F,fontSize:8.5,bold:true,color:VERM,valign:"middle",margin:0,isTextBox:true});
+  card(s,M+6.2,4.98,W-6.2,1.72,"実際に出ている削減幅（実例）",
+    ["大手保険のWeb広告動画　制作コスト ▲30〜50%／期間 ▲40%",
+     "Amazon Nova活用の広告　費用 ▲70%・効果 8倍",
+     "サイバーエージェント　1本 数千万円・3ヶ月 → 3本 300万円・1.5〜2週間",
+     "映画の群衆シーン　9,000万円 → 150万円（▲98%）",
+     "米国の企業動画　1分あたり 約63万円 → 約38万円（▲40%・実測）"],GOLD,9.5);
+  foot(s,"出所: 動画幹事・ムビサク・デジタルドロップ（制作費相場／撮影費は制作費の35〜40%）／ ムービーインパクト・各社プレスリリース（AI導入の削減事例）／ Vidico（米国の1分単価）。用途別の削減率は、工程別の削減率（企画▲50%・撮影▲80%・機材▲80%・出演▲90%・編集▲50%・諸経費▲30%）を費用構成に当てた当社試算です");
+}
+/* ═══════════ 8. ビジネスモデル ═══════════ */
 {
   const s = base(false);
   head(s, 3, "ビジネスモデル", "主軸は映像制作。自社プラットフォームは、作った作品の出口として副次的に置きます");
@@ -270,7 +334,7 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   foot(s, "クリエイター調達の設計は CHINA_SOURCING ／ プラットフォームの収益設計は PLATFORM_PIVOT 第11章を参照");
 }
 
-/* ═══════════ 8. ユニットエコノミクス ═══════════ */
+/* ═══════════ 9. ユニットエコノミクス ═══════════ */
 {
   const s = base(false);
   head(s, 3, "ユニットエコノミクス", "売上18億が何の積み上げなのかを、1本あたりと1人あたりで示します");
@@ -306,7 +370,7 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   foot(s, "制作の単価・原価は BUSINESS_PLAN 7-1、PFの1MAU¥464は PLATFORM_PIVOT 11-3。課金率・ARPPU・eCPM・MAUはすべて未実測の［仮置き］です");
 }
 
-/* ═══════════ 9. 収益モデル ═══════════ */
+/* ═══════════ 10. 収益モデル ═══════════ */
 {
   const s = base(false);
   head(s, 3, "収益モデル", "3本の柱。人手に比例しない収益（P2〜P4）を5期に44%まで上げます");
@@ -333,7 +397,7 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   foot(s, "出所: BUMP公式（emole）／ Playio・Tenjin 2026年eCPMベンチマーク（日本のリワードeCPMは $17.35）。実効eCPM・課金率・カニバリ率は未実測です");
 }
 
-/* ═══════════ 10. 日本IPを使った作品制作 ═══════════ */
+/* ═══════════ 11. 日本IPを使った作品制作 ═══════════ */
 {
   const s = base(false);
   head(s, 3, "日本IPを使った作品制作 — 4つの入口", "版権コストの安い順に着手します。D から始め、課金収益が立ってから A へ");
@@ -359,7 +423,28 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   foot(s, "出所: 日本動画協会 アニメ産業レポート（制作市場4,662億円・海外売上2兆1,700億円）／ JIAA「2026年インターネット広告に関するユーザー意識調査」");
 }
 
-/* ═══════════ 11. 競合 ═══════════ */
+/* ═══════════ 12. 政策も同じ方向を向いている ═══════════ */
+{
+  const s = base(false);
+  head(s, 1, "政策も同じ方向を向いている", "国はコンテンツを輸出産業にすると決め、予算を3倍にした");
+  img(s, "assets/image4.png", 10.48, 0.17, 2.41, 1.61);   // 松田さんが挿入（国会議事堂）
+  const y0=1.78, h=1.44, w=(W-0.6)/3;
+  stat(s, M,           y0, w, h, "20兆円", "コンテンツ海外売上 目標（2033年）", "経産省「エンタメ・クリエイティブ産業戦略2026」");
+  stat(s, M+w+0.3,     y0, w, h, "3.5倍",  "経産省の財政支援規模", "令和6年度補正 101.1億円 → 令和7年度補正 350.2億円", NAVY);
+  stat(s, M+(w+0.3)*2, y0, w, h, "+26%",   "アニメの海外売上（2024年）", "2兆1,700億円。市場全体は3兆8,400億円", GOLD);
+  const y1=3.42, w2=(W-0.3)/2;
+  card(s, M, y1, w2, 1.60, "AI政策",
+    ["AI推進法（人工知能関連技術の研究開発及び活用の推進に関する法律）","2025年5月28日成立 ／ 6月4日公布。日本初のAI基本法。",
+     "AI基本計画を2025年12月23日に閣議決定。内閣にAI戦略本部を設置。"], NAVY, 9.5);
+  card(s, M+w2+0.3, y1, w2, 1.60, "当社が実際に狙える支援",
+    ["東京都 創業助成事業 — 上限400万円・助成率2/3・最長2年","特許料等の減免 — 設立10年未満・資本金3億円以下なら1/3に軽減",
+     "JLOX+ — 「制作の生産性向上に資するシステムの開発・実証」枠"], GOLD, 9.5);
+  warn(s, M, 5.22, W, 1.02, "補助金は資金計画に算入していません",
+    ["いずれも後払い（精算払い）で、入金が1年以上先になります。資金繰りの当てにはできません。",
+     "取れた場合は上振れとして扱います。"]);
+  foot(s, "出所: 経済産業省「エンタメ・クリエイティブ産業戦略2026」／ 内閣府 AI戦略 ／ 東京都中小企業振興公社 ／ 特許庁");
+}
+/* ═══════════ 13. 競合 ═══════════ */
 {
   const s = base(false);
   head(s, 4, "競合 — 主戦場は国内の映像制作市場です", "相手は国内の制作会社とフリーランス。中国PFはクリエイター獲得での競合です");
@@ -384,7 +469,7 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   foot(s, "出所: 動画幹事・ムビサク（制作費相場）／ GOKKO ／ nowhere film ／ BUMP公式 ／ 36Kr Japan（中国発アプリの日本シェア）。詳細は COMPETITORS.md");
 }
 
-/* ═══════════ 12. なぜクリエイターは当社に来るのか ═══════════ */
+/* ═══════════ 14. なぜクリエイターは当社に来るのか ═══════════ */
 {
   const s = base(false);
   head(s, 4, "では、なぜクリエイターは当社に来るのか", "分成率ではなく、3つの別の理由で選ばれる設計にします");
@@ -413,7 +498,7 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   foot(s, "出所: Bilibili「2026熱門AI漫劇/短劇創作平台」／ 中伝英才「AI短劇制作平台 2026主流平台全解析」／ 网易「2026短劇分账新政」。条件は頻繁に変わるため、提携前に公式条件の確認が必要です");
 }
 
-/* ═══════════ 13. 課題と解決 ═══════════ */
+/* ═══════════ 15. 課題と解決 ═══════════ */
 {
   const s = base(false);
   head(s, 5, "課題と、その解決方法", "最大の課題は、受託のままでは上場しないことです。そこにP4を置いています");
@@ -440,7 +525,7 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   foot(s, "各課題の詳細と数値根拠は BUSINESS_PLAN ／ MARKET_SIZING ／ MOAT_TIMELINE ／ CHINA_SOURCING に記載");
 }
 
-/* ═══════════ 14. チーム ═══════════ */
+/* ═══════════ 16. チーム ═══════════ */
 {
   const s = base(false);
   head(s, 6, "チーム", "（記入予定）");
@@ -460,7 +545,7 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   foot(s, "1期は6名（代表・エンジニア2・制作ディレクター1・クリエイター管理1・営業1）。制作事業のため、売上の伸びと人員の伸びが連動します");
 }
 
-/* ═══════════ 15. 事業計画 ═══════════ */
+/* ═══════════ 17. 事業計画 ═══════════ */
 {
   const s = base(false);
   head(s, 7, "事業計画", "3期まで赤字が前提。通期黒字化は4期、上場申請は5期です");
@@ -500,7 +585,7 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   foot(s, "計画値。制作の単価・粗利率、PFの課金率・ARPPU・eCPM、MAUはすべて未実測です。1期に実測して差し替えます。数字は financial_model.py が計算しています");
 }
 
-/* ═══════════ 16. 上場までの流れ ═══════════ */
+/* ═══════════ 18. 上場までの流れ ═══════════ */
 {
   const s = base(false);
   head(s, 8, "上場までの流れ", "5期（2031年）での上場を逆算。N-2期の監査開始は3期・2028年10月です");
@@ -524,7 +609,7 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   foot(s, "出所: 日本取引所グループ 上場維持基準。上場基準は改定が続くため、準備期に入る前に最新基準を再確認します");
 }
 
-/* ═══════════ 17. 出口とリターン ═══════════ */
+/* ═══════════ 19. 出口とリターン ═══════════ */
 {
   const s = base(false);
   head(s, 8, "出口とリターン", "5期の売上18億・営業利益3.8億を前提に、3手法で試算しています");
@@ -548,7 +633,7 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   foot(s, "出所: M&A総研（業種別EV/EBITDA倍率）／ みつきコンサルティング（メディア・コンテンツ業界のM&A）／ EY Japan（2026年以降のIPO市場）／ FiNX（グロース維持基準の制度化）");
 }
 
-/* ═══════════ 18. マイルストーン ═══════════ */
+/* ═══════════ 20. マイルストーン ═══════════ */
 {
   const s = base(false);
   head(s, 9, "マイルストーン", "各フェーズは「ゲート条件」で区切ります。満たさない限り、次へは進みません");
@@ -569,7 +654,7 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   foot(s, "ゲート条件を満たさない場合は次フェーズに進まず、前提を引き直します。詳細は ROADMAP.md");
 }
 
-/* ═══════════ 19. 資金計画 ═══════════ */
+/* ═══════════ 21. 資金計画 ═══════════ */
 {
   const s = base(false);
   head(s, 10, "資金計画", "調達目標 1.5億円。融資を使わず、全額をエクイティで調達します");
@@ -593,7 +678,7 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   foot(s, "※ 融資は使いません。補助金は後払いのため資金繰りに算入していません。全額をエクイティで調達します");
 }
 
-/* ═══════════ 20. リスクと対策 ═══════════ */
+/* ═══════════ 22. リスクと対策 ═══════════ */
 {
   const s = base(false);
   head(s, 11, "リスクと対策", "影響度と発生確率で並べています。上の3つが、この事業の生死を分けます");
@@ -614,7 +699,7 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   foot(s, "全リスクと対策は BUSINESS_PLAN ／ MOAT_TIMELINE ／ CHINA_SOURCING ／ PLATFORM_PIVOT に記載しています");
 }
 
-/* ═══════════ 21. クロージング ═══════════ */
+/* ═══════════ 23. クロージング ═══════════ */
 {
   const s = base(true);
   s.addText("制作力が余っている場所と、発注が余っている場所をつなぐ。", { x:M, y:2.30, w:11.9, h:0.8, fontFace:F, fontSize:32, bold:true,
@@ -631,3 +716,26 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
 }
 
 p.writeFile({ fileName: "deck.pptx" }).then(function(){ console.log("deck.pptx"); });
+/* ═══════════ 24. 日本は一度、これをやっている ═══════════ */
+{
+  const s = base(false);
+  head(s, 1, "日本は一度、これをやっている", "輸入した技術を4年で国産化し、その後20年以上の改善で世界一の品質に到達した");
+  const y0=1.62, w=(W-0.9)/4, h=1.30;
+  card(s, M,           y0, w, h, "1952", ["日産＝オースチン技術提携","日野＝ルノー、いすゞ＝ルーツ"], MUTED, 9.5);
+  card(s, M+w+0.3,     y0, w, h, "1956-57", ["4社が相次いで完全国産化","ここまで4年"], VERM, 9.5);
+  card(s, M+(w+0.3)*2, y0, w, h, "1960s-70s", ["QCサークル・トヨタ生産方式","改善を20年以上回し続ける"], NAVY, 9.5);
+  card(s, M+(w+0.3)*3, y0, w, h, "1980s", ["品質と燃費で世界市場を取る","米国メーカーが学びに来る側へ"], GOLD, 9.5);
+  const rows=[
+    hrow(["","持っている側","","修得する側","期間","到達点"]),
+    ["1952 → 1956","オースチン（英）","技術 →","日産・日野・いすゞ","4年","完全国産化。ただしこれは入口"],
+    [{text:"2026 → 2029",options:{bold:true,color:VERM}},"世界のAIクリエイター","制作力 →",{text:"当社",options:{bold:true}},{text:"3年",options:{bold:true}},{text:"内製化。ここから改善を回す",options:{bold:true}}],
+  ];
+  table(s, M, 3.22, W, rows, [1.8,2.9,1.0,2.9,0.8,2.63], 9.5, 0.40);
+  warn(s, M, 4.62, W, 1.16, "ポイントは国産化の速さではありません。その後の改善で世界一の品質を築いたことです",
+    ["日産・トヨタは国産化をゴールにせず、以後20年以上かけて生産方式と品質管理を磨き続けました。",
+     "当社も同じです。内製化（3年）は出発点で、制作データで改善を回し続けることが模倣されない資産になります。"]);
+  s.addText("⚠ 当時は政府の保護（輸入制限・関税）がありました。今のAI映像にはありません。だから改善のサイクルをより速く回す必要があります。",
+    { x:M, y:5.94, w:W, h:0.34, fontFace:F, fontSize:10, bold:true, color:VERM, valign:"middle", margin:0, isTextBox:true });
+  foot(s, "出所: 日産自動車 企業情報 ／ トヨタ博物館 ／ GAZOO「ノックダウン生産の時代」／ 日本科学技術連盟（QCサークル・デミング賞）");
+}
+

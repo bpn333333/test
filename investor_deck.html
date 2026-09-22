@@ -28,6 +28,13 @@ html,body{height:100%}
 body{margin:0;background:var(--chrome);color:var(--ink);font-family:var(--sans);
   display:flex;flex-direction:column;overflow:hidden}
 
+
+/* --- 挿入画像 --- */
+.cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cover-scrim{position:absolute;inset:0;background:rgba(0,0,0,.52)}
+.s.dk .tiw,.s.dk .kpi{position:relative;z-index:2}
+.shot{position:absolute;object-fit:cover;border-radius:2px}
+
 /* ── chrome ── */
 header{display:flex;align-items:center;gap:14px;padding:9px 16px;border-bottom:1px solid var(--chrome-b);
   background:var(--chrome);flex:0 0 auto;font-size:13px}
@@ -253,7 +260,7 @@ svg text{font-family:var(--sans)}
     <button id="prev" aria-label="前のスライド">‹</button>
     <button id="next" aria-label="次のスライド">›</button>
   </span>
-  <span class="count"><b id="cur">1</b> / 21</span>
+  <span class="count"><b id="cur">1</b> / 24</span>
 </header>
 
 <div id="deck">
@@ -261,10 +268,12 @@ svg text{font-family:var(--sans)}
 
   <!-- 1 表紙 -->
   <section class="s dk on">
+    <img class="cover-img" src="deck/assets/image5.jpg" alt="">
+    <div class="cover-scrim"></div>
     <div class="tiw" style="top:170px">
       <div style="width:52px;height:52px;background:#fff"></div>
-      <h1 style="font-family:var(--serif);font-weight:700;font-size:44px;line-height:1.24;margin:28px 0 0">AI映像制作</h1>
-      <p class="lead" style="font-size:16px">日本で受注し、中国のAIクリエイターで作る。溜まった制作データを、模倣されない資産に変える。</p>
+      <h1 style="font-family:var(--serif);font-weight:700;font-size:38px;line-height:1.24;margin:28px 0 0">次世代AI映像制作会社の設立</h1>
+      <p class="lead" style="font-size:16px">東アジアを21世紀のハリウッドにするための、AI映像制作ハブとなる会社のシード投資のご案内</p>
     </div>
     <div style="position:absolute;left:62px;bottom:96px;color:var(--ondk);font-size:13px;line-height:1.9">
       投資家向け企画書 ／ 2026年9月<br>新設法人（株式会社・仮称）
@@ -275,7 +284,7 @@ svg text{font-family:var(--sans)}
   <section class="s">
     <div class="hd"><div class="chip">0</div><div class="hdt">
       <h2 class="h1">エグゼクティブサマリー</h2>
-      <p class="sub">映像制作でキャッシュと顧客とデータを作り、人手に比例しない収益へ移します</p></div></div>
+      <p class="sub">中華圏の最先端技術に日本のクオリティーコントロールとIPを融合させ、世界市場を取りに行く企業を設立</p></div></div>
     <div class="body">
       <p class="thesis"><em>5年後・2031年、東証グロース市場への上場を目指す。</em><br>
         日本企業から映像制作を受注し、中国を中心とする登録クリエイターで作る。制作データを特許とモデルに変える。</p>
@@ -288,7 +297,7 @@ svg text{font-family:var(--sans)}
         <div class="card"><h4>何をするか</h4><ul>
           <li><strong>① 日本企業から映像制作を受注し、</strong>中国を中心とする登録クリエイターに配分する。</li>
           <li><strong>② 制作した作品と日本IPを自社プラットフォームに載せ、</strong>課金・広告で回収する。</li>
-          <li><strong>③ 溜まった制作データで特許を取得し、</strong>ツール・モデルを外販する。</li></ul></div>
+          <li><strong>③ 溜まった制作データで生成AI関連の特許を取得し、</strong>チェックポイント・LoRA・モデル開発へ。</li></ul></div>
         <div class="card n"><h4>なぜ勝てるか</h4><ul>
           <li><strong>生成AIで制作原価は下がったが、日本企業の発注価格は下がっていない。</strong>この差が粗利になります。</li>
           <li><strong>日本企業は中華圏に直接発注できません。</strong>言語・商習慣・品質保証・契約が壁です。</li>
@@ -306,87 +315,61 @@ svg text{font-family:var(--sans)}
   <section class="s">
     <div class="hd"><div class="chip">1</div><div class="hdt">
       <h2 class="h1">なぜ今なのか</h2>
-      <p class="sub">中国で制作力が余り、日本ではまだAIが現場に入っていない。この差が開いているのは数年です</p></div></div>
+      <p class="sub">出遅れている日本、淘汰が始まった中国。そして優秀なAIクリエイターが行き場を失っている今がチャンス</p></div></div>
+    <img class="shot" src="deck/assets/image3.png" alt="" style="left:394px;top:320px;width:195px;height:142px">
+    <img class="shot" src="deck/assets/image2.png" alt="" style="left:686px;top:320px;width:195px;height:142px">
+    <img class="shot" src="deck/assets/image1.png" alt="" style="left:978px;top:320px;width:211px;height:142px">
     <div class="body">
       <div class="row" style="grid-template-columns:repeat(4,1fr)">
         <div class="ph"><b>1</b><strong class="pt">日本は出遅れている</strong><div class="pb">政府がAI推進法を制定し、AI基本計画を閣議決定するほどの危機感。映像制作の現場にAIはまだ入っていない。</div></div>
-        <div class="ph"><b>2</b><strong class="pt">中国では淘汰が始まった</strong><div class="pb">AI映像の制作会社は2026年Q1に1,216社→698社（−42%）。約90%が赤字。最大コストは制作費ではなく広告出稿で約70%。</div></div>
+        <div class="ph"><b>2</b><strong class="pt">中国では淘汰が始まった</strong><div class="pb">AI映像の制作会社は2026年Q1に1,216社→698社（−42%）。約90%が赤字。最大コストは広告出稿で約70%。</div></div>
         <div class="ph"><b>3</b><strong class="pt">制作力が余っている</strong><div class="pb">中国PFは純AIコンテンツの分成を圧縮し、最低保証を廃止。足りないのは「作る力」ではなく「売る力」。</div></div>
         <div class="ph dk"><b>4</b><strong class="pt">当社が売る力になる</strong><div class="pb">日本の発注を取り、要件定義・品質保証・契約・請求を引き受ける。彼らは作るだけでよくなる。</div></div>
       </div>
-      <div class="row c2" style="margin-top:22px">
+      <div class="row c2" style="margin-top:170px">
         <div>
           <h4 style="margin:0 0 10px">中国のAI映像制作会社数</h4>
           <div class="mb"><span>2025年 Q4</span><div class="f" style="width:100%"><b>1,216社</b></div></div>
           <div class="mb"><span>2026年 Q1</span><div class="f v" style="width:57.4%"><b>698社</b></div></div>
-          <p class="warn" style="margin:10px 0 0">1四半期で −42%。制作力が市場に溢れ出しています。</p>
         </div>
-        <div class="note"><b>⚠ ただし、これは「安く買い叩ける」という話ではありません</b>
-          <p>淘汰されているのは、広告出稿で視聴者を取りに行った会社です。作る力そのものは市場に残っています。<br>
+        <div class="note"><b>⚠ ただし「安く買い叩ける」という話ではありません</b>
+          <p><strong>1四半期で −42%。制作力が市場に溢れ出しています。</strong>ただし淘汰されているのは、広告出稿で視聴者を取りに行った会社です。作る力そのものは市場に残っています。<br>
           当社が取るのは制作力であって、彼らが負けた土俵（視聴者獲得の消耗戦）には乗りません。</p></div>
       </div>
-      <table style="margin-top:18px"><thead><tr><th style="width:200px"></th><th style="width:420px">中国のAI制作会社</th><th>当社</th></tr></thead>
-      <tbody>
-        <tr><td class="a">収益の取り方</td><td class="m">自社作品を投稿し、再生数で分成を取る</td><td class="k">日本企業から受注して納品する</td></tr>
-        <tr><td class="a">最大コスト</td><td class="m">広告出稿（全体の約70%）</td><td class="k">制作原価（売上の40%）</td></tr>
-        <tr><td class="a">負ける理由</td><td class="m">広告費を先に張れる側が勝つ消耗戦</td><td class="k">―（この土俵に乗らない）</td></tr>
-      </tbody></table>
     </div>
     <div class="foot"><span class="src">出所: 内閣府 AI戦略 ／ 第一財経・搜狐（中国AI短劇の淘汰）／ 网易「2026短劇分账新政」／ 経済産業省</span><span class="pg">3</span></div>
   </section>
 
-  <!-- 4 自動車 -->
+  <!-- 4 最終ゴール -->
   <section class="s">
     <div class="hd"><div class="chip">1</div><div class="hdt">
-      <h2 class="h1">日本は一度、これをやっている</h2>
-      <p class="sub">輸入した技術を4年で国産化し、その後20年以上の改善で世界一の品質に到達した</p></div></div>
+      <h2 class="h1">最終ゴール</h2>
+      <p class="sub">日本に制作ハブを置き、中華圏の技術を束ねて世界市場を取りに行く</p></div></div>
     <div class="body">
-      <div class="row" style="grid-template-columns:repeat(4,1fr)">
-        <div class="card"><h4>1952</h4><ul><li>日産＝オースチン技術提携</li><li>日野＝ルノー、いすゞ＝ルーツ</li></ul></div>
-        <div class="card"><h4>1956-57</h4><ul><li><strong>4社が相次いで完全国産化</strong></li><li>ここまで4年</li></ul></div>
-        <div class="card n"><h4>1960s-70s</h4><ul><li>QCサークル・トヨタ生産方式</li><li>改善を20年以上回し続ける</li></ul></div>
-        <div class="card g"><h4>1980s</h4><ul><li>品質と燃費で世界市場を取る</li><li>米国メーカーが学びに来る側へ</li></ul></div>
+      <p class="thesis"><em>AI映像制作ハブを日本に置く。</em><br>
+        中華圏の最先端技術に、日本のクオリティーコントロールとIPを載せて世界へ出す。</p>
+      <div class="row c3" style="margin-top:20px">
+        <div class="card"><h4>① 日本の企業案件</h4><ul>
+          <li><strong>4,580億円の実測市場。</strong>法人が発注し、与信と請求が必要な領域。</li>
+          <li>個人クリエイターには越えられない壁を当社が引き受ける。</li>
+          <li><strong>初日から現金を生む主軸。</strong></li></ul></div>
+        <div class="card n"><h4>② 自社プラットフォーム</h4><ul>
+          <li>①で作った作品と日本IPを載せる出口。</li>
+          <li>課金と広告で回収し、視聴維持率のデータを制作側へ戻す。</li>
+          <li>6ヶ月目から。<strong>副次ライン。</strong></li></ul></div>
+        <div class="card g"><h4>③ 日本の個人案件</h4><ul>
+          <li>ウエディング・終活など、個人が発注する領域。単価5〜20万。</li>
+          <li>法人案件の閑散期を埋める調整弁。</li>
+          <li>要求が定型的で件数が出るため、<strong>最良の学習データ源</strong>になる。</li></ul></div>
       </div>
-      <table style="margin-top:20px"><thead><tr><th style="width:130px"></th><th style="width:230px">持っている側</th><th style="width:90px"></th>
-        <th style="width:230px">修得する側</th><th style="width:70px">期間</th><th>到達点</th></tr></thead>
-      <tbody>
-        <tr><td class="a">1952 → 1956</td><td class="m">オースチン（英）</td><td class="m">技術 →</td><td class="m">日産・日野・いすゞ</td><td class="b">4年</td><td class="m">完全国産化。ただしこれは入口</td></tr>
-        <tr><td class="a">2026 → 2029</td><td class="m">世界のAIクリエイター</td><td class="m">制作力 →</td><td class="k">当社</td><td class="b">3年</td><td class="k">内製化。ここから改善を回す</td></tr>
-      </tbody></table>
-      <div class="note" style="margin-top:18px"><b>⚠ ポイントは国産化の速さではありません。その後の改善で世界一の品質を築いたことです</b>
-        <p>日産・トヨタは国産化をゴールにせず、以後20年以上かけて生産方式と品質管理を磨き続けました。当社も同じです。内製化（3年）は出発点で、制作データで改善を回し続けることが模倣されない資産になります。<br>
-        <strong>当時は政府の保護（輸入制限・関税）がありました。今のAI映像にはありません。だから改善のサイクルをより速く回す必要があります。</strong></p></div>
+      <div class="note" style="margin-top:20px"><b>⚠ 3つとも「制作」が土台です</b>
+        <p>②のプラットフォームは、①③で作った作品が無ければ載せるものがありません。<strong>プラットフォームが先ではなく、制作が先です。</strong><br>
+        そして①②③で溜まった制作データが、内製化・特許・モデル外販（P4）の原料になります。ここが企業価値の本体です。</p></div>
     </div>
-    <div class="foot"><span class="src">出所: 日産自動車 企業情報 ／ トヨタ博物館 ／ GAZOO「ノックダウン生産の時代」／ 日本科学技術連盟（QCサークル・デミング賞）</span><span class="pg">4</span></div>
+    <div class="foot"><span class="src">市場規模の出所は次ページ以降。個人案件は「個人が発注する市場」であり、クリエイターエコノミー（個人が受け取る市場）とは別物です</span><span class="pg">4</span></div>
   </section>
 
-  <!-- 5 政策 -->
-  <section class="s">
-    <div class="hd"><div class="chip">1</div><div class="hdt">
-      <h2 class="h1">政策も同じ方向を向いている</h2>
-      <p class="sub">国はコンテンツを輸出産業にすると決め、予算を3倍にした</p></div></div>
-    <div class="body">
-      <div class="row c3">
-        <div class="stat"><div class="big v">20兆円</div><h4>コンテンツ海外売上 目標（2033年）</h4><p>経産省「エンタメ・クリエイティブ産業戦略2026」</p></div>
-        <div class="stat"><div class="big n">3.5倍</div><h4>経産省の財政支援規模</h4><p>令和6年度補正 101.1億円 → 令和7年度補正 350.2億円</p></div>
-        <div class="stat"><div class="big g">+26%</div><h4>アニメの海外売上（2024年）</h4><p>2兆1,700億円。市場全体は3兆8,400億円</p></div>
-      </div>
-      <div class="row c2" style="margin-top:20px">
-        <div class="card n"><h4>AI政策</h4><ul>
-          <li><strong>AI推進法</strong>（人工知能関連技術の研究開発及び活用の推進に関する法律）2025年5月28日成立 ／ 6月4日公布。日本初のAI基本法。</li>
-          <li>AI基本計画を2025年12月23日に閣議決定。内閣にAI戦略本部を設置。</li></ul></div>
-        <div class="card g"><h4>当社が実際に狙える支援</h4><ul>
-          <li><strong>東京都 創業助成事業</strong> — 上限400万円・助成率2/3・最長2年</li>
-          <li><strong>特許料等の減免</strong> — 設立10年未満・資本金3億円以下なら1/3に軽減</li>
-          <li><strong>JLOX+</strong> — 「制作の生産性向上に資するシステムの開発・実証」枠</li></ul></div>
-      </div>
-      <div class="note" style="margin-top:18px"><b>⚠ 補助金は資金計画に算入していません</b>
-        <p>いずれも後払い（精算払い）で、入金が1年以上先になります。資金繰りの当てにはできません。取れた場合は上振れとして扱います。</p></div>
-    </div>
-    <div class="foot"><span class="src">出所: 経済産業省「エンタメ・クリエイティブ産業戦略2026」／ 内閣府 AI戦略 ／ 東京都中小企業振興公社 ／ 特許庁</span><span class="pg">5</span></div>
-  </section>
-
-  <!-- 6 市場規模 -->
+  <!-- 5 市場規模 -->
   <section class="s">
     <div class="hd"><div class="chip">2</div><div class="hdt">
       <h2 class="h1">市場規模</h2>
@@ -409,10 +392,72 @@ svg text{font-family:var(--sans)}
         <p>米国では企業動画の制作費中央値が 1分あたり約63万円 → 約38万円 に下落済み。日本も追随します。<br>
         <strong>だから制作だけで終わらせず、3期からツール外販（P4）へ移します。時限は3年と見ています。</strong></p></div>
     </div>
-    <div class="foot"><span class="src">出所: 矢野経済研究所（動画コンテンツビジネス調査2025）／ サイバーエージェント 国内動画広告の市場調査 ／ Vidico（米国の1分単価）／ nowhere film。AI後の単価は工程別削減率からの当社試算です</span><span class="pg">6</span></div>
+    <div class="foot"><span class="src">出所: 矢野経済研究所（動画コンテンツビジネス調査2025）／ サイバーエージェント 国内動画広告の市場調査 ／ Vidico（米国の1分単価）／ nowhere film。AI後の単価は工程別削減率からの当社試算です</span><span class="pg">5</span></div>
   </section>
 
-  <!-- 7 ビジネスモデル -->
+  <!-- 6 企業案件と個人案件 -->
+  <section class="s">
+    <div class="hd"><div class="chip">2</div><div class="hdt">
+      <h2 class="h1">企業案件と個人案件 — 発注市場の規模</h2>
+      <p class="sub">「誰がお金を払うのか」で見ると、法人と個人では市場の性質がまったく違います</p></div></div>
+    <div class="body">
+      <div class="row c3">
+        <div class="stat"><div class="big v">4,580億円</div><h4>企業案件｜法人が発注する市場</h4><p>国内動画制作サービス市場（2025年度予測）。2024年度 4,238億円 → 2027年度 5,400億円【実測値・矢野経済研究所】</p></div>
+        <div class="stat"><div class="big n">6,800億円</div><h4>個人案件｜個人が発注する市場</h4><p>スキルシェア市場全体の2028年予測。動画編集はこのうちの一部にすぎず【直接の統計は存在しません】</p></div>
+        <div class="stat"><div class="big">2兆894億円</div><h4>参考｜個人が「受け取る」市場</h4><p>クリエイターエコノミー（2024年）。これは発注市場ではなく報酬市場です【混同しないこと】</p></div>
+      </div>
+      <table class="cmp" style="margin-top:20px"><thead><tr><th style="width:170px"></th><th style="width:480px">企業案件（法人が発注）</th><th>個人案件（個人が発注）</th></tr></thead>
+      <tbody>
+        <tr><td class="k">1件あたり単価</td><td class="a">20万〜200万円（制作会社）／代理店経由は100万〜1,000万円</td><td class="b">5,000円〜30万円。簡易編集は1,000円台も</td></tr>
+        <tr><td class="k">発注者</td><td class="m">事業会社の広報・マーケ部門／広告代理店／制作会社</td><td class="m">YouTuber・配信者・インフルエンサー・個人事業主</td></tr>
+        <tr><td class="k">取引の場</td><td class="m">相見積 → 稟議 → 発注書 → 検収 → 請求</td><td class="m">ココナラ・ランサーズ・クラウドワークス（PFが仲介）</td></tr>
+        <tr><td class="k">与信・請求</td><td class="k">必要。ここが個人クリエイターには越えられない壁</td><td class="m">原則プラットフォームが代行するため不要</td></tr>
+        <tr><td class="k">市場の性質</td><td class="m">単価が高く件数が少ない。参入障壁が高い</td><td class="m">単価が低く件数が多い。初級案件は完全な買い手市場</td></tr>
+      </tbody></table>
+      <div class="note" style="margin-top:18px"><b>⚠ 主戦場は法人です。個人案件は「取らない」のではなく「別の役割で取る」</b>
+        <p>個人が発注する市場は小さく、統計すら整備されていません。だから売上の主軸は法人（①）に置きます。<br>
+        個人案件（③）は閑散期の調整弁であり、要求が定型的で件数が出るため<strong>学習データ源</strong>として取ります。</p></div>
+    </div>
+    <div class="foot"><span class="src">出所: 矢野経済研究所（動画コンテンツビジネス調査2025）／ Business Insider Japan（スキルシェア市場2028年予測）／ クリエイターエコノミー協会（2025年版調査）／ ココナラ・ランサーズ公開単価。企業案件は実測値、個人案件は推計値です</span><span class="pg">6</span></div>
+  </section>
+
+  <!-- 7 AI導入で制作費 -->
+  <section class="s">
+    <div class="hd"><div class="chip">2</div><div class="hdt">
+      <h2 class="h1">AI導入で、制作費はいくらになり、いくら浮くのか</h2>
+      <p class="sub">削減が効くのは「人が動く工程」です。撮影・機材・出演で費用の55%。ここが1/5になると単価が根本から変わります</p></div></div>
+    <div class="body">
+      <table class="cmp"><thead><tr><th style="width:210px">用途</th><th style="width:150px">現状の制作費</th><th style="width:150px">AI導入後</th>
+        <th style="width:180px">コストメリット</th><th style="width:80px">削減率</th><th>AIの効き方</th></tr></thead>
+      <tbody>
+        <tr><td class="m">映画（実写）</td><td class="m">3〜5億円</td><td class="m">2.4〜4億円</td><td class="a">▲6,000万〜1億円</td><td class="m">▲20%</td><td class="m">部分適用のみ。VFX・群衆・背景</td></tr>
+        <tr><td class="m">アニメ映画</td><td class="m">1〜20億円</td><td class="m">7,000万〜14億円</td><td class="a">▲3,000万〜6億円</td><td class="m">▲30%</td><td class="m">中割・背景・彩色の自動化</td></tr>
+        <tr><td class="m">テレビCM（制作費）</td><td class="m">1,000万〜1億円</td><td class="m">500万〜5,000万円</td><td class="a">▲500万〜5,000万円</td><td class="m">▲50%</td><td class="m">実写×生成AIのハイブリッド</td></tr>
+        <tr><td class="k">★ 企業VP・会社紹介</td><td class="k">50〜150万円</td><td class="b">18〜52万円</td><td class="a">▲32〜98万円</td><td class="a">▲65%</td><td class="k">フル生成AIが成立。撮影が消える</td></tr>
+        <tr><td class="k">★ 展示会・社内イベント映像</td><td class="k">20〜100万円</td><td class="b">6〜30万円</td><td class="a">▲14〜70万円</td><td class="a">▲70%</td><td class="k">同上。ループ素材は特に効く</td></tr>
+        <tr><td class="k">★ PR素材・SNS縦型</td><td class="k">10〜50万円</td><td class="b">2〜10万円</td><td class="a">▲8〜40万円</td><td class="a">▲80%</td><td class="k">量産前提。1本あたりが最も下がる</td></tr>
+      </tbody></table>
+      <p class="warn" style="margin:14px 0 0">★ 下3行がフル生成AIの成立帯です。当社が取りに行くのはこの帯です。映画・CMは部分適用にとどまり、桁は変わりません。</p>
+      <div class="row c2" style="margin-top:16px">
+        <div>
+          <h4 style="margin:0 0 10px">内訳はこう変わる｜企業VP 1本 100万円 → 35万円</h4>
+          <div class="bars" style="gap:11px">
+            <div class="bar" style="grid-template-columns:70px 1fr"><span>現状</span><div class="bt"><div class="bf" style="width:100%"></div><b class="bv">100万円</b></div></div>
+            <div class="bar" style="grid-template-columns:70px 1fr"><span><strong>AI後</strong></span><div class="bt"><div class="bf v" style="width:35%"></div><b class="bv">35万円</b></div></div>
+          </div>
+          <p class="src" style="margin:12px 0 0">企画15→7.5／撮影38→7.6／機材10→2.0／出演7→0.7／編集20→10.0／諸経費10→7.0。<strong>撮影・機材・出演の55%が10.3まで落ちます。</strong>編集と諸経費は残ります。</p>
+        </div>
+        <div class="card g"><h4>実際に出ている削減幅（実例）</h4><ul>
+          <li>大手保険のWeb広告動画　制作コスト ▲30〜50%／期間 ▲40%</li>
+          <li>Amazon Nova活用の広告　費用 ▲70%・効果 8倍</li>
+          <li>サイバーエージェント　1本 数千万円・3ヶ月 → 3本 300万円・1.5〜2週間</li>
+          <li>映画の群衆シーン　9,000万円 → 150万円（▲98%）</li>
+          <li>米国の企業動画　1分あたり 約63万円 → 約38万円（▲40%・実測）</li></ul></div>
+      </div>
+    </div>
+    <div class="foot"><span class="src">出所: 動画幹事・ムビサク・デジタルドロップ（制作費相場／撮影費は制作費の35〜40%）／ ムービーインパクト・各社プレスリリース（AI導入の削減事例）／ Vidico（米国の1分単価）。用途別の削減率は、工程別の削減率を費用構成に当てた当社試算です</span><span class="pg">7</span></div>
+  </section>
+  <!-- 8 ビジネスモデル -->
   <section class="s">
     <div class="hd"><div class="chip">3</div><div class="hdt">
       <h2 class="h1">ビジネスモデル</h2>
@@ -441,10 +486,10 @@ svg text{font-family:var(--sans)}
       </div>
       <p class="warn" style="margin:16px 0 0">差別化の核心は価格ではありません。海外に安く出せること自体は誰でも知っています。やらない理由は「管理しきれないから」であり、そこを引き受けるのが当社の商品です。</p>
     </div>
-    <div class="foot"><span class="src">クリエイター調達の設計は CHINA_SOURCING ／ プラットフォームの収益設計は PLATFORM_PIVOT 第11章を参照</span><span class="pg">7</span></div>
+    <div class="foot"><span class="src">クリエイター調達の設計は CHINA_SOURCING ／ プラットフォームの収益設計は PLATFORM_PIVOT 第11章を参照</span><span class="pg">8</span></div>
   </section>
 
-  <!-- 8 ユニットエコノミクス -->
+  <!-- 9 ユニットエコノミクス -->
   <section class="s">
     <div class="hd"><div class="chip">3</div><div class="hdt">
       <h2 class="h1">ユニットエコノミクス</h2>
@@ -489,10 +534,10 @@ svg text{font-family:var(--sans)}
           <strong>MAUが計画の1/3（40万人）でも売上14.9億・営業利益1.2億で、事業は黒字を保ちます。</strong>PFを畳んでも制作事業が残る構造にしてあります。</p></div>
       </div>
     </div>
-    <div class="foot"><span class="src">制作の単価・原価は BUSINESS_PLAN 7-1、PFの1MAU¥464は PLATFORM_PIVOT 11-3。課金率・ARPPU・eCPM・MAUはすべて未実測の［仮置き］です</span><span class="pg">8</span></div>
+    <div class="foot"><span class="src">制作の単価・原価は BUSINESS_PLAN 7-1、PFの1MAU¥464は PLATFORM_PIVOT 11-3。課金率・ARPPU・eCPM・MAUはすべて未実測の［仮置き］です</span><span class="pg">9</span></div>
   </section>
 
-  <!-- 9 収益モデル -->
+  <!-- 10 収益モデル -->
   <section class="s">
     <div class="hd"><div class="chip">3</div><div class="hdt">
       <h2 class="h1">収益モデル</h2>
@@ -529,10 +574,10 @@ svg text{font-family:var(--sans)}
         </div>
       </div>
     </div>
-    <div class="foot"><span class="src">出所: BUMP公式（emole）／ Playio・Tenjin 2026年eCPMベンチマーク（日本のリワードeCPMは $17.35）。実効eCPM・課金率・カニバリ率は未実測です</span><span class="pg">9</span></div>
+    <div class="foot"><span class="src">出所: BUMP公式（emole）／ Playio・Tenjin 2026年eCPMベンチマーク（日本のリワードeCPMは $17.35）。実効eCPM・課金率・カニバリ率は未実測です</span><span class="pg">10</span></div>
   </section>
 
-  <!-- 10 日本IP -->
+  <!-- 11 日本IP -->
   <section class="s">
     <div class="hd"><div class="chip">3</div><div class="hdt">
       <h2 class="h1">日本IPを使った作品制作 — 4つの入口</h2>
@@ -564,10 +609,37 @@ svg text{font-family:var(--sans)}
         </div>
       </div>
     </div>
-    <div class="foot"><span class="src">出所: 日本動画協会 アニメ産業レポート（制作市場4,662億円・海外売上2兆1,700億円）／ JIAA「2026年インターネット広告に関するユーザー意識調査」</span><span class="pg">10</span></div>
+    <div class="foot"><span class="src">出所: 日本動画協会 アニメ産業レポート（制作市場4,662億円・海外売上2兆1,700億円）／ JIAA「2026年インターネット広告に関するユーザー意識調査」</span><span class="pg">11</span></div>
   </section>
 
-  <!-- 11 競合 -->
+  <!-- 12 政策 -->
+  <section class="s">
+    <div class="hd"><div class="chip">1</div><div class="hdt">
+      <h2 class="h1">政策も同じ方向を向いている</h2>
+      <p class="sub">国はコンテンツを輸出産業にすると決め、予算を3倍にした</p></div></div>
+    <img class="shot" src="deck/assets/image4.png" alt="" style="left:1006px;top:16px;width:231px;height:155px">
+    <div class="body">
+      <div class="row c3">
+        <div class="stat"><div class="big v">20兆円</div><h4>コンテンツ海外売上 目標（2033年）</h4><p>経産省「エンタメ・クリエイティブ産業戦略2026」</p></div>
+        <div class="stat"><div class="big n">3.5倍</div><h4>経産省の財政支援規模</h4><p>令和6年度補正 101.1億円 → 令和7年度補正 350.2億円</p></div>
+        <div class="stat"><div class="big g">+26%</div><h4>アニメの海外売上（2024年）</h4><p>2兆1,700億円。市場全体は3兆8,400億円</p></div>
+      </div>
+      <div class="row c2" style="margin-top:20px">
+        <div class="card n"><h4>AI政策</h4><ul>
+          <li><strong>AI推進法</strong>（人工知能関連技術の研究開発及び活用の推進に関する法律）2025年5月28日成立 ／ 6月4日公布。日本初のAI基本法。</li>
+          <li>AI基本計画を2025年12月23日に閣議決定。内閣にAI戦略本部を設置。</li></ul></div>
+        <div class="card g"><h4>当社が実際に狙える支援</h4><ul>
+          <li><strong>東京都 創業助成事業</strong> — 上限400万円・助成率2/3・最長2年</li>
+          <li><strong>特許料等の減免</strong> — 設立10年未満・資本金3億円以下なら1/3に軽減</li>
+          <li><strong>JLOX+</strong> — 「制作の生産性向上に資するシステムの開発・実証」枠</li></ul></div>
+      </div>
+      <div class="note" style="margin-top:18px"><b>⚠ 補助金は資金計画に算入していません</b>
+        <p>いずれも後払い（精算払い）で、入金が1年以上先になります。資金繰りの当てにはできません。取れた場合は上振れとして扱います。</p></div>
+    </div>
+    <div class="foot"><span class="src">出所: 経済産業省「エンタメ・クリエイティブ産業戦略2026」／ 内閣府 AI戦略 ／ 東京都中小企業振興公社 ／ 特許庁</span><span class="pg">12</span></div>
+  </section>
+
+  <!-- 13 競合 -->
   <section class="s">
     <div class="hd"><div class="chip">4</div><div class="hdt">
       <h2 class="h1">競合 — 主戦場は国内の映像制作市場です</h2>
@@ -596,10 +668,10 @@ svg text{font-family:var(--sans)}
           <strong>当社のPFは、制作した作品と日本IPの出口として小さく回します。5期でもMAU125万・売上5億の規模です。</strong></p></div>
       </div>
     </div>
-    <div class="foot"><span class="src">出所: 動画幹事・ムビサク（制作費相場）／ GOKKO ／ nowhere film ／ BUMP公式 ／ 36Kr Japan（中国発アプリの日本シェア）。詳細は COMPETITORS.md</span><span class="pg">11</span></div>
+    <div class="foot"><span class="src">出所: 動画幹事・ムビサク（制作費相場）／ GOKKO ／ nowhere film ／ BUMP公式 ／ 36Kr Japan（中国発アプリの日本シェア）。詳細は COMPETITORS.md</span><span class="pg">13</span></div>
   </section>
 
-  <!-- 12 なぜ来るか -->
+  <!-- 14 なぜ来るか -->
   <section class="s">
     <div class="hd"><div class="chip">4</div><div class="hdt">
       <h2 class="h1">では、なぜクリエイターは当社に来るのか</h2>
@@ -639,10 +711,10 @@ svg text{font-family:var(--sans)}
         </div>
       </div>
     </div>
-    <div class="foot"><span class="src">出所: Bilibili「2026熱門AI漫劇/短劇創作平台」／ 中伝英才「AI短劇制作平台 2026主流平台全解析」／ 网易「2026短劇分账新政」。条件は頻繁に変わるため、提携前に公式条件の確認が必要です</span><span class="pg">12</span></div>
+    <div class="foot"><span class="src">出所: Bilibili「2026熱門AI漫劇/短劇創作平台」／ 中伝英才「AI短劇制作平台 2026主流平台全解析」／ 网易「2026短劇分账新政」。条件は頻繁に変わるため、提携前に公式条件の確認が必要です</span><span class="pg">14</span></div>
   </section>
 
-  <!-- 13 課題と解決 -->
+  <!-- 15 課題と解決 -->
   <section class="s">
     <div class="hd"><div class="chip">5</div><div class="hdt">
       <h2 class="h1">課題と、その解決方法</h2>
@@ -673,10 +745,10 @@ svg text{font-family:var(--sans)}
         </tbody></table>
       </div>
     </div>
-    <div class="foot"><span class="src">各課題の詳細と数値根拠は BUSINESS_PLAN ／ MARKET_SIZING ／ MOAT_TIMELINE ／ CHINA_SOURCING に記載</span><span class="pg">13</span></div>
+    <div class="foot"><span class="src">各課題の詳細と数値根拠は BUSINESS_PLAN ／ MARKET_SIZING ／ MOAT_TIMELINE ／ CHINA_SOURCING に記載</span><span class="pg">15</span></div>
   </section>
 
-  <!-- 14 チーム -->
+  <!-- 16 チーム -->
   <section class="s">
     <div class="hd"><div class="chip">6</div><div class="hdt">
       <h2 class="h1">チーム</h2>
@@ -696,10 +768,10 @@ svg text{font-family:var(--sans)}
         <tr><td class="k">1人あたり人件費</td><td class="m">500万</td><td class="m">700万</td><td class="m">800万</td><td class="m">900万</td><td class="b">1,000万</td></tr>
       </tbody></table>
     </div>
-    <div class="foot"><span class="src">1期は6名（代表・エンジニア2・制作ディレクター1・クリエイター管理1・営業1）。制作事業のため、売上の伸びと人員の伸びが連動します</span><span class="pg">14</span></div>
+    <div class="foot"><span class="src">1期は6名（代表・エンジニア2・制作ディレクター1・クリエイター管理1・営業1）。制作事業のため、売上の伸びと人員の伸びが連動します</span><span class="pg">16</span></div>
   </section>
 
-  <!-- 15 事業計画 -->
+  <!-- 17 事業計画 -->
   <section class="s">
     <div class="hd"><div class="chip">7</div><div class="hdt">
       <h2 class="h1">事業計画</h2>
@@ -731,10 +803,10 @@ svg text{font-family:var(--sans)}
         <tr><td class="k">5期（N期）→ 2031年 上場</td><td class="b">制作1,000 ／ PF 499 ／ P4 300</td><td class="b">売上18億・営業利益3.8億</td></tr>
       </tbody></table>
     </div>
-    <div class="foot"><span class="src">計画値。制作の単価・粗利率、PFの課金率・ARPPU・eCPM、MAUはすべて未実測です。1期に実測して差し替えます。数字は financial_model.py が計算しています</span><span class="pg">15</span></div>
+    <div class="foot"><span class="src">計画値。制作の単価・粗利率、PFの課金率・ARPPU・eCPM、MAUはすべて未実測です。1期に実測して差し替えます。数字は financial_model.py が計算しています</span><span class="pg">17</span></div>
   </section>
 
-  <!-- 16 上場までの流れ -->
+  <!-- 18 上場までの流れ -->
   <section class="s">
     <div class="hd"><div class="chip">8</div><div class="hdt">
       <h2 class="h1">上場までの流れ</h2>
@@ -759,10 +831,10 @@ svg text{font-family:var(--sans)}
         <p>グロースは2030年3月以降「上場5年経過後に時価総額100億円」の維持基準が新設されました。2031年上場なら2036年に100億円。<br>
         <strong>当社の上場時の想定時価総額は64億で、届いていません。</strong>期限は2036年なので、上場後5年で1.55倍にする計画を示す必要があります。</p></div>
     </div>
-    <div class="foot"><span class="src">出所: 日本取引所グループ 上場維持基準。上場基準は改定が続くため、準備期に入る前に最新基準を再確認します</span><span class="pg">16</span></div>
+    <div class="foot"><span class="src">出所: 日本取引所グループ 上場維持基準。上場基準は改定が続くため、準備期に入る前に最新基準を再確認します</span><span class="pg">18</span></div>
   </section>
 
-  <!-- 17 出口とリターン -->
+  <!-- 19 出口とリターン -->
   <section class="s">
     <div class="hd"><div class="chip">8</div><div class="hdt">
       <h2 class="h1">出口とリターン</h2>
@@ -786,10 +858,10 @@ svg text{font-family:var(--sans)}
       </div>
       <p class="warn" style="margin:16px 0 0">⚠ すべて「成功した場合」の試算です。2025年のグロースIPOは18社（前年34社から半減）で、IPO市場そのものが縮んでいます。倍率は市況で変動します。</p>
     </div>
-    <div class="foot"><span class="src">出所: M&amp;A総研（業種別EV/EBITDA倍率）／ みつきコンサルティング（メディア・コンテンツ業界のM&amp;A）／ EY Japan（2026年以降のIPO市場）／ FiNX（グロース維持基準の制度化）</span><span class="pg">17</span></div>
+    <div class="foot"><span class="src">出所: M&amp;A総研（業種別EV/EBITDA倍率）／ みつきコンサルティング（メディア・コンテンツ業界のM&amp;A）／ EY Japan（2026年以降のIPO市場）／ FiNX（グロース維持基準の制度化）</span><span class="pg">19</span></div>
   </section>
 
-  <!-- 18 マイルストーン -->
+  <!-- 20 マイルストーン -->
   <section class="s">
     <div class="hd"><div class="chip">9</div><div class="hdt">
       <h2 class="h1">マイルストーン</h2>
@@ -809,10 +881,10 @@ svg text{font-family:var(--sans)}
         <p>［仮置き］8時間で人員計画の全部を置いています。<strong>実測が16時間なら必要人数が倍になり、5期の営業利益は3.8億→2.4億に落ちます。</strong><br>
         最初の3案件で必ず測ってください。後で気づくより、2027年3月時点で直すほうが遥かに安く済みます。</p></div>
     </div>
-    <div class="foot"><span class="src">ゲート条件を満たさない場合は次フェーズに進まず、前提を引き直します。詳細は ROADMAP.md</span><span class="pg">18</span></div>
+    <div class="foot"><span class="src">ゲート条件を満たさない場合は次フェーズに進まず、前提を引き直します。詳細は ROADMAP.md</span><span class="pg">20</span></div>
   </section>
 
-  <!-- 19 資金計画 -->
+  <!-- 21 資金計画 -->
   <section class="s">
     <div class="hd"><div class="chip">10</div><div class="hdt">
       <h2 class="h1">資金計画</h2>
@@ -848,10 +920,10 @@ svg text{font-family:var(--sans)}
       </div>
       <p class="src" style="margin:14px 0 0">［仮置き］視聴者獲得のCPIが未実測のため、流量投放1,500万の精度が最も低い数字です。PF公開後に実測して増減させます。</p>
     </div>
-    <div class="foot"><span class="src">※ 融資は使いません。補助金は後払いのため資金繰りに算入していません。全額をエクイティで調達します</span><span class="pg">19</span></div>
+    <div class="foot"><span class="src">※ 融資は使いません。補助金は後払いのため資金繰りに算入していません。全額をエクイティで調達します</span><span class="pg">21</span></div>
   </section>
 
-  <!-- 20 リスク -->
+  <!-- 22 リスク -->
   <section class="s">
     <div class="hd"><div class="chip">11</div><div class="hdt">
       <h2 class="h1">リスクと対策</h2>
@@ -872,10 +944,10 @@ svg text{font-family:var(--sans)}
       <div class="note" style="margin-top:18px"><b>⚠ 1と2は「制作事業そのもの」のリスクです</b>
         <p>3〜7のプラットフォーム側が全部外れても、制作事業は残ります。<strong>ここが旧計画との決定的な違いです。</strong></p></div>
     </div>
-    <div class="foot"><span class="src">全リスクと対策は BUSINESS_PLAN ／ MOAT_TIMELINE ／ CHINA_SOURCING ／ PLATFORM_PIVOT に記載しています</span><span class="pg">20</span></div>
+    <div class="foot"><span class="src">全リスクと対策は BUSINESS_PLAN ／ MOAT_TIMELINE ／ CHINA_SOURCING ／ PLATFORM_PIVOT に記載しています</span><span class="pg">22</span></div>
   </section>
 
-  <!-- 21 クロージング -->
+  <!-- 23 クロージング -->
   <section class="s dk">
     <div class="tiw" style="top:180px">
       <div style="width:52px;height:52px;background:#fff"></div>
@@ -889,6 +961,31 @@ svg text{font-family:var(--sans)}
     </div>
   </section>
 
+  <!-- 24 自動車 -->
+  <section class="s">
+    <div class="hd"><div class="chip">1</div><div class="hdt">
+      <h2 class="h1">日本は一度、これをやっている</h2>
+      <p class="sub">輸入した技術を4年で国産化し、その後20年以上の改善で世界一の品質に到達した</p></div></div>
+    <div class="body">
+      <div class="row" style="grid-template-columns:repeat(4,1fr)">
+        <div class="card"><h4>1952</h4><ul><li>日産＝オースチン技術提携</li><li>日野＝ルノー、いすゞ＝ルーツ</li></ul></div>
+        <div class="card"><h4>1956-57</h4><ul><li><strong>4社が相次いで完全国産化</strong></li><li>ここまで4年</li></ul></div>
+        <div class="card n"><h4>1960s-70s</h4><ul><li>QCサークル・トヨタ生産方式</li><li>改善を20年以上回し続ける</li></ul></div>
+        <div class="card g"><h4>1980s</h4><ul><li>品質と燃費で世界市場を取る</li><li>米国メーカーが学びに来る側へ</li></ul></div>
+      </div>
+      <table style="margin-top:20px"><thead><tr><th style="width:130px"></th><th style="width:230px">持っている側</th><th style="width:90px"></th>
+        <th style="width:230px">修得する側</th><th style="width:70px">期間</th><th>到達点</th></tr></thead>
+      <tbody>
+        <tr><td class="a">1952 → 1956</td><td class="m">オースチン（英）</td><td class="m">技術 →</td><td class="m">日産・日野・いすゞ</td><td class="b">4年</td><td class="m">完全国産化。ただしこれは入口</td></tr>
+        <tr><td class="a">2026 → 2029</td><td class="m">世界のAIクリエイター</td><td class="m">制作力 →</td><td class="k">当社</td><td class="b">3年</td><td class="k">内製化。ここから改善を回す</td></tr>
+      </tbody></table>
+      <div class="note" style="margin-top:18px"><b>⚠ ポイントは国産化の速さではありません。その後の改善で世界一の品質を築いたことです</b>
+        <p>日産・トヨタは国産化をゴールにせず、以後20年以上かけて生産方式と品質管理を磨き続けました。当社も同じです。内製化（3年）は出発点で、制作データで改善を回し続けることが模倣されない資産になります。<br>
+        <strong>当時は政府の保護（輸入制限・関税）がありました。今のAI映像にはありません。だから改善のサイクルをより速く回す必要があります。</strong></p></div>
+    </div>
+    <div class="foot"><span class="src">出所: 日産自動車 企業情報 ／ トヨタ博物館 ／ GAZOO「ノックダウン生産の時代」／ 日本科学技術連盟（QCサークル・デミング賞）</span><span class="pg">24</span></div>
+  </section>
+
   <div id="toc" role="dialog" aria-label="目次">
     <h2>目次</h2>
     <ol id="toclist"></ol>
@@ -896,11 +993,30 @@ svg text{font-family:var(--sans)}
 </div>
 
 <script>
-const TITLES=[["","表紙"],["0","エグゼクティブサマリー"],["1","なぜ今なのか"],["1","日本は一度、これをやっている"],
- ["1","政策も同じ方向を向いている"],["2","市場規模"],["3","ビジネスモデル"],["3","ユニットエコノミクス"],
- ["3","収益モデル"],["3","日本IPを使った作品制作"],["4","競合 — 主戦場は国内の映像制作市場"],["4","なぜクリエイターは当社に来るのか"],
- ["5","課題と、その解決方法"],["6","チーム"],["7","事業計画"],["8","上場までの流れ"],["8","出口とリターン"],["9","マイルストーン"],
- ["10","資金計画"],["11","リスクと対策"],["","制作力が余っている場所と、発注が余っている場所をつなぐ。"]];
+const TITLES=[["","表紙"],
+ ["0","エグゼクティブサマリー"],
+ ["1","なぜ今なのか"],
+ ["1","最終ゴール"],
+ ["2","市場規模"],
+ ["2","企業案件と個人案件"],
+ ["2","AI導入で、制作費はいくら浮くのか"],
+ ["3","ビジネスモデル"],
+ ["3","ユニットエコノミクス"],
+ ["3","収益モデル"],
+ ["3","日本IPを使った作品制作"],
+ ["1","政策も同じ方向を向いている"],
+ ["4","競合 — 主戦場は国内の映像制作市場"],
+ ["4","なぜクリエイターは当社に来るのか"],
+ ["5","課題と、その解決方法"],
+ ["6","チーム"],
+ ["7","事業計画"],
+ ["8","上場までの流れ"],
+ ["8","出口とリターン"],
+ ["9","マイルストーン"],
+ ["10","資金計画"],
+ ["11","リスクと対策"],
+ ["","制作力が余る場所と、発注が余る場所をつなぐ。"],
+ ["1","日本は一度、これをやっている"]];
 const slides=[...document.querySelectorAll('.s')], stage=document.getElementById('stage'),
       deck=document.getElementById('deck'), cur=document.getElementById('cur'),
       toc=document.getElementById('toc'), tocb=document.getElementById('tocb'), list=document.getElementById('toclist');
