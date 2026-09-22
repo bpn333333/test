@@ -4,10 +4,12 @@ p.layout = "LAYOUT_WIDE";               // 13.333 x 7.5
 p.author = "AI映像制作事業";
 p.title  = "投資家向け企画書";
 
-const INK="16161A", PAPER="FFFFFF", SOFT="F4F2EF", VERM="B3121B",
+const INK="16161A", PAPER="FFFFFF", SOFT="FCE5CD", VERM="B3121B",
       GOLD="C9962C", NAVY="2A3563", MUTED="6E6E76", LINE="DCD9D4",
       INKSOFT="3A3A42", ONDARK="EDEBE7", TEAL="1F6F63",
-      ORANGE="D9601A", ONORG="FBE2D2";
+      ORANGE="D9601A", ONORG="FBE2D2",
+      /* Ver1.0（松田さん配色）から取り込み */
+      SOFT2="FFF2CC", BAR="D9D2E9", TITLEBG="FF9900";
 const F="Yu Gothic";
 const M=0.65, W=12.03;
 
@@ -41,8 +43,8 @@ function lede(s, y, lines, h){
     { x:M+0.25, y, w:W-0.25, h:h||0.86, fontFace:F, fontSize:15.5, bold:true, color:INK,
       lineSpacingMultiple:1.3, valign:"middle", margin:0, isTextBox:true });
 }
-function stat(s, x, y, w, h, big, label, note, col, bigSize){
-  s.addShape(p.ShapeType.rect, { x, y, w, h, fill:{color:SOFT} });
+function stat(s, x, y, w, h, big, label, note, col, bigSize, bg){
+  s.addShape(p.ShapeType.rect, { x, y, w, h, fill:{color:bg||SOFT} });
   s.addText(big, { x:x+0.26, y:y+0.18, w:w-0.52, h:0.66, fontFace:F, fontSize:bigSize||27, bold:true,
     color:col||VERM, valign:"middle", margin:0, isTextBox:true });
   s.addText(label, { x:x+0.26, y:y+0.86, w:w-0.52, h:0.28, fontFace:F, fontSize:11, bold:true,
@@ -50,8 +52,8 @@ function stat(s, x, y, w, h, big, label, note, col, bigSize){
   if(note) s.addText(note, { x:x+0.26, y:y+1.16, w:w-0.52, h:h-1.3, fontFace:F, fontSize:9,
     color:MUTED, valign:"top", lineSpacingMultiple:1.2, margin:0, isTextBox:true });
 }
-function card(s, x, y, w, h, title, lines, accent, fs){
-  s.addShape(p.ShapeType.rect, { x, y, w, h, fill:{color:SOFT} });
+function card(s, x, y, w, h, title, lines, accent, fs, bg){
+  s.addShape(p.ShapeType.rect, { x, y, w, h, fill:{color:bg||SOFT} });
   s.addShape(p.ShapeType.rect, { x:x+0.24, y:y+0.28, w:0.12, h:0.12, fill:{color:accent||VERM} });
   s.addText(title, { x:x+0.48, y:y+0.18, w:w-0.72, h:0.32, fontFace:F, fontSize:12.5, bold:true,
     color:INK, valign:"middle", margin:0, isTextBox:true });
@@ -118,9 +120,10 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   // 写真の上に白文字を置くため、可読性用のスクリム（半透明の黒）を敷く
   s.addShape(p.ShapeType.rect, { x:0, y:0, w:13.333, h:7.5, fill:{color:"000000", transparency:52} });
   s.addShape(p.ShapeType.rect, { x:M, y:2.05, w:0.62, h:0.62, fill:{color:PAPER} });
-  s.addText("次世代AI映像制作会社の設立", { x:M, y:2.82, w:11.90, h:1.51, fontFace:F, fontSize:40, bold:true,
+  s.addShape(p.ShapeType.rect, { x:M, y:2.82, w:11.90, h:1.51, fill:{color:TITLEBG} });
+  s.addText("次世代AI映像制作会社の設立投資案件", { x:M+0.28, y:2.82, w:11.62, h:1.51, fontFace:F, fontSize:40, bold:true,
     color:PAPER, valign:"middle", margin:0, isTextBox:true });
-  s.addText("東アジアを21世紀のハリウッドにするためのAI映像制作ハブとなるAI映像制作会社のシード投資のご案内",
+  s.addText("東アジアを21世紀のハリウッドにするためのAI映像制作ハブとするAI映像制作会社のシード投資のご案内",
     { x:M, y:4.61, w:11.90, h:0.50, fontFace:F, fontSize:15, color:ONDARK, valign:"middle", margin:0, isTextBox:true });
   s.addText("投資家向け企画書  ／  2026年9月", { x:M, y:6.48, w:7, h:0.36, fontFace:F, fontSize:12, color:ONORG, valign:"middle", margin:0, isTextBox:true });
   s.addText("新設法人（株式会社・仮称）", { x:M, y:6.84, w:7, h:0.36, fontFace:F, fontSize:12, color:ONORG, valign:"middle", margin:0, isTextBox:true });
@@ -134,21 +137,21 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
     "中国を中心に世界のAIクリエイターを集め、企業案件と越境C2C発注で回すプラットフォームをつくる。"]);
   const y0=2.56, h=1.52, w=(W-0.6)/3;
   stat(s, M,           y0, w, h, "4,580億円", "国内の映像制作市場（実測）", "矢野経済研究所。2027年度は5,400億円の予測", VERM);
-  stat(s, M+w+0.3,     y0, w, h, "3本立て",   "収益の柱", "企業案件の仲介（初日から）＋ 越境C2C発注の手数料（6ヶ月目〜）＋ ツール外販（2期〜）", NAVY);
+  stat(s, M+w+0.3,     y0, w, h, "3本立て",   "収益の柱", "① AI映像制作 ② 越境C2C発注の手数料（6ヶ月目〜）③ 特許・制作用ツール外販（2期〜）", NAVY);
   stat(s, M+(w+0.3)*2, y0, w, h, "1.5億円",   "今回の調達目標", "追加はシリーズA 3億のみ。累計4.5億で上場まで届く設計", GOLD);
   const y1=4.26, h2=2.28, w2=(W-0.6)/3;
   card(s, M,            y1, w2, h2, "何をするか",
     ["① 日本・海外の個人と中小事業者が、中国の映像クリエイターに直接発注できるプラットフォームを運営する。",
      "② 企業案件は当社が受注し、登録クリエイターに配分する。再生数がゼロでも稼げる。",
-     "③ 溜まった制作データで生成AI関連の特許を取得し、チェックポイント・LoRA・モデル開発へ。①の自動化機能をそのままツールとして外販する。"]);
+     "③ 溜まった制作データで生成AI関連の特許を取得し、チェックポイント・LoRA・モデル開発へ。①の自動化機能をそのままツールとして外販する。"], VERM, 10, SOFT2);
   card(s, M+w2+0.3,     y1, w2, h2, "なぜ勝てるか",
-    ["2026年、中国の大手PFは純AIコンテンツの分成を圧縮し、最低保証を廃止した。AI専業のクリエイターは行き場を探している。",
-     "企業案件があるので、トラフィックがゼロの初日からクリエイターに報酬を出せる。",
-     "分成率で折り合わない課題を解決する唯一の設計。"], NAVY);
+    ["生成AIで制作原価は下がったが、日本企業の発注価格は下がっていない。この差が粗利。",
+     "日本企業は中華圏に直接発注しない。言語・商習慣・品質保証・契約が壁。",
+     "その壁を引き受けることが商品。差別化は価格ではなく「発注側の管理コストをゼロにする」こと。"], NAVY, 10, SOFT2);
   card(s, M+(w2+0.3)*2, y1, w2, h2, "どこへ向かうか",
     ["1年目に基盤を作り、2〜3年目は投資期間。",
      "4年目に通期黒字化、5年目に年商20億・営業利益6.1億。",
-     "売上の76%が人手に比例しない収益。自動車産業が輸入技術を4年で国産化したのと同じ道筋を、3年で。"], GOLD);
+     "売上の76%が人手に比例しない収益。自動車産業が輸入技術を4年で国産化したのと同じ道筋を、3年で。"], GOLD, 10, SOFT2);
   foot(s, "収支は［仮置き］を含む計画値です。国内市場規模は矢野経済研究所の実測値。制作の単価・粗利率は業界相場からの設定で、1期に実測して差し替えます。");
 }
 
@@ -327,11 +330,11 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
      "資金決済法の該当性は弁護士に確認中です。［確認事項］"]);
   const y2=5.56, w3=(W-0.6)/3;
   card(s, M,             y2, w3, 0.96, "アダルトは対象外です",
-    ["受注する案件にも、①に載せる作品にも含めません。決済・法規制・ストア審査が理由です。"], VERM, 9.5);
+    ["受注する案件にも、①に載せる作品にも含めません。決済・法規制・ストア審査が理由です。"], VERM, 9.5, SOFT2);
   card(s, M+w3+0.3,      y2, w3, 0.96, "差別化の核心は価格ではありません",
-    ["海外に安く出せること自体は誰でも知っています。やらない理由は「管理しきれないから」です。"], NAVY, 9.5);
+    ["海外に安く出せること自体は誰でも知っています。やらない理由は「管理しきれないから」です。"], NAVY, 9.5, SOFT2);
   card(s, M+(w3+0.3)*2,  y2, w3, 0.96, "発注側の管理コストがゼロになる",
-    ["日本語の要件定義・品質保証・契約・与信・請求。この一式を当社が引き受けます。"], GOLD, 9.5);
+    ["日本語の要件定義・品質保証・契約・与信・請求。この一式を当社が引き受けます。"], GOLD, 9.5, SOFT2);
   foot(s, "クリエイター調達の設計は CHINA_SOURCING を参照");
 }
 
@@ -454,10 +457,10 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   const s = base(false);
   head(s, 4, "競合 — 相手は2種類います", "クリエイター側は中国PF、発注者側は国内C2C。どちらとも正面からは戦いません");
   sec(s, M, 1.56, 6.0, "クリエイター側 — 各社が提示している分成率");
-  hbar(s, M, 1.94, 6.0, 0.32, 0.90, "快手「灵感新纪元」", "最大90%", MUTED, 2.5);
-  hbar(s, M, 2.30, 6.0, 0.32, 0.90, "抖音「漫画星河」", "純収益90%", MUTED, 2.5);
-  hbar(s, M, 2.66, 6.0, 0.32, 0.80, "Bilibili「觉醒计划」", "最大80%", MUTED, 2.5);
-  hbar(s, M, 3.02, 6.0, 0.32, 0.50, "抖音 AI実写短劇", "40〜60%", MUTED, 2.5);
+  hbar(s, M, 1.94, 6.0, 0.32, 0.90, "快手「灵感新纪元」", "最大90%", BAR, 2.5);
+  hbar(s, M, 2.30, 6.0, 0.32, 0.90, "抖音「漫画星河」", "純収益90%", BAR, 2.5);
+  hbar(s, M, 2.66, 6.0, 0.32, 0.80, "Bilibili「觉醒计划」", "最大80%", BAR, 2.5);
+  hbar(s, M, 3.02, 6.0, 0.32, 0.50, "抖音 AI実写短劇", "40〜60%", BAR, 2.5);
   hbar(s, M, 3.38, 6.0, 0.32, 0.00, "当社", "―", VERM, 2.5);
   s.addText("当社の行が空欄であることが、このページの主張です。", { x:M, y:3.76, w:6.0, h:0.3, fontFace:F, fontSize:9.5, bold:true, color:VERM, margin:0, isTextBox:true });
   warn(s, M+6.3, 1.56, 5.73, 1.34, "分成率では勝てません",
@@ -633,11 +636,11 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   card(s, M, y1, w2, 1.46, "M&A で売却する場合",
     ["3期（売上5.2億・ほぼ均衡）… 10〜25億。買い手が評価するのはクリエイター網と技術。",
      "4期（売上11.5億・営業利益2.4億）… 30〜60億 ／ 5期（売上20億）… 121〜161億。",
-     "戦略的買い手（大手代理店・制作会社・テレビ局）ならシナジー価格が乗ります。"], NAVY, 9.5);
+     "戦略的買い手（大手代理店・制作会社・テレビ局）ならシナジー価格が乗ります。"], NAVY, 9.5, SOFT2);
   card(s, M+w2+0.3, y1, w2, 1.46, "シード投資家のリターン",
     ["ESOP10%・シリーズA・IPO公募20%で希薄化後、上場後のシード持分は 14.5%。",
      "時価総額121億 → 12.4倍 ／ 141億 → 14.4倍 ／ 161億 → 16.5倍（出資から約4.9年）。",
-     "上場時の創業者持分は 42%前後。時価総額141億なら評価額 約59億。"], GOLD, 9.5);
+     "上場時の創業者持分は 42%前後。時価総額141億なら評価額 約59億。"], GOLD, 9.5, SOFT2);
   warn(s, M, 5.46, W, 0.78, "すべて「成功した場合」の試算です",
     ["2025年のグロースIPOは18社（前年34社から半減）で、IPO市場そのものが縮んでいます。倍率は市況で変動します。"]);
   foot(s, "出所: M&A総研（業種別EV/EBITDA倍率）／ みつきコンサルティング（メディア・コンテンツ業界のM&A）／ EY Japan（2026年以降のIPO市場）／ FiNX（グロース維持基準の制度化）");

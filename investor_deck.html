@@ -4,7 +4,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Serif+JP:wght@500;600;700&display=swap">
 <style>
 :root{
-  --ink:#16161A; --ink-2:#3A3A42; --paper:#FFFFFF; --soft:#F4F2EF; --soft-2:#EAE7E2;
+  --ink:#16161A; --ink-2:#3A3A42; --paper:#FFFFFF; --soft:#FCE5CD; --soft-2:#EAE7E2;
+  --soft-y:#FFF2CC; --bar:#D9D2E9; --titlebg:#FF9900;
   --verm:#B3121B; --gold:#9A7218; --navy:#2A3563; --muted:#6E6E76; --line:#DCD9D4;
   --dark:#D9601A; --ondk:#FBE2D2; --ondk-2:#FBE0CE;
   --panel:#FFFFFF; --chrome:#F7F5F2; --chrome-b:#E3E0DA; --shadow:0 1px 3px rgba(22,22,26,.10),0 8px 28px rgba(22,22,26,.09);
@@ -13,12 +14,14 @@
 }
 @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
   --ink:#EFECE7; --ink-2:#C9C5BE; --paper:#17171B; --soft:#212128; --soft-2:#2B2B33;
+  --soft-y:#2A2720; --bar:#3A3350; --titlebg:#B0690F;
   --verm:#E2555B; --gold:#D9AE4A; --navy:#8E9BD4; --muted:#93909A; --line:#33333C;
   --dark:#DB6A26; --ondk:#FCE6D8; --ondk-2:#FBE0CE;
   --panel:#17171B; --chrome:#101014; --chrome-b:#2A2A32; --shadow:0 1px 3px rgba(0,0,0,.5),0 10px 34px rgba(0,0,0,.45);
 }}
 :root[data-theme="dark"]{
   --ink:#EFECE7; --ink-2:#C9C5BE; --paper:#17171B; --soft:#212128; --soft-2:#2B2B33;
+  --soft-y:#2A2720; --bar:#3A3350; --titlebg:#B0690F;
   --verm:#E2555B; --gold:#D9AE4A; --navy:#8E9BD4; --muted:#93909A; --line:#33333C;
   --dark:#DB6A26; --ondk:#FCE6D8; --ondk-2:#FBE0CE;
   --panel:#17171B; --chrome:#101014; --chrome-b:#2A2A32; --shadow:0 1px 3px rgba(0,0,0,.5),0 10px 34px rgba(0,0,0,.45);
@@ -83,6 +86,7 @@ button:focus-visible{outline:2px solid var(--verm);outline-offset:2px}
 .stat p{margin:0;font-size:10.8px;color:var(--muted);line-height:1.55}
 
 .card{background:var(--soft);padding:22px 26px}
+.card.y{background:var(--soft-y)}
 .card h4{margin:0 0 12px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:11px;line-height:1.3}
 .card h4::before{content:"";width:10px;height:10px;background:var(--verm);flex:0 0 auto}
 .card.n h4::before{background:var(--navy)} .card.g h4::before{background:var(--gold)}
@@ -111,6 +115,7 @@ td.b{color:var(--navy);font-weight:700}
 .bt{display:flex;align-items:center;gap:10px}
 .bf{height:26px;background:var(--navy);min-width:3px}
 .bf.v{background:var(--verm)} .bf.g{background:var(--gold)} .bf.m{background:var(--muted)}
+.bf.p{background:var(--bar)}
 .bv{font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
 
 /* flow */
@@ -274,8 +279,8 @@ svg text{font-family:var(--sans)}
     <div class="cover-scrim"></div>
     <div class="tiw" style="top:170px">
       <div style="width:52px;height:52px;background:#fff"></div>
-      <h1 style="font-family:var(--serif);font-weight:700;font-size:38px;line-height:1.24;margin:28px 0 0">次世代AI映像制作会社の設立</h1>
-      <p class="lead" style="font-size:16px">東アジアを21世紀のハリウッドにするための、AI映像制作ハブとなる会社のシード投資のご案内</p>
+      <h1 style="font-family:var(--serif);font-weight:700;font-size:38px;line-height:1.24;margin:28px 0 0;background:var(--titlebg);display:inline-block;padding:10px 18px">次世代AI映像制作会社の設立投資案件</h1>
+      <p class="lead" style="font-size:16px">東アジアを21世紀のハリウッドにするためのAI映像制作ハブとするAI映像制作会社のシード投資のご案内</p>
     </div>
     <div style="position:absolute;left:62px;bottom:96px;color:var(--ondk);font-size:13px;line-height:1.9">
       投資家向け企画書 ／ 2026年9月<br>新設法人（株式会社・仮称）
@@ -292,19 +297,19 @@ svg text{font-family:var(--sans)}
         中国を中心に世界のAIクリエイターを集め、企業案件と越境C2C発注で回すプラットフォームをつくる。</p>
       <div class="row c3">
         <div class="stat"><div class="big v">4,580億円</div><h4>国内の映像制作市場（実測）</h4><p>矢野経済研究所。2027年度は5,400億円の予測</p></div>
-        <div class="stat"><div class="big n">3本立て</div><h4>収益の柱</h4><p>企業案件の仲介（初日から）＋ 越境C2C発注の手数料（6ヶ月目〜）＋ ツール外販（2期〜）</p></div>
+        <div class="stat"><div class="big n">3本立て</div><h4>収益の柱</h4><p>① AI映像制作 ② 越境C2C発注の手数料（6ヶ月目〜）③ 特許・制作用ツール外販（2期〜）</p></div>
         <div class="stat"><div class="big g">1.5億円</div><h4>今回の調達目標</h4><p>追加はシリーズA 3億のみ。累計4.5億で上場まで届く設計</p></div>
       </div>
       <div class="row c3" style="margin-top:20px">
-        <div class="card"><h4>何をするか</h4><ul>
+        <div class="card y"><h4>何をするか</h4><ul>
           <li><strong>① 日本・海外の個人と中小事業者が、中国の映像クリエイターに直接発注できる</strong>プラットフォームを運営する。</li>
           <li><strong>② 企業案件は当社が受注し、登録クリエイターに配分する。</strong>再生数がゼロでも稼げる。</li>
           <li><strong>③ 制作データで特許を取得し、①の自動化機能をそのままツールとして外販する。</strong></li></ul></div>
-        <div class="card n"><h4>なぜ勝てるか</h4><ul>
-          <li><strong>2026年、中国の大手PFは純AIコンテンツの分成を圧縮し、最低保証を廃止した。</strong>AI専業のクリエイターは行き場を探している。</li>
-          <li><strong>企業案件があるので、トラフィックがゼロの初日からクリエイターに報酬を出せる。</strong></li>
-          <li>分成率で折り合わない課題を解決する唯一の設計。</li></ul></div>
-        <div class="card g"><h4>どこへ向かうか</h4><ul>
+        <div class="card n y"><h4>なぜ勝てるか</h4><ul>
+          <li>生成AIで制作原価は下がったが、<strong>日本企業の発注価格は下がっていない。この差が粗利。</strong></li>
+          <li><strong>日本企業は中華圏に直接発注しない。</strong>言語・商習慣・品質保証・契約が壁。</li>
+          <li>その壁を引き受けることが商品。差別化は価格ではなく<strong>「発注側の管理コストをゼロにする」</strong>こと。</li></ul></div>
+        <div class="card g y"><h4>どこへ向かうか</h4><ul>
           <li>1年目に基盤を作り、2〜3年目は投資期間。<strong>4年目に通期黒字化、5年目に年商20億・営業利益6.1億。</strong></li>
           <li><strong>売上の76%が人手に比例しない収益。</strong></li>
           <li>自動車産業が輸入技術を4年で国産化したのと同じ道筋を、3年で。</li></ul></div>
@@ -660,10 +665,10 @@ svg text{font-family:var(--sans)}
         <div>
           <h4 style="margin:0 0 10px">クリエイター側 — 各社が提示している分成率</h4>
           <div class="bars" style="gap:10px">
-            <div class="bar" style="grid-template-columns:190px 1fr"><span>快手「灵感新纪元」</span><div class="bt"><div class="bf" style="width:90%"></div><b class="bv">最大90%</b></div></div>
-            <div class="bar" style="grid-template-columns:190px 1fr"><span>抖音「漫画星河」</span><div class="bt"><div class="bf" style="width:90%"></div><b class="bv">純収益90%</b></div></div>
-            <div class="bar" style="grid-template-columns:190px 1fr"><span>Bilibili「觉醒计划」</span><div class="bt"><div class="bf" style="width:80%"></div><b class="bv">最大80%</b></div></div>
-            <div class="bar" style="grid-template-columns:190px 1fr"><span>抖音 AI実写短劇</span><div class="bt"><div class="bf" style="width:50%"></div><b class="bv">40〜60%</b></div></div>
+            <div class="bar" style="grid-template-columns:190px 1fr"><span>快手「灵感新纪元」</span><div class="bt"><div class="bf p" style="width:90%"></div><b class="bv">最大90%</b></div></div>
+            <div class="bar" style="grid-template-columns:190px 1fr"><span>抖音「漫画星河」</span><div class="bt"><div class="bf p" style="width:90%"></div><b class="bv">純収益90%</b></div></div>
+            <div class="bar" style="grid-template-columns:190px 1fr"><span>Bilibili「觉醒计划」</span><div class="bt"><div class="bf p" style="width:80%"></div><b class="bv">最大80%</b></div></div>
+            <div class="bar" style="grid-template-columns:190px 1fr"><span>抖音 AI実写短劇</span><div class="bt"><div class="bf p" style="width:50%"></div><b class="bv">40〜60%</b></div></div>
             <div class="bar" style="grid-template-columns:190px 1fr"><span><strong>当社</strong></span><div class="bt"><div class="bf v" style="width:0%"></div><b class="bv">―</b></div></div>
           </div>
           <p class="warn" style="margin:12px 0 0">当社の行が空欄であることが、このページの主張です。</p>
@@ -853,11 +858,11 @@ svg text{font-family:var(--sans)}
       </div>
       <p class="warn" style="margin:18px 0 0;font-size:13px">中心値は 時価総額 141億円 ─ グロースの上場維持基準（2036年に100億円以上）に対し 41% のバッファ</p>
       <div class="row c2" style="margin-top:16px">
-        <div class="card n"><h4>M&amp;A で売却する場合</h4><ul>
+        <div class="card n y"><h4>M&amp;A で売却する場合</h4><ul>
           <li>3期（売上5.2億・ほぼ均衡）… 10〜25億。買い手が評価するのはクリエイター網と技術。</li>
           <li>4期（売上11.5億・営業利益2.4億）… 30〜60億 ／ 5期（売上20億）… 121〜161億。</li>
           <li>戦略的買い手（大手代理店・制作会社・テレビ局）ならシナジー価格が乗ります。</li></ul></div>
-        <div class="card g"><h4>シード投資家のリターン</h4><ul>
+        <div class="card g y"><h4>シード投資家のリターン</h4><ul>
           <li>ESOP10%・シリーズA・IPO公募20%で希薄化後、上場後のシード持分は <strong>14.5%</strong>。</li>
           <li><strong>時価総額121億 → 12.4倍 ／ 141億 → 14.4倍 ／ 161億 → 16.5倍</strong>（出資から約4.9年）。</li>
           <li>上場時の創業者持分は 42%前後。時価総額141億なら評価額 約59億。</li></ul></div>
