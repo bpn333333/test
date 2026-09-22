@@ -730,24 +730,36 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
 {
   const s = base(false);
   head(s, 1, "日本は一度、これをやっている", "輸入した技術を4年で国産化し、その後20年以上の改善で世界一の品質に到達した");
-  const y0=1.62, w=(W-0.9)/4, h=1.30;
-  card(s, M,           y0, w, h, "1952", ["日産＝オースチン技術提携","日野＝ルノー、いすゞ＝ルーツ"], MUTED, 9.5);
-  card(s, M+w+0.3,     y0, w, h, "1956-57", ["4社が相次いで完全国産化","ここまで4年"], VERM, 9.5);
-  card(s, M+(w+0.3)*2, y0, w, h, "1960s-70s", ["QCサークル・トヨタ生産方式","改善を20年以上回し続ける"], NAVY, 9.5);
-  card(s, M+(w+0.3)*3, y0, w, h, "1980s", ["品質と燃費で世界市場を取る","米国メーカーが学びに来る側へ"], GOLD, 9.5);
+  const y0=1.46, w=(W-0.9)/4, h=1.16;
+  card(s, M,           y0, w, h, "1952", ["日産＝オースチン技術提携","日野＝ルノー、いすゞ＝ルーツ"], MUTED, 9);
+  card(s, M+w+0.3,     y0, w, h, "1956-57", ["4社が相次いで完全国産化","ここまで4年"], VERM, 9);
+  card(s, M+(w+0.3)*2, y0, w, h, "1960s-70s", ["QCサークル・トヨタ生産方式","改善を20年以上回し続ける"], NAVY, 9);
+  card(s, M+(w+0.3)*3, y0, w, h, "1980s", ["品質と燃費で世界市場を取る","米国メーカーが学びに来る側へ"], GOLD, 9);
+
+  /* 出発点と到達点。いずれも CC0 / パブリックドメインの写真 */
+  const iw=2.44, ih=1.30, iy=2.80;
+  img(s, "assets/austin1959.jpg",  M,        iy, iw, ih);
+  arw(s, "r", M+iw+0.12, iy+0.47, 0.44, 0.36);
+  img(s, "assets/corolla1986.jpg", M+iw+0.68, iy, iw, ih);
+  s.addText("1959 日産オースチン A50", { x:M, y:iy+ih+0.04, w:iw, h:0.24, fontFace:F, fontSize:8.5,
+    color:MUTED, align:"center", valign:"middle", margin:0, isTextBox:true });
+  s.addText("1986 トヨタ カローラ", { x:M+iw+0.68, y:iy+ih+0.04, w:iw, h:0.24, fontFace:F, fontSize:8.5,
+    color:MUTED, align:"center", valign:"middle", margin:0, isTextBox:true });
+
+  warn(s, M+iw*2+0.98, iy, W-(iw*2+0.98), 1.58, "ポイントは国産化の速さではありません",
+    ["日産・トヨタは国産化をゴールにせず、以後20年以上かけて生産方式と品質管理を磨き続けました。",
+     "1980年代には米国メーカーが日本の生産方式を学びに来る側に回ります。",
+     "内製化（3年）は出発点にすぎません。制作データで改善を回し続けることが、模倣されない資産になります。"], 9.5);
+
   const rows=[
     hrow(["","持っている側","","修得する側","期間","到達点"]),
     ["1952 → 1956","オースチン（英）","技術 →","日産・日野・いすゞ","4年","完全国産化。ただしこれは入口"],
     [{text:"2026 → 2029",options:{bold:true,color:VERM}},"世界のAIクリエイター","制作力 →",{text:"当社",options:{bold:true}},{text:"3年",options:{bold:true}},{text:"内製化。ここから改善を回す",options:{bold:true}}],
   ];
-  table(s, M, 3.22, W, rows, [1.8,2.9,1.0,2.9,0.8,2.63], 9.5, 0.40);
-  warn(s, M, 4.62, W, 1.16, "ポイントは国産化の速さではありません。その後の改善で世界一の品質を築いたことです",
-    ["日産・トヨタは国産化をゴールにせず、以後20年以上かけて生産方式と品質管理を磨き続けました。",
-     "当社も同じです。内製化（3年）は出発点で、制作データで改善を回し続けることが模倣されない資産になります。"]);
+  table(s, M, 4.52, W, rows, [1.8,2.9,1.0,2.9,0.8,2.63], 9.5, 0.40);
   s.addText("⚠ 当時は政府の保護（輸入制限・関税）がありました。今のAI映像にはありません。だから改善のサイクルをより速く回す必要があります。",
-    { x:M, y:5.94, w:W, h:0.34, fontFace:F, fontSize:10, bold:true, color:VERM, valign:"middle", margin:0, isTextBox:true });
-  foot(s, "出所: 日産自動車 企業情報 ／ トヨタ博物館 ／ GAZOO「ノックダウン生産の時代」／ 日本科学技術連盟（QCサークル・デミング賞）");
+    { x:M, y:5.86, w:W, h:0.34, fontFace:F, fontSize:10, bold:true, color:VERM, valign:"middle", margin:0, isTextBox:true });
+  foot(s, "出所: 日産自動車 企業情報 ／ トヨタ博物館 ／ GAZOO「ノックダウン生産の時代」／ 日本科学技術連盟（QCサークル・デミング賞）。写真: 1959 Nissan Austin Cambridge Deluxe（CC0 / TTTNIS）、1986-1989 Toyota Corolla AE82（Public domain / OSX）いずれも Wikimedia Commons");
 }
-
-
 p.writeFile({ fileName: "deck.pptx" }).then(function(){ console.log("deck.pptx"); });
+
