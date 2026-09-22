@@ -462,7 +462,11 @@ CW = [
     ("シリーズA ポストマネー評価", 15.0, "億円", "計画", "2028年（2期）"),
     ("シリーズA 調達額", 3.0, "億円", "計画", "これが無いと2期末に資金ショートする"),
     ("ESOP補充後の ESOP比率", 0.099, "%", "計画", "シリーズAで薄まった枠を戻す"),
-    ("IPO 公募比率", 0.20, "%", "計画", "2031年。流通株式25%を満たすには要見直し（下表）"),
+    ("IPO 公募比率", 0.20, "%", "計画", "2031年。新株発行なので全員が薄まる"),
+    ("IPO 売出し（シードから）", 0.055, "%", "計画",
+     "既存株主が売る。新株ではないので創業者は薄まらない。シードを10%未満に落とすのが目的"),
+    ("IPO 売出し（シリーズAから）", 0.0, "%", "計画",
+     "シード分だけで基準を満たすため0。交渉次第で振り替えてよい"),
 ]
 r = 4
 for name, v, unit, kind, note in CW:
@@ -475,7 +479,7 @@ for name, v, unit, kind, note in CW:
     put(W, r, 10, note, font=F_S)
     r += 1
 W_ESOP, W_CAP, W_RAISE, W_A_POST, W_A_RAISE, W_ESOP2, W_PUB = 5, 6, 7, 9, 10, 11, 12
-W_CONV, W_ASH = 13, 14
+W_SELL_S, W_SELL_A, W_CONV, W_ASH = 13, 14, 15, 16
 for name, f, note in [("転換時のシード持分（シリーズA前）", "=C%d/C%d" % (W_RAISE, W_CAP),
                        "ポストマネー・キャップなので 1.42億 ÷ 6億"),
                       ("シリーズA の持分", "=C%d/C%d" % (W_A_RAISE, W_A_POST), "3億 ÷ post 15億")]:
@@ -505,69 +509,98 @@ WALK = [
     ("2031", "IPO 公募", "—",
      ["=D{p}*(1-$C${pb})", "=E{p}*(1-$C${pb})", "=F{p}*(1-$C${pb})",
       "=G{p}*(1-$C${pb})", "=$C${pb}"]),
+    ("2031", "売出し（既存株主が売る）", "—",
+     ["=D{p}", "=E{p}", "=F{p}-$C${ss}", "=G{p}-$C${sa}", "=H{p}+$C${ss}+$C${sa}"]),
 ]
 for when, ev, amt, fs in WALK:
     put(W, r, 1, when)
     put(W, r, 2, ev, font=F_B)
     put(W, r, 3, amt, align="right")
     for j, f in enumerate(fs):
-        put(W, r, 4 + j, f.format(p=r - 1, e=W_ESOP, c=W_CONV, a=W_ASH, e2=W_ESOP2, pb=W_PUB),
+        put(W, r, 4 + j, f.format(p=r - 1, e=W_ESOP, c=W_CONV, a=W_ASH, e2=W_ESOP2,
+                                  pb=W_PUB, ss=W_SELL_S, sa=W_SELL_A),
             fmt="0.0%", align="right",
             font=F_B if j == 0 else F_N, fill=KEYBG if j == 0 else None)
     put(W, r, 9, "=SUM(D%d:H%d)" % (r, r), fmt="0.0%", align="right", font=F_S)
     put(W, r, 10, '=IF(D%d>0.5,"経営権あり（50%%超）",IF(D%d>0.334,"拒否権あり（1/3超）","1/3割れ"))' % (r, r))
     r += 1
-W_IPO = r - 1
-put(W, r, 2, "J-KISS は転換までは議決権が発生しない。1/3の線を踏まずに済むのが J-KISS を選ぶ理由のひとつ。",
+W_FINAL = r - 1          # 売出し後（＝上場後に実際に保有している持分）
+W_IPO = r - 2            # 公募直後（＝売出し分を含む経済持分。リターンの計算はこちら）
+put(W, r, 2, "売出しは新株発行ではないので、創業者もESOPも薄まらない。"
+             "シードの持分が動くだけで、売却代金はシードが受け取る。", font=F_S, border=False)
+
+r += 2
+put(W, r, 1, "上場時の評価額（売出しの代金を含む経済持分）", font=F_B, border=False)
+r += 1
+header(W, r, ["株主", "経済持分", "うち売出し", "保守 348億", "中庸 419億", "強気 490億",
+              "", "", "", "備考"])
+r += 1
+for label, col, sell, note in [
+        ("創業者", "D", None, "経営権は上場時に50%を割る。シリーズA後も52.7%を維持できる"),
+        ("シード投資家", "F", W_SELL_S, "売却代金 ＋ 保有株の合計。売出しをしても取り分は変わらない"),
+        ("シリーズA", "G", W_SELL_A, ""),
+        ("ESOP", "E", None, "役員・従業員への配分枠"),
+        ("公募", "H", None, "新株発行分")]:
+    put(W, r, 1, label, font=F_B)
+    put(W, r, 2, "=%s%d" % (col, W_IPO), fmt="0.0%", align="right", font=F_B)
+    put(W, r, 3, "=$C$%d" % sell if sell else "—", fmt="0.0%" if sell else None, align="right")
+    for k, v in enumerate([348, 419, 490]):
+        put(W, r, 4 + k, "=B%d*%d" % (r, v), fmt="#,##0.0", align="right",
+            fill=KEYBG if label in ("創業者", "シード投資家") else None)
+    put(W, r, 10, note, font=F_S)
+    r += 1
+put(W, r, 1, "単位は億円。売出しは新株発行ではないので、売った側の経済持分は減らない（代金で受け取る）。",
     font=F_S, border=False)
 
 r += 2
-put(W, r, 1, "上場時の評価額", font=F_B, border=False)
+put(W, r, 1, "流通株式比率 — 基準25%を満たす設計", font=F_B, border=False)
 r += 1
-header(W, r, ["株主", "上場時持分", "", "保守 348億", "中庸 419億", "強気 490億", "", "", "", "備考"])
-r += 1
-for label, col, note in [("創業者", "D", "経営権は上場時に50%を割る。ただしシリーズA後も52.7%を維持できる"),
-                         ("シード投資家", "F", "出資1.42億に対する取り分"),
-                         ("シリーズA", "G", ""),
-                         ("ESOP", "E", "役員・従業員への配分枠"),
-                         ("公募", "H", "")]:
-    put(W, r, 1, label, font=F_B)
-    put(W, r, 2, "=%s%d" % (col, W_IPO), fmt="0.0%", align="right", font=F_B)
-    put(W, r, 3, "")
-    for j, v in enumerate([348, 419, 490]):
-        put(W, r, 4 + j, "=B%d*%d" % (r, v), fmt="#,##0.0", align="right",
-            fill=KEYBG if label == "シード投資家" else None)
-    put(W, r, 10, note, font=F_S)
-    r += 1
-put(W, r, 1, "単位は億円。時価総額は「資本政策とリターン」シートのライン別評価。", font=F_S, border=False)
-
-r += 2
-put(W, r, 1, "⚠ 流通株式比率 — このままでは基準25%を満たさない", font=F_R, border=False)
-r += 1
-header(W, r, ["株主", "上場時持分", "", "流通株式への算入", "", "", "", "", "", "理由"])
+header(W, r, ["株主", "上場後の保有持分", "10%の判定", "流通株式への算入", "算入される持分",
+              "", "", "", "", "理由"])
 r += 1
 R_FLOAT0 = r
-for label, col, inc, why in [("創業者（役員）", "D", 0, "役員は除外"),
-                             ("シード投資家", "F", 0, "10%超のため除外"),
-                             ("シリーズA", "G", 0, "10%超のため除外"),
-                             ("ESOP", "E", 0, "役員・従業員分は除外"),
-                             ("公募", "H", 1, "算入")]:
+for label, col, fixed, why in [
+        ("創業者（役員）", "D", False, "役員の保有分は除外される"),
+        ("ESOP枠", "E", False, "役員・従業員分は除外される"),
+        ("シード投資家 保有分", "F", None, "10%未満なら全株が算入される。売出しでここを越える"),
+        ("シリーズA 保有分", "G", None, "10%以上なので除外。シードだけで基準を満たすため売出しは0"),
+        ("公募・売出し", "H", True, "市場に出た分。全額が算入される")]:
     put(W, r, 1, label)
-    put(W, r, 2, "=%s%d" % (col, W_IPO), fmt="0.0%", align="right")
-    put(W, r, 3, "")
-    put(W, r, 4, "○ 算入" if inc else "× 除外", align="center",
-        font=F_N if inc else F_R)
+    put(W, r, 2, "=%s%d" % (col, W_FINAL), fmt="0.0%", align="right", font=F_B)
+    if fixed is None:
+        put(W, r, 3, '=IF(B%d<0.1,"10%%未満","10%%以上")' % r, align="center")
+        put(W, r, 4, '=IF(B%d<0.1,"○ 算入","× 除外")' % r, align="center")
+        put(W, r, 5, "=IF(B%d<0.1,B%d,0)" % (r, r), fmt="0.0%", align="right", font=F_B)
+    else:
+        put(W, r, 3, "—", align="center")
+        put(W, r, 4, "○ 算入" if fixed else "× 除外", align="center", font=F_N if fixed else F_R)
+        put(W, r, 5, "=B%d" % r if fixed else 0, fmt="0.0%", align="right", font=F_B)
     put(W, r, 10, why, font=F_S)
     r += 1
 put(W, r, 1, "流通株式比率", font=F_B)
-put(W, r, 2, "=H%d" % W_IPO, fmt="0.0%", align="right", font=F_R, fill=KEYBG)
+put(W, r, 2, "")
 put(W, r, 3, "")
-put(W, r, 4, "=B%d-0.25" % r, fmt="+0.0%;-0.0%", align="center", font=F_R)
-put(W, r, 10, "基準25%に対する過不足", font=F_S)
+put(W, r, 4, "")
+put(W, r, 5, "=SUM(E%d:E%d)" % (R_FLOAT0, r - 1), fmt="0.0%", align="right", font=F_B, fill=KEYBG)
+R_FLOATSUM = r
+r += 1
+put(W, r, 1, "基準25%に対する過不足", font=F_B)
+put(W, r, 2, "")
+put(W, r, 3, "")
+put(W, r, 4, '=IF(E%d>=0.25,"○ 満たす","× 不足")' % R_FLOATSUM, align="center", font=F_B)
+put(W, r, 5, "=E%d-0.25" % R_FLOATSUM, fmt='+0.0%;-0.0%;0.0%', align="right", font=F_B)
+put(W, r, 10, "東証グロースの上場維持基準", font=F_S)
 r += 2
-put(W, r, 1, "手当て: ①公募を25%に引き上げる（創業者42.2%→39.5%）／②公募20%＋売出し5〜8%を併用（推奨）／"
-             "③上場前にVC持分を10%未満へ分散。主幹事証券が決まる4期に確定させる論点。"
-             "シードのタームシートに「上場時の売出しに協力する」条項を入れておくこと。", font=F_S, border=False)
+put(W, r, 1, "仕組み: シードが5.5%を売出すと保有が10%未満になり、"
+             "残りの保有株も一括で流通株式に算入される。公募20%だけなら20%、"
+             "売出しを足すと34.5%まで跳ね上がるのはこのため。"
+             "公募を25%に上げる案より、創業者持分が2.6ポイント厚く残る（42.2% vs 39.5%）。",
+    font=F_S, border=False)
+r += 1
+put(W, r, 1, "⚠ 残る論点: 時価総額348億で25.5%を売り出すと、公開規模は約89億になる。"
+             "グロース市場としては大きく、機関投資家の需要が要る。主幹事が決まる4期に規模を再設計すること。"
+             "シードのタームシートには「上場時の売出しに協力する」条項を入れておく。",
+    font=F_R, border=False)
 
 # ══════════════════════════════════════════════════════════════
 # 資本政策とリターン
