@@ -7,7 +7,7 @@ PowerPoint を手で作らず、**コードから生成**しています。数�
 
 | ファイル | 出力 | 中身 |
 |---|---|---|
-| `build.js` | `投資家向け企画書 Ver1.2.pptx` | **投資家向けデッキ 25枚**（本体） |
+| `build.js` | `投資家向け企画書 Ver1.3.pptx` | **投資家向けデッキ 26枚**（本体） |
 | `extra.js` | `市場規模と制作費の構造.pptx` | 補足 2枚（市場規模／制作費とAI） |
 | `av.js` | `市場規模と制作費の構造_AV含む版.pptx` | 上の 3枚版（AVの行と解説を追加） |
 | `slim.py` | — | **必ず通す後処理**（下記） |
@@ -19,7 +19,7 @@ PowerPoint を手で作らず、**コードから生成**しています。数�
 cd deck
 npm install                      # pptxgenjs
 node build.js                    # -> deck.pptx
-python3 slim.py deck.pptx "../投資家向け企画書 Ver1.2.pptx"
+python3 slim.py deck.pptx "../投資家向け企画書 Ver1.3.pptx"
 
 # レンダリング確認（レイアウト崩れは目で見ないと分からない）
 soffice --headless --convert-to pdf ../投資家向け企画書.pptx --outdir .
