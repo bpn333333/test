@@ -1,0 +1,16 @@
+{
+  "name": "ai-movie-deck",
+  "private": true,
+  "description": "投資家向けデッキと補足スライドのジェネレータ",
+  "scripts": {
+    "deck": "node build.js",
+    "extra": "node extra.js",
+    "av": "node av.js"
+  },
+  "dependencies": {
+    "pptxgenjs": "^3.12.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.0"
+  }
+}
