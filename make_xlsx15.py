@@ -724,7 +724,7 @@ title(H, "人員と人件費（社員はPM中心）",
 header(H, 3, ["職種", "年収(万円)"] + Y + ["考え方"])
 ROLES = [
     ("経営・CxO", 900, [1, 1, 2, 3, 3], "代表＋CFO／CTO級"),
-    ("モデル開発PM", 950, [1, 2, 4, 6, 8], "オフショアチームを率いる。開発者は社員で抱えない"),
+    ("モデル開発PM", 950, None, "オフショアチームを率いる。人数はAX後のエンジニア数から逆算"),
     ("制作統括", 650, [1, 2, 3, 3, 3], "業務委託ディレクターの束ね役"),
     ("事業開発・アライアンス", 700, [1, 2, 4, 5, 6], "営業体制シートの直販人員と同じ"),
     ("クリエイターネットワーク統括", 600, [1, 1, 2, 3, 3], "中国パートナー・登録クリエイター管理"),
@@ -734,8 +734,11 @@ r = 4
 for name, pay, heads, note in ROLES:
     put(H, r, 1, name)
     put(H, r, 2, pay, fmt=N, fill=INBG, align="right")
-    for i, h in enumerate(heads):
-        put(H, r, 3 + i, h, fmt=N, fill=INBG, align="right")
+    for i, c in enumerate(C5):
+        if heads is None:
+            put(H, r, 3 + i, "=%s34" % c, fmt=N, fill=CALCBG, align="right", font=F_B)
+        else:
+            put(H, r, 3 + i, heads[i], fmt=N, fill=INBG, align="right")
     put(H, r, 8, note, font=F_S)
     r += 1
 HR0, HR1 = 4, r - 1
@@ -764,56 +767,62 @@ put(H, HGIG + 1, 1, "中国クリエイター（登録・人）")
 put(H, HGIG + 1, 8, "クリエイター経済シート。①③の合計", font=F_S)
 put(H, HGIG + 1, 7, "=クリエイター経済!B%d" % CR_REG, fmt=N, align="right", font=F_B)
 
-band(H, 19, "オフショア開発（業務委託）")
-header(H, 20, ["項目", "値", "単位", "", "", "", "", "出所"])
+band(H, 19, "オフショア開発（業務委託）— 単価は国別の実測")
+header(H, 20, ["国", "シニア(万/月)", "リード(万/月)", "構成比", "", "", "", "出所"])
 OFF = [
-    ("ベトナム（シニア）", 50.0, "万円/月", "オフショア開発.com 2026（実測）"),
-    ("中国（シニア）", 71.7, "万円/月", "同上。★オフショア先で最も高い"),
-    ("東欧（シニア）", 80.0, "万円/月", "★推定。この調査に東欧は含まれない"),
-    ("構成比 ベトナム", 0.50, "%", "★"),
-    ("構成比 中国", 0.30, "%", "★"),
-    ("構成比 東欧", 0.20, "%", "★"),
+    ("ベトナム", 50.0, 59.0, 0.50, "オフショア開発.com 2026（シニア／ブリッジSE）"),
+    ("中国", 71.7, 75.8, 0.30, "同上。アジアでは最も高い"),
+    ("東欧", 104.0, 124.8, 0.20,
+     "Devico/RemoteMore/Wild.Codes 2026。羅$30-45・宇$40-55・波$35-55/h を月160h・150円換算"),
 ]
-for i2, (nm, v, unit, note) in enumerate(OFF):
+for i2, (nm, sen, lead, w, note) in enumerate(OFF):
     rr = 21 + i2
     put(H, rr, 1, nm)
-    put(H, rr, 2, v, fmt=P if unit == "%" else "0.0", fill=INBG, align="right")
-    put(H, rr, 3, unit, align="center")
+    put(H, rr, 2, sen, fmt="0.0", fill=INBG, align="right")
+    put(H, rr, 3, lead, fmt="0.0", fill=INBG, align="right")
+    put(H, rr, 4, w, fmt=P, fill=INBG, align="right")
     put(H, rr, 8, note, font=F_S)
-put(H, 27, 1, "加重単価（万円/年）", font=F_B)
-put(H, 27, 2, "=(B21*B24+B22*B25+B23*B26)*12", fmt=N, fill=CALCBG,
-    align="right", font=F_B)
-put(H, 28, 1, "PM1名あたりのエンジニア数", font=F_B)
-put(H, 28, 2, 5, fmt=N, fill=INBG, align="right")
-put(H, 28, 8, "★ブリッジはPMが兼ねる前提", font=F_S)
-HOFF_RATE, HOFF_PER = 27, 28
+put(H, 25, 1, "シニア級 加重（万円/年）", font=F_B)
+put(H, 25, 2, "=SUMPRODUCT(B21:B23,D21:D23)*12", fmt=N, fill=CALCBG, align="right")
+put(H, 26, 1, "リード級 加重（万円/年）", font=F_B)
+put(H, 26, 2, "=SUMPRODUCT(C21:C23,D21:D23)*12", fmt=N, fill=KEYBG, align="right", font=F_B)
+put(H, 26, 8, "AX前提はこちらを使う。人数を減らすかわりに上位層に絞る", font=F_S)
+put(H, 27, 1, "⚠ 安い順は ミャンマー＜インド＜フィリピン＜ベトナム＜中国＜東欧。"
+             "中国も東欧もアジア最安ではない。「中国が安い」のは剪辑師（月18.8万）の話で、"
+             "エンジニアの受託単価ではない。", font=F_R, border=False)
+HOFF_RATE = 26
 
-band(H, 30, "期別")
-header(H, 31, ["項目", ""] + Y + ["考え方"])
-put(H, 32, 1, "PM（社員）")
-put(H, 33, 1, "オフショアエンジニア（委託）")
-put(H, 34, 1, "開発委託費（百万円）", font=F_B)
-for i2, c in enumerate(C5):
-    put(H, 32, 3 + i2, "=%s5" % c, fmt=N, align="right")
-    put(H, 33, 3 + i2, "=%s32*$B$%d" % (c, HOFF_PER), fmt=N, align="right")
-    put(H, 34, 3 + i2, "=%s33*$B$%d/100" % (c, HOFF_RATE), fmt=N, fill=KEYBG,
-        align="right", font=F_B)
-HOFF_COST = 34
-put(H, 29, 1, "⚠ 中国はオフショア先として最も高い（71.7万/月・ベトナムの1.43倍）。"
-             "「中国の方が安い」のは剪辑師（月18.8万・雇用ベース）の話で、エンジニアの受託単価ではない。"
-             "インド45.0／フィリピン47.5／ミャンマー40.0 の方が安い。", font=F_R, border=False)
-put(H, 36, 1, "旧構成はモデル開発エンジニアを社員で40名抱えていた。PM8名＋委託40名に置き換えると、"
-             "社員は61名→25名。コストはほぼ変わらない（人件費が下がり委託費が上がる）。"
-             "狙いはコスト削減ではなく組織の身軽さ。", font=F_S, border=False)
-put(H, 37, 1, "⚠ 管理・コーポレート2名は、5期に上場会社として内部統制報告制度の対象になる規模には薄い。"
-             "取引処理はBPOに出す前提だが、内部統制の設計・運用・評価は社員の仕事。"
-             "監査法人と主幹事に早期に当てること。★確認事項", font=F_R, border=False)
+band(H, 29, "エンジニアのAX化 — 人数を減らして単価を上げる")
+header(H, 30, ["項目", ""] + Y + ["考え方"])
+OFFD = [
+    (31, "必要開発工数（AXなし換算・人年）", [5, 10, 20, 30, 40], None, "★プロダクト規模から"),
+    (32, "★ エンジニアのAX倍率", [1.0, 1.3, 1.7, 2.1, 2.5], None, "★制作のAX（5期4.0倍）より保守的に置く"),
+    (33, "実エンジニア数（委託）", None, "=ROUNDUP(C31/C32,0)", "必要工数 ÷ AX倍率"),
+    (34, "PM（社員）", None, "=ROUNDUP(C33/5,0)", "1名で5名を見る。上の人件費表はここを参照"),
+    (35, "開発委託費（百万円）", None, "=C33*$B$26/100", "実人数 × リード級の年額"),
+]
+for rr, name, vals, f, note in OFFD:
+    put(H, rr, 1, name, font=F_B if "委託費" in name else F_N)
+    put(H, rr, 2, "")
+    for i2, c in enumerate(C5):
+        if vals is not None:
+            put(H, rr, 3 + i2, vals[i2], fmt="0.0" if isinstance(vals[i2], float) else N,
+                fill=INBG, align="right")
+        else:
+            put(H, rr, 3 + i2, f.replace("C3", c + "3"), fmt=N, align="right",
+                fill=KEYBG if "委託費" in name else CALCBG,
+                font=F_B if "委託費" in name else F_N)
+    put(H, rr, 8, note, font=F_S)
+HOFF_COST = 35
+put(H, 37, 1, "旧構成は社員40名。PM4名＋委託16名になる。単価は年808万→926万に上げても、"
+             "委託費は5期300→148百万。1〜2期は逆に高くつく（AX倍率が立つ前に単価だけ上がるため）。"
+             "制作のAXと同じ形で、先に投資して後で効く。", font=F_S, border=False)
 
-band(H, 39, "社外の専門家を前提にするなら、その費用が見えている必要がある")
-put(H, 40, 1, "管理3名で回るのは顧問弁護士・監査法人・社労士が外にいるから。"
+band(H, 40, "社外の専門家を前提にするなら、その費用が見えている必要がある")
+put(H, 41, 1, "管理3名で回るのは顧問弁護士・監査法人・社労士が外にいるから。"
              "その費用は「その他販管費（売上の4%）」に入っている。5期で足りるかの検算。",
     font=F_S, border=False)
-header(H, 41, ["費目", "下限", "上限", "", "", "", "", "備考"])
+header(H, 42, ["費目", "下限", "上限", "", "", "", "", "備考"])
 SGAI = [
     ("監査報酬（上場後）", 40, 70, "上場会社・売上108億規模"),
     ("株式事務代行・IR", 20, 40, "信託銀行・開示書類・説明会"),
@@ -826,19 +835,19 @@ SGAI = [
     ("保険・その他", 20, 40, ""),
 ]
 for i2, (nm, a2, b2, note) in enumerate(SGAI):
-    rr = 42 + i2
+    rr = 43 + i2
     put(H, rr, 1, nm)
     put(H, rr, 2, a2, fmt=N, fill=INBG, align="right")
     put(H, rr, 3, b2, fmt=N, fill=INBG, align="right")
     put(H, rr, 8, note, font=F_S)
-put(H, 51, 1, "合計（百万円）", font=F_B)
-put(H, 51, 2, "=SUM(B42:B50)", fmt=N, align="right", font=F_B, fill=CALCBG)
-put(H, 51, 3, "=SUM(C42:C50)", fmt=N, align="right", font=F_B, fill=CALCBG)
-put(H, 52, 1, "その他販管費（5期・売上の4%）", font=F_B)
-H_SGA_CELL = (52, 3)   # 損益シート生成後に埋める
-put(H, 53, 1, "判定", font=F_B)
-put(H, 53, 3, '=IF(C52>=C51,"○ 上限まで賄える","× 足りない")', align="center", font=F_B)
-put(H, 53, 8, "★費目はすべて私の見積もり。実際の見積を取ったものではない", font=F_S)
+put(H, 54, 1, "合計（百万円）", font=F_B)
+put(H, 52, 2, "=SUM(B43:B51)", fmt=N, align="right", font=F_B, fill=CALCBG)
+put(H, 52, 3, "=SUM(C43:C51)", fmt=N, align="right", font=F_B, fill=CALCBG)
+put(H, 54, 1, "その他販管費（5期・売上の4%）", font=F_B)
+H_SGA_CELL = (53, 3)   # 損益シート生成後に埋める
+put(H, 54, 1, "判定", font=F_B)
+put(H, 54, 3, '=IF(C53>=C52,"○ 上限まで賄える","× 足りない")', align="center", font=F_B)
+put(H, 54, 8, "★費目はすべて私の見積もり。実際の見積を取ったものではない", font=F_S)
 
 # ══════════════════════════════════════════════════════════════
 # 損益計算書

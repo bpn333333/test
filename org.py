@@ -17,70 +17,82 @@
   ⚠ 東欧はこの調査に含まれないため★推定。
 """
 
+import math
+
 Y = ["1期", "2期", "3期", "4期", "5期"]
 n = 5
 BURDEN = 1.16
 
 # ── オフショア単価（国別・実測）───────────────────────────
-# オフショア開発.com 2026年2月13日更新。シニアエンジニアの人月単価（万円）
-# ⚠ 東欧はこの調査に含まれていない。当社の★推定。
+# アジア: オフショア開発.com 2026年2月更新（人月・万円）
+# 東欧:  Devico / RemoteMore / Wild.Codes 2026（時給ドル）→ 月160h・1ドル150円で換算
+USD, HRS = 150.0, 160.0
+EE_HOURLY = {"ルーマニア": (30, 45), "ウクライナ": (40, 55), "ポーランド": (35, 55)}
+EE_MONTH = {k: (lo + hi) / 2 * HRS * USD / 10000 for k, (lo, hi) in EE_HOURLY.items()}
+EE_SENIOR = sum(EE_MONTH.values()) / len(EE_MONTH)
+
 SENIOR = {"ミャンマー": 40.0, "インド": 45.0, "フィリピン": 47.5, "ベトナム": 50.0,
-          "バングラデシュ": 52.5, "中国": 71.7, "東欧★": 80.0}
-SRC = {"東欧★": "★推定（この調査に東欧は含まれない）"}
+          "バングラデシュ": 52.5, "中国": 71.7, "東欧": EE_SENIOR}
+# AX前提のリード級（ブリッジSE／アーキテクト相当）
+LEAD = {"ベトナム": 59.0, "中国": 75.8, "東欧": EE_SENIOR * 1.2}
 
 print("=" * 92)
-print("オフショア単価（シニアエンジニア・人月）— オフショア開発.com 2026")
+print("オフショア単価（シニア・人月）")
 print("=" * 92)
-print("  %-14s %10s %12s  %s" % ("国", "月額(万)", "年額(万)", "ベトナム比"))
-print("  " + "-" * 62)
+print("  東欧の内訳（時給ドル → 月160h・1ドル150円）")
+for k, (lo, hi) in EE_HOURLY.items():
+    print("    %-10s $%d〜%d/h  →  月 %.1f万円" % (k, lo, hi, EE_MONTH[k]))
+print("    3か国平均 月 %.1f万円" % EE_SENIOR)
+print()
+print("  %-12s %10s %12s  %s" % ("国", "月額(万)", "年額(万)", "ベトナム比"))
+print("  " + "-" * 60)
 for k, v in sorted(SENIOR.items(), key=lambda x: x[1]):
-    mark = "  ← 中国は最も高い" if k == "中国" else ""
-    print("  %-14s %10.1f %12.0f %11.2f倍%s" % (k, v, v * 12, v / SENIOR["ベトナム"], mark))
+    mk = "  ← 最も高い" if v == max(SENIOR.values()) else ("  ← 中国" if k == "中国" else "")
+    print("  %-12s %10.1f %12.0f %11.2f倍%s" % (k, v, v * 12, v / SENIOR["ベトナム"], mk))
 print()
-print("  ⚠ 中国はオフショア先として**最も高い**。R&D投資でエンジニア単価が高騰している。"
-      .replace("**", ""))
-print("     私は「ベトナム比1.3倍」と推定していたが、実測は 1.43倍だった。")
-print("     そして「中国の方が安い」という直感は、**クリエイターの話とエンジニアの話が混ざっている**。"
-      .replace("**", ""))
-print("     中国の剪辑師は月18.8万円（雇用ベース）。エンジニアの受託単価は71.7万円。")
-print("     前者は直接契約の賃金、後者はベンダーのマージンが乗った受託価格で、性質が違う。")
+print("  ⚠ 私は東欧を★80万/月と置いていたが、実勢は %.1f万/月。**低く見積もっていた**。"
+      .replace("**", "") % EE_SENIOR)
+print("     そして東欧は中国より高い。安い順は ミャンマー＜インド＜フィリピン＜ベトナム＜中国＜東欧。")
+print("     出所はAI・DevOps等は「baseline より上」としており、モデル開発は上振れ側。")
 print()
 
-MIXES = {
-    "現行（中国・ベトナム・東欧）": {"ベトナム": 0.50, "中国": 0.30, "東欧★": 0.20},
-    "中国を外す（ベトナム・インド・比）": {"ベトナム": 0.50, "インド": 0.30, "フィリピン": 0.20},
-    "ベトナム単独": {"ベトナム": 1.00},
-}
+MIX = {"ベトナム": 0.50, "中国": 0.30, "東欧": 0.20}
+SEN_BLEND = sum(SENIOR[k] * w for k, w in MIX.items())
+LEAD_BLEND = sum(LEAD[k] * w for k, w in MIX.items())
 print("=" * 92)
-print("構成比の選択肢")
+print("エンジニアのAX化 — 人数を減らして単価を上げる")
 print("=" * 92)
-print("  %-34s %12s %12s %14s" % ("構成", "月額(万)", "年額(万)", "5期40名の年額"))
+print("  構成比 ベトナム50% / 中国30% / 東欧20%（松田さんの指示どおり）")
+print("  %-28s 月 %5.1f万  年 %4.0f万" % ("シニア級（AXなし）", SEN_BLEND, SEN_BLEND * 12))
+print("  %-28s 月 %5.1f万  年 %4.0f万  （+%.0f%%）"
+      % ("リード級（AX前提）", LEAD_BLEND, LEAD_BLEND * 12,
+         (LEAD_BLEND / SEN_BLEND - 1) * 100))
+print("    リード級＝ブリッジSE／アーキテクト相当。AIを使い切れる層に絞る。")
+print()
+NEED = [5, 10, 20, 30, 40]           # ★必要開発工数（AXなし換算・人年）
+AX_DEV = [1.0, 1.3, 1.7, 2.1, 2.5]   # ★エンジニアのAX倍率
+OFF_HEADS = [int(math.ceil(NEED[i] / AX_DEV[i])) for i in range(n)]
+OFF_YEAR = LEAD_BLEND * 12
+OFF_COST = [OFF_HEADS[i] * OFF_YEAR / 100 for i in range(n)]
+PM_HEADS = [int(math.ceil(OFF_HEADS[i] / 5)) for i in range(n)]
+
+print("  %-26s" % "" + "".join("%10s" % y for y in Y))
 print("  " + "-" * 78)
-RES = {}
-for name, mx in MIXES.items():
-    m = sum(SENIOR[k] * w for k, w in mx.items())
-    RES[name] = m * 12
-    print("  %-34s %12.1f %12.0f %13.1f億" % (name, m, m * 12, m * 12 * 40 / 10000))
+print("  %-26s" % "必要開発工数（AXなし換算）" + "".join("%10d" % v for v in NEED))
+print("  %-26s" % "★エンジニアのAX倍率" + "".join("%10.1f" % v for v in AX_DEV))
+print("  %-26s" % "実エンジニア数（委託）" + "".join("%10d" % v for v in OFF_HEADS))
+print("  %-26s" % "PM（社員・1名で5名を見る）" + "".join("%10d" % v for v in PM_HEADS))
+print("  %-26s" % "開発委託費（百万円）" + "".join("%10.0f" % v for v in OFF_COST))
 print()
-base = RES["現行（中国・ベトナム・東欧）"]
-alt = RES["中国を外す（ベトナム・インド・比）"]
-print("  → 中国を外すと 1人あたり年 %.0f万 安くなる。40名なら年 %.2f億。"
-      % (base - alt, (base - alt) * 40 / 10000))
+OLD_OFF = [38, 75, 150, 225, 300]
+print("  %-26s" % "（AXなしの場合）" + "".join("%10.0f" % v for v in OLD_OFF))
+print("  %-26s" % "差" + "".join("%+10.0f" % (OFF_COST[i] - OLD_OFF[i]) for i in range(n)))
 print()
-print("  ＜中国を使う理由が残るとすれば＞")
-for t in ["制作パートナーが既に中国にいる。同じ会社に開発も出せる（窓口が1つで済む）",
-          "中国語圏のデータ・モデル対応",
-          "クリエイターネットワークと開発チームが近い（③のAI-botは中国語UIも要る）"]:
-    print("    ・" + t)
-print("  ＜外す理由＞")
-print("    ・単価が最も高い。エンジニアリングで中国を使うコスト上の理由はない")
-print()
-
-MIX = MIXES["現行（中国・ベトナム・東欧）"]     # ★松田さんの指示どおり据え置き
-OFF_MONTH = sum(SENIOR[k] * w for k, w in MIX.items())
-OFF_YEAR = OFF_MONTH * 12
-print("  ※ 構成比は松田さんの指示（中国・ベトナム・東欧）のまま据え置き。年 %.0f万で計算する。"
-      % OFF_YEAR)
+print("  → 5期は %d名 → %d名。単価は年%.0f万 → %.0f万に上げても、費用は %.0f → %.0f百万。"
+      % (40, OFF_HEADS[-1], SEN_BLEND * 12, OFF_YEAR, OLD_OFF[-1], OFF_COST[-1]))
+print("     **1〜2期は高くつく**（AX倍率が立ち上がっていないのに単価だけ上がるため）。"
+      .replace("**", ""))
+print("     制作のAXと同じ形。先に投資して、後で効いてくる。")
 print()
 
 # ── 社員 ───────────────────────────────────────────────
@@ -94,15 +106,13 @@ ROLE = {
 }
 HEADS = {
     "経営・CxO":                [1, 1, 2, 3, 3],
-    "モデル開発PM":              [1, 2, 4, 6, 8],
+    "モデル開発PM":              PM_HEADS,          # AX後のエンジニア数から逆算
     "制作統括":                 [1, 2, 3, 3, 3],
     "事業開発・アライアンス":      [1, 2, 4, 5, 6],
     "クリエイターネットワーク統括": [1, 1, 2, 3, 3],
     "管理・コーポレート":         [0, 1, 1, 2, 3],   # 松田さん指示。社外の顧問弁護士等が補う前提
 }
 PER_PM = 5      # ★PM1名あたりのオフショアエンジニア数
-OFF_HEADS = [HEADS["モデル開発PM"][i] * PER_PM for i in range(n)]
-OFF_COST = [OFF_HEADS[i] * OFF_YEAR / 100 for i in range(n)]   # 百万円
 
 heads = [sum(HEADS[r][i] for r in ROLE) for i in range(n)]
 pay = [sum(HEADS[r][i] * ROLE[r] * BURDEN for r in ROLE) / 100 for i in range(n)]
