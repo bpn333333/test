@@ -67,9 +67,14 @@ CORP_ACV = [0, 265, 290, 308, 326]   # products.py の積み上げ（2階建て�
 INDIE = [0, 0, 2000, 8000, 17000]
 INDIE_ACV = 12
 
-# ── ③ 越境C2C（据え置き）──────────────────────────────
-GMV = [50, 400, 1600, 4500, 8300]
-TAKE = 0.18
+# ── ③ 越境C2C（c2c.py の商品別積み上げ）────────────────
+# ③-A 個人パッケージ / ③-B 中小企業パッケージ / ③-C オーダーメイド
+# ★手数料率はパッケージ20%・オーダーメイド15%（要判断）。一律18%なら C2C_FLAT を使う
+GMV = [9, 143, 1212, 3625, 6366]
+C2C_BUILD = [2, 29, 216, 629, 1099]     # 率を分けた場合
+C2C_FLAT = [round(g * 0.18) for g in GMV]
+OLD_GMV = [50, 400, 1600, 4500, 8300]   # Ver1.2の一本値
+TAKE = None
 
 # ── 社員（据え置き）────────────────────────────────────
 BURDEN = 1.16
@@ -93,7 +98,7 @@ ACQF = [6, 40, 90, 150, 200]
 
 PY_PER_UNIT = 1.0 / 120 + 1.0 / 90
 TOOL = [round(CORP[i] * CORP_ACV[i] / 100.0 + INDIE[i] * INDIE_ACV / 100.0) for i in range(n)]
-C2C = [round(g * TAKE) for g in GMV]
+C2C = C2C_BUILD
 
 
 def calc():
@@ -136,6 +141,8 @@ row("    1本あたり原価(万円)", [r["cu"] for r in R], "{:>9.1f}")
 row("    AX倍率", AX, "{:>9.1f}")
 row("  ② ツール外販", TOOL)
 row("  ③ C2C手数料", C2C)
+row("    参考 GMV", GMV)
+row("    （Ver1.2の一本値GMV）", OLD_GMV)
 row("売上高", [r["rev"] for r in R])
 print("-" * 92)
 row("売上総利益", [r["gp"] for r in R])
