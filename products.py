@@ -87,44 +87,82 @@ print("    → ①は今後、平均単価を使わず商品別に積みます�
 print()
 
 # ── 事業② 制作ツール外販 ──────────────────────────────
-# 現状: 法人ACV 320万・個人ACV 12万の一本値（5期・契約数 法人600社／個人17,000人）
-# デッキ記載の商品名:「チェックポイント・LoRA／要件定義テンプレート／自動チェック」
+# 松田さんの決定（2026-09-23）
+#   ・チェックポイントと工程ツールは別売り
+#   ・LoRA個別構築は ② の売上（①の制作案件には含めない）
+#   ・法人は Enterprise / Standard の2階建て
+# ★単価・席数・構成比は私が置いた値
+SKU = {
+    "cp_ent":  ("チェックポイント Enterprise", "年額",      300, "全業種・商用利用・10席"),
+    "cp_std":  ("チェックポイント Standard",   "年額",      100, "1業種・3席"),
+    "tool":    ("工程ツール（要件定義・自動チェック）", "月額2万/席", 24, "1席あたり年額"),
+    "lora_m":  ("LoRA 年間保守",              "年額",       24, "追加学習モデルの更新・再学習"),
+    "lora_b":  ("LoRA 個別構築",              "初期・都度",  80, "顧客のブランド・商品を学習"),
+}
+SEATS = {"Enterprise": 10, "Standard": 3}
+LORA_ATTACH = 0.25            # ★個別構築の付帯率
+CORP = [0, 15, 100, 320, 600]                  # 契約数（Ver1.4から変えない）
+ENT_SHARE = [0.0, 0.13, 0.20, 0.25, 0.30]      # ★Enterprise比率
+OLD_ACV = [0, 250, 280, 300, 320]              # Ver1.4の一本値
+Y = ["1期", "2期", "3期", "4期", "5期"]
+
 print("=" * 100)
-print("事業② 制作ツール外販 — 商品別（★すべて私の提案）")
+print("事業② 制作ツール外販 — 商品（★単価・席数・構成比は私の提案）")
 print("=" * 100)
-CORP_SKU = [
-    ("チェックポイント（学習済みモデル）", "年額ライセンス", 180, 1.00,
-     "業種・表現別の生成モデル本体。10席まで"),
-    ("工程ツール（要件定義・自動チェック）", "月額3万/席", 108, 1.00,
-     "3席想定。検収通過率を上げる本体"),
-    ("LoRA 年間保守", "年額", 24, 1.00, "追加学習モデルの更新・再学習"),
-    ("LoRA 個別構築", "初期・都度", 80, 0.25,
-     "顧客のブランド・商品を学習。新規契約の25%が初年度に発注"),
-]
-print("  法人向け（制作会社・事業会社）")
-print("  %-34s %-14s %8s %8s  %s" % ("商品", "課金形態", "年額(万)", "付帯率", "中身"))
+print("  %-34s %-12s %8s  %s" % ("商品", "課金形態", "単価(万)", "中身"))
 print("  " + "-" * 96)
-acv = 0.0
-for name, kind, price, attach, note in CORP_SKU:
-    acv += price * attach
-    print("  %-34s %-14s %8d %7.0f%%  %s" % (name, kind, price, attach * 100, note))
-print("  " + "-" * 96)
-print("  %-34s %-14s %8.0f" % ("法人ACV（積み上げ）", "", acv))
-print("  %-34s %-14s %8d" % ("法人ACV（Ver1.4の一本値・5期）", "", 320))
-print("  %-34s %-14s %+8.0f  ← 差。どちらを採るか指示をください" % ("差", "", acv - 320))
+for k in ["cp_ent", "cp_std", "tool", "lora_m", "lora_b"]:
+    nm, kind, pr, note = SKU[k]
+    print("  %-34s %-12s %8d  %s" % (nm, kind, pr, note))
 print()
-INDIE_SKU = [
-    ("個人向けプラン（チェックポイント＋工程ツール）", "月額1万", 12, 1.00, "現行の一本値そのもの"),
-]
-print("  個人向け（クリエイター）")
-for name, kind, price, attach, note in INDIE_SKU:
-    print("  %-34s %-14s %8d %7.0f%%  %s" % (name, kind, price, attach * 100, note))
-print("  → 個人は月1万の単一プラン。ここは分解の必要がない。")
+
+def plan_acv(tier):
+    cp = SKU["cp_ent"][2] if tier == "Enterprise" else SKU["cp_std"][2]
+    tool = SKU["tool"][2] * SEATS[tier]
+    return cp, tool, SKU["lora_m"][2], cp + tool + SKU["lora_m"][2]
+
+print("  プラン構成（LoRA個別構築は別枠）")
+print("  %-12s %10s %10s %10s %10s" % ("", "チェックポイント", "工程ツール", "LoRA保守", "年額計"))
+print("  " + "-" * 60)
+for tier in ["Enterprise", "Standard"]:
+    cp, tool, lm, tot = plan_acv(tier)
+    print("  %-12s %10d %10d %10d %10d  （%d席）" % (tier, cp, tool, lm, tot, SEATS[tier]))
+ent_acv = plan_acv("Enterprise")[3]
+std_acv = plan_acv("Standard")[3]
+lora_add = SKU["lora_b"][2] * LORA_ATTACH
+print("  %-12s %43d  （付帯率%.0f%%）" % ("＋LoRA個別構築", lora_add, LORA_ATTACH * 100))
 print()
-print("  ★ 確認したい点")
-print("    1 チェックポイントと工程ツールを別売りにするか、束ねて1プランにするか")
-print("    2 LoRA個別構築は ② の売上か、① の制作案件に含めるか（副産物として作れる）")
-print("    3 法人を Enterprise / Standard の2階建てにするか（いまは1種類）")
+
+print("  期別の積み上げと、Ver1.4の一本値との突き合わせ")
+print("  %-22s" % "" + "".join("%10s" % y for y in Y))
+print("  " + "-" * 72)
+def row2(lab, vals, f="%10.0f"):
+    print("  %-22s" % lab + "".join(f % v for v in vals))
+ent_n = [round(CORP[i] * ENT_SHARE[i]) for i in range(5)]
+std_n = [CORP[i] - ent_n[i] for i in range(5)]
+acv = [((ent_n[i] * ent_acv + std_n[i] * std_acv) / CORP[i] + lora_add) if CORP[i] else 0
+       for i in range(5)]
+rev2 = [CORP[i] * acv[i] / 100.0 for i in range(5)]
+old2 = [CORP[i] * OLD_ACV[i] / 100.0 for i in range(5)]
+row2("法人契約数", CORP)
+row2("  Enterprise", ent_n)
+row2("  Standard", std_n)
+row2("積み上げACV(万)", acv)
+row2("Ver1.4の一本値(万)", OLD_ACV)
+row2("  差(万)", [acv[i] - OLD_ACV[i] for i in range(5)], "%+10.0f")
+row2("法人売上(百万)", rev2)
+row2("  Ver1.4(百万)", old2)
+print()
+print("  → 積み上げたACVは一本値を %+.0f〜%+.0f万でなぞる。数字を置き換えるのではなく再現できている。"
+      % (min(acv[i] - OLD_ACV[i] for i in range(1, 5)),
+         max(acv[i] - OLD_ACV[i] for i in range(1, 5))))
+print("     5期の法人売上は %.0f百万（Ver1.4は %.0f百万）。差 %+.0f百万。"
+      % (rev2[-1], old2[-1], rev2[-1] - old2[-1]))
+print()
+print("  個人向け（別売りの決定を反映）")
+print("  %-34s %-12s %8s" % ("チェックポイント 個人", "月額6,000円", 7.2))
+print("  %-34s %-12s %8s" % ("工程ツール 個人（1席）", "月額4,000円", 4.8))
+print("  %-34s %-12s %8s  ← Ver1.4の12万と一致" % ("計", "", 12.0))
 print()
 
 # ── 事業③ 越境C2C ────────────────────────────────────
