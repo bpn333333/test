@@ -430,19 +430,20 @@ M2 = sheet("商品マスタ②", [30, 16, 12, 12, 12, 12, 12, 10, 10, 40])
 title(M2, "② 制作ツール外販 — 商品別",
       "チェックポイントと工程ツールは別売り。LoRA個別構築は②の売上。法人は Enterprise / Standard の2階建て。"
       "★単価・席数・構成比は提案値。")
-header(M2, 3, ["商品", "課金形態", "単価(万円)", "", "", "", "", "", "", "中身"])
+header(M2, 3, ["商品", "課金形態", "単価(万円)", "継続/一過性", "", "", "", "", "", "中身"])
 SKU2 = [
-    ("チェックポイント Enterprise", "年額", 300, "全業種・商用利用"),
-    ("チェックポイント Standard", "年額", 100, "1業種"),
-    ("工程ツール（要件定義・自動チェック）", "月額2万/席", 24, "1席あたり年額"),
-    ("LoRA 年間保守", "年額", 24, "追加学習モデルの更新・再学習"),
-    ("LoRA 個別構築", "初期・都度", 80, "顧客のブランド・商品を学習"),
+    ("チェックポイント Enterprise", "年額", 300, "継続", "全業種・商用利用"),
+    ("チェックポイント Standard", "年額", 100, "継続", "1業種"),
+    ("工程ツール（要件定義・自動チェック）", "月額2万/席", 24, "継続", "1席あたり年額"),
+    ("LoRA 年間保守", "年額", 24, "継続", "追加学習モデルの更新・再学習"),
+    ("LoRA 個別構築", "初期・都度", 80, "一過性", "毎年は発生しない。ARRには入らない"),
 ]
 r = 4
-for name, kind, price, note in SKU2:
+for name, kind, price, rec, note in SKU2:
     put(M2, r, 1, name)
     put(M2, r, 2, kind, align="center")
     put(M2, r, 3, price, fmt=N, fill=INBG, align="right")
+    put(M2, r, 4, rec, align="center", font=F_R if rec == "一過性" else F_N)
     put(M2, r, 10, note, font=F_S)
     r += 1
 m2CPE, m2CPS, m2TOOL, m2LORAM, m2LORAB = 4, 5, 6, 7, 8
@@ -525,7 +526,35 @@ for i, c in enumerate(C5):
     put(M2, 38, 3 + i, "=%s%d+%s%d+%s%d" % (c, m2CORPREV, c, m2INDREV, c, m2SELF),
         fmt=N, fill=KEYBG, align="right", font=F_B)
 m2REV = 38
-put(M2, 40, 1, "②-C はここに置く（③ではなく）。ツール事業の倍率が当たる側で、会社の形も3事業のまま保てる。",
+band(M2, 41, "ARRベース（継続課金のみ）— Synthesia・HeyGenと同じ土俵で比べるための行")
+header(M2, 42, ["項目", ""] + Y + ["", "", "考え方"])
+put(M2, 47, 1, "②-C のうち継続課金の比率", font=F_B)
+put(M2, 47, 2, 0.50, fmt=P, fill=INBG, align="right")
+put(M2, 47, 10, "★月額980円と都度1,500円/本の混合。都度分はARRに入らない", font=F_S)
+m2SUBSH = 47
+ARRD = [
+    (43, "法人ARR / 社（万円）", "=IF(C19=0,0,C23-$C$15)", "積み上げACVから LoRA個別構築の20万を除く"),
+    (44, "法人ARR（百万円）", "=C19*C43/100", ""),
+    (45, "② ARR 合計（百万円）", "=C44+C27+C35*$B$47", "法人ARR ＋ 個人 ＋ セルフサーブの継続分"),
+    (46, "一過性収入（百万円）", "=C38-C45", "LoRA個別構築とセルフサーブの都度課金"),
+]
+for rr, name, f, note in ARRD:
+    put(M2, rr, 1, name, font=F_B if "合計" in name else F_N)
+    put(M2, rr, 2, "")
+    for i, c in enumerate(C5):
+        ff = f
+        for src in ["C19", "C23", "C27", "C35", "C38", "C43", "C44", "C45"]:
+            ff = ff.replace(src, c + src[1:])
+        put(M2, rr, 3 + i, ff, fmt=N, align="right",
+            fill=KEYBG if "ARR 合計" in name else CALCBG,
+            font=F_B if "ARR 合計" in name else F_N)
+    if note:
+        put(M2, rr, 10, note, font=F_S)
+m2ARR = 45
+put(M2, 49, 1, "② 売上（ACVベース）と ② ARR の差が一過性収入。投資家に「御社のARRは？」と聞かれたら下の行を答える。"
+             "デッキで Synthesia 210億・HeyGen 300億と並べているが、あちらの公表値はARRなので揃える必要がある。",
+    font=F_S, border=False)
+put(M2, 51, 1, "②-C はここに置く（③ではなく）。ツール事業の倍率が当たる側で、会社の形も3事業のまま保てる。",
     font=F_S, border=False)
 
 # ══════════════════════════════════════════════════════════════
@@ -1047,7 +1076,7 @@ put(B, r, 3, "①制作＋②ツール＋③C2C", font=F_R)
 put(B, r, 4, "本計画", font=F_S)
 r += 2
 for lab, f in [("① 制作 ÷ 東北新社", "=損益計算書!$G$%d/100/477" % RL["p1"]),
-               ("② ツール ÷ Synthesia", "=損益計算書!$G$%d/100/210" % RL["p2"])]:
+               ("② ツール（ARRベース）÷ Synthesia", "=商品マスタ②!$G$45/100/210")]:
     put(B, r, 1, lab, font=F_B, border=False)
     put(B, r, 2, f, fmt=P, align="right")
     r += 1
