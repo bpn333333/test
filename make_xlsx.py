@@ -620,7 +620,7 @@ for name, grp, hmin, hmax, pmax, cnt, why in S3:
     put(M3, r, 2, grp, align="center", font=F_B)
     put(M3, r, 3, hmin, fmt="0.0", fill=INBG, align="right")
     put(M3, r, 4, hmax, fmt="0.0", fill=INBG, align="right")
-    put(M3, r, 5, "=ROUNDUP(クリエイター経済!$B$10*D%d/(1-$B$26)/500,0)*500" % r,
+    put(M3, r, 5, "=ROUNDUP(クリエイター経済!$B$10*D%d/(1-$B$28)/500,0)*500" % r,
         fmt=N, fill=CALCBG, align="right")
     put(M3, r, 6, pmax, fmt=N, fill=KEYBG, align="right", font=F_B)
     put(M3, r, 7, "=(E%d+F%d)/2" % (r, r), fmt=N, align="right", font=F_S)
@@ -637,22 +637,28 @@ for i, (g, lab) in enumerate([("A", "小計 ③-A 個人パッケージ"), ("B",
     for col, ch in [(8, "H"), (9, "I"), (10, "J")]:
         put(M3, rr, col, '=SUMIF($B$5:$B$18,"%s",%s$5:%s$18)' % (g, ch, ch),
             fmt=M if col == 10 else N, align="right", font=F_B, fill=CALCBG)
-put(M3, 23, 1, "合計", font=F_B)
+put(M3, 23, 1, "合計（②-Cの共食い前）", font=F_B)
 for col, ch in [(8, "H"), (9, "I"), (10, "J")]:
     put(M3, 23, col, "=SUM(%s20:%s22)" % (ch, ch), fmt=M if col == 10 else N,
         align="right", font=F_B, fill=KEYBG)
 m3A, m3B, m3C, m3TOT = 20, 21, 22, 23
+# 期別の GMV と突き合わせるための調整行（見えないと合わない）
+put(M3, 24, 1, "　− ②-Cセルフサーブによる共食い（③-A）", font=F_N)
+put(M3, 24, 10, "=-J20*G35", fmt=M, align="right", font=F_R)
+put(M3, 24, 11, "③-Aの安い帯が②-Cに流れる分。下の期別GMVはこれを引いた後", font=F_S)
+put(M3, 25, 1, "5期GMV（共食い後）＝下の期別G列と一致", font=F_B)
+put(M3, 25, 10, "=J23+J24", fmt=M, align="right", font=F_B, fill=KEYBG)
 
-band(M3, 25, "手数料と原価率")
+band(M3, 27, "手数料と原価率")
 for i, (lab, v, note) in enumerate([
         ("手数料率", 0.30, "一律30%。70%をクリエイターに渡す（松田さん決定）"),
         ("決済手数料率", 0.0318, "Stripe 国内カード3.6%／銀行振込1.5% を 80:20 で加重"),
         ("送金・為替", 0.03, "中国の制作パートナー経由（松田さん指示）")]):
-    rr = 26 + i
+    rr = 28 + i
     put(M3, rr, 1, lab, font=F_B)
     put(M3, rr, 2, v, fmt="0.00%", fill=INBG, align="right")
     put(M3, rr, 11, note, font=F_S)
-m3TAKE, m3PAY, m3REMIT = 26, 27, 28
+m3TAKE, m3PAY, m3REMIT = 28, 29, 30
 
 band(M3, 30, "期別")
 header(M3, 31, ["項目", ""] + Y + ["", "", "考え方"])
@@ -678,8 +684,8 @@ ROWS3 = [
     ("③-C GMV（百万円）", "=$J$22*C34"),
     ("GMV 合計", "=C36+C37+C38"),
     ("取引件数", "=$H$20*C32*(1-C35)+$H$21*C33+$H$22*C34"),
-    ("③ 売上（手数料30%）", "=C39*$B$26"),
-    ("　− 決済・送金・システム", "=C39*($B$27+$B$28)+C40*システム原価!$H$%d/1000000" % SC_AVG),
+    ("③ 売上（手数料30%）", "=C39*$B$28"),
+    ("　− 決済・送金・システム", "=C39*($B$29+$B$30)+C40*システム原価!$H$%d/1000000" % SC_AVG),
     ("売上総利益", "=C41-C42"),
     ("年間工数（時間）", "=$I$20*C32*(1-C35)+$I$21*C33+$I$22*C34"),
 ]

@@ -122,7 +122,7 @@ gc = series("商品マスタ③", "③-C GMV（百万円）")
 gmv = series("商品マスタ③", "GMV 合計")
 eq("商品マスタ③: GMV計 ＝ A＋B＋C", gmv, add(ga, gb, gc))
 
-take = val("商品マスタ③", "B26")
+take = val("商品マスタ③", "B28")
 m3rev = series("商品マスタ③", "③ 売上（手数料30%）")
 eq("商品マスタ③: 売上 ＝ GMV × 手数料率", m3rev, [gmv[i] * take for i in range(5)])
 
@@ -134,6 +134,8 @@ ws = wb["商品マスタ③"]
 sumJ = sum(val("商品マスタ③", "J%d" % r) for r in range(5, 19))
 totJ = val("商品マスタ③", "J23")
 eq("商品マスタ③: 合計GMV ＝ 14商品の和", [totJ], [sumJ], tol=1.0)
+adjJ = val("商品マスタ③", "J25")
+eq("商品マスタ③: 共食い後の5期GMV ＝ 期別GMVの5期", [adjJ], [val("商品マスタ③", "G39")], tol=1.0)
 for r in range(5, 19):
     f, h, j = val("商品マスタ③", "F%d" % r), val("商品マスタ③", "H%d" % r), val("商品マスタ③", "J%d" % r)
     if abs(f * h / 1e6 - j) > 0.5:
