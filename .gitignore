@@ -11,3 +11,6 @@ deck/_*.py
 
 __pycache__/
 *.pyc
+
+# この案件と無関係（MT5のEA）
+trading-tools/
