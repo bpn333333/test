@@ -40,9 +40,21 @@ print()
 print("  ③は1人のクリエイターが完結する仕事なので、発注額はこの時給に工数を掛けたものになる。")
 print("  価格の幅＝「工数の幅 × 時給の幅（新人1,600円〜熟練3,500円）」。")
 print()
+print("  手数料30%・クリエイター70%なので、発注額 ＝ 時給 × 工数 ÷ 0.70。")
+print("  （20%だったときより発注額は 0.80/0.70 = 1.14倍になる。クリエイターの受取は変えない）")
+print()
 
-TAKE_PKG = 0.20
-TAKE_CUSTOM = 0.15
+# 松田さんの決定（2026-09-23）: 手数料は一律30%。70%をクリエイターに渡す。
+# 30%から決済手数料・送金手数料・システム原価を引いたものが粗利。
+TAKE_PKG = 0.30
+TAKE_CUSTOM = 0.30
+
+# 30%の中身（すべてGMV比。★は［仮置き］）
+PAY_CARD, PAY_CARD_MIX = 0.036, 0.80    # Stripe 国内カード 3.6%
+PAY_BANK, PAY_BANK_MIX = 0.015, 0.20    # Stripe 銀行振込 1.5%
+PAY_FEE = PAY_CARD * PAY_CARD_MIX + PAY_BANK * PAY_BANK_MIX
+REMIT_FEE = 0.015                        # ★中国の制作パートナー経由の送金・為替
+SYS_COST_PER_TXN = 120                   # ★円/件。サーバー・AI-bot推論・ストレージ・CDN
 
 # ③は「1人のクリエイターが完結する」仕事（松田さんの定義）。
 # だから価格は工数に連動する。単純な案件＝短時間＝安い、複雑な案件＝長時間＝高い。
@@ -53,6 +65,7 @@ HOURLY_HI = 3500      # ★熟練クリエイター。月20,000元相当×フリ
 
 def price_range(hmin, hmax, take):
     """価格帯 ＝ 1人のクリエイターの工賃 ÷ (1 − 手数料率)
+       手数料が20%→30%に上がると、同じ工賃を渡すために発注額は上がる
        下限: 単純な案件を新人が受ける    上限: 複雑な案件を熟練が受ける"""
     lo = HOURLY_LO * hmin / (1 - take)
     hi = HOURLY_HI * hmax / (1 - take)
@@ -204,6 +217,51 @@ print("=" * 100)
 print()
 print("  plan用: GMV = %s" % [round(x) for x in gmv_y])
 print("  plan用: C2C = %s" % [round(x) for x in rev_y])
+
+print()
+print("=" * 100)
+print("30%の中身 — 何が引かれて、いくら残るか")
+print("=" * 100)
+avg = gmv5 * 1e6 / cnt5
+print("  1件あたり（期待単価 %s円）" % f"{avg:,.0f}")
+print("  " + "-" * 62)
+print("  %-34s %12s  %7s" % ("発注者が支払う額（GMV）", f"{avg:,.0f}円", "100.0%"))
+print("  %-34s %12s  %7s" % ("  クリエイターへ（70%）", f"{-avg * 0.70:,.0f}円", "-70.0%"))
+print("  %-34s %12s  %7s" % ("当社の手数料収入（30%）", f"{avg * 0.30:,.0f}円", " 30.0%"))
+items = [("決済手数料（Stripe 加重%.2f%%）" % (PAY_FEE * 100), avg * PAY_FEE),
+         ("送金・為替（中国パートナー経由）★", avg * REMIT_FEE),
+         ("システム原価（サーバー・推論・CDN）★", SYS_COST_PER_TXN)]
+cogs = 0
+for nm, v in items:
+    cogs += v
+    print("  %-34s %12s  %7s" % ("  − " + nm, f"{-v:,.0f}円", "%.1f%%" % (-v / avg * 100)))
+gp = avg * 0.30 - cogs
+print("  " + "-" * 62)
+print("  %-34s %12s  %7s" % ("売上総利益", f"{gp:,.0f}円", "%.1f%%" % (gp / avg * 100)))
+print("  %-34s %12s" % ("  手数料収入に対する粗利率", "%.1f%%" % (gp / (avg * 0.30) * 100)))
+print()
+
+print("  期別（百万円）")
+print("  %-24s" % "" + "".join("%11s" % y for y in Y))
+print("  " + "-" * 80)
+cogs_y = [gmv_y[i] * (PAY_FEE + REMIT_FEE) + cnt_y[i] * SYS_COST_PER_TXN / 1e6 for i in range(5)]
+gp_y = [rev_y[i] - cogs_y[i] for i in range(5)]
+def r3(lab, v, f="%11.0f"):
+    print("  %-24s" % lab + "".join(f % x for x in v))
+r3("GMV", gmv_y)
+r3("③ 売上（手数料30%）", rev_y)
+r3("  − 決済・送金・システム", cogs_y)
+r3("売上総利益", gp_y)
+r3("  粗利率（対 手数料収入）", [g / r * 100 if r else 0 for g, r in zip(gp_y, rev_y)], "%10.1f%%")
+print()
+print("  plan用: C2C_GP_RATE = %s" % [round(g / r, 3) if r else 0 for g, r in zip(gp_y, rev_y)])
+print()
+print("  → 粗利率は %.0f%%前後。従来モデルで置いていた85%%より低い。"
+      % (gp_y[-1] / rev_y[-1] * 100))
+print("     決済手数料はGMV比で効くので、**単価が下がるほど粗利率が悪化する**構造。"
+      .replace("**", ""))
+print("     システム原価が件数比なので、安い案件ほど重い。1件120円は 1,000円の案件では12%%。")
+
 print()
 print("=" * 100)
 print("⚠ この積み上げの弱点")

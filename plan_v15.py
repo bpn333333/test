@@ -74,8 +74,9 @@ SELF = [0, 6, 29, 78, 160]
 # ★手数料率はパッケージ20%・オーダーメイド15%（要判断）。一律18%なら C2C_FLAT を使う
 # c2c.py の積み上げ（クリエイター側の受注判断から価格帯を決め、期待値で置いたもの）
 # ②-C セルフサーブの共食いは c2c.py 側で既に差し引き済み
-GMV = [6, 66, 460, 1290, 2185]
-C2C_BUILD = [1, 13, 84, 228, 382]
+GMV = [7, 76, 538, 1517, 2576]
+C2C_BUILD = [2, 23, 161, 455, 773]        # 手数料一律30%
+C2C_GP = [0.804, 0.813, 0.824, 0.827, 0.828]   # 30%から決済・送金・システム原価を引いた後
 OLD_GMV = [50, 400, 1600, 4500, 8300]   # Ver1.2の一本値（参考。ここには寄せない）
 CANNIB_GMV = [0, 0, 0, 0, 0]            # c2c.py で処理済み
 
@@ -111,7 +112,7 @@ def calc():
         p1 = UNITS[i] * PRICE[i] / 100.0
         rev = p1 + TOOL[i] + C2C[i]
         cu = cost_unit(AX[i], DIFF[i])
-        gp = p1 * (1 - cu / PRICE[i]) + TOOL[i] * 0.80 + C2C[i] * 0.85
+        gp = p1 * (1 - cu / PRICE[i]) + TOOL[i] * 0.80 + C2C[i] * C2C_GP[i]
         heads = sum(HEADS[r][i] for r in ROLE)
         pay = sum(HEADS[r][i] * ROLE[r] * BURDEN for r in ROLE) / 100.0
         acq = p1 * ACQ1 + TOOL[i] * ACQ2 + ACQF[i]
@@ -200,7 +201,7 @@ print("  AX倍率   ディレクション費/本   1本あたり原価   制作�
 print("  " + "-" * 74)
 for k in [1.0, 2.0, 3.0, 4.0]:
     cu = cost_unit(k, DIFF[-1])
-    gp = r["p1"] * (1 - cu / PRICE[-1]) + TOOL[-1] * 0.80 + C2C[-1] * 0.85
+    gp = r["p1"] * (1 - cu / PRICE[-1]) + TOOL[-1] * 0.80 + C2C[-1] * C2C_GP[-1]
     op = gp - r["pay"] - BPO[-1] - RND[-1] - r["acq"] - r["agf"] - r["sga"]
     mk = "  ←計画" if k == 4.0 else ("  ←ここでも成立" if k == 3.0 else "")
     print("  %.1f倍    %8.1f万          %7.1f万     %5.1f%%   %+8.0f百万   %6.1f%%%s"
