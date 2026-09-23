@@ -144,7 +144,7 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   s.addText("投資の期待値", { x:M+0.26, y:4.06, w:2.2, h:0.28, fontFace:F, fontSize:11, bold:true, color:INK, margin:0, isTextBox:true });
   s.addText("シード1.42億 → 上場後持分14.5%（ESOP10%・シリーズA・IPO公募20%で希薄化後）。出資から約4.9年",
     { x:M+0.26, y:4.40, w:2.4, h:0.46, fontFace:F, fontSize:8, color:MUTED, valign:"top", lineSpacingMultiple:1.2, margin:0, isTextBox:true });
-  const ex=[["45.8倍","449億（ライン別・保守）"],["55.8倍","546億（ライン別）"],["65.8倍","644億（ライン別・強気）"]];
+  const ex=[["45.9倍","449億（ライン別・保守）"],["55.9倍","546億（ライン別）"],["65.9倍","644億（ライン別・強気）"]];
   ex.forEach(function(e,i){
     const x=M+2.9+i*3.05;
     s.addText(e[0], { x, y:4.06, w:1.4, h:0.42, fontFace:F, fontSize:19, bold:true, color:VERM, valign:"middle", margin:0, isTextBox:true });
@@ -714,7 +714,7 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
     [{text:"業務委託 開発（ベトナム）",options:{color:MUTED}},"5","9","14","16","19"],
     [{text:"業務委託 ディレクション",options:{color:MUTED}},"1","5","16","25","28"],
     [{text:"業務委託 中国クリエイター（稼働）",options:{color:MUTED}},"3","26","155","410","681"],
-    [{text:"★ 売上／社員",options:{bold:true}},"900万","3,887万","1.59億","3.32億",{text:"5.25億",options:{bold:true,color:VERM}}],
+    [{text:"★ 売上／社員",options:{bold:true}},"900万","3,889万","1.59億","3.32億",{text:"5.25億",options:{bold:true,color:VERM}}],
   ];
   table(s, M, 3.20, W, rows, [3.6,1.6,1.6,1.6,1.6,1.63], 9.5, 0.34);
   warn(s, M, 5.42, (W-0.3)/2, 0.82, "社員はPM中心。開発も外に出します",
@@ -749,7 +749,7 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   card(s, cx, 1.6, cw, 1.02, "1〜2期 ― 仕組みを作る",
     ["制作60本→304本でデータを溜め、2期にツール外販を立ち上げ。研究開発に1.5億を先に入れます。"], VERM, 9.5);
   card(s, cx, 2.74, cw, 0.9, "3期 ― ツールが立ち上がる",
-    ["ツール外販5.6億・C2C7.9億。ここで黒字化します（＋5.0億・20.8%）。"], GOLD, 9.5);
+    ["ツール外販5.6億・C2C7.9億。ここで黒字化します（＋5.0億・20.9%）。"], GOLD, 9.5);
   card(s, cx, 3.76, cw, 1.14, "4〜5期 ― 回収",
     ["3期に黒字化。5期に年商115.4億・営業利益40.8億（35.3%）。社員は22名にとどめます。"], NAVY, 9.5);
   const rows=[
@@ -799,9 +799,9 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   sec(s, M, 3.20, W, "シード投資家のリターン — 上場後持分 14.5%（ESOP10%・シリーズA・IPO公募20%で希薄化後）");
   const rows=[
     hrow(["時価総額","根拠","シードの取り分","倍率"]),
-    ["449億","ツール6倍＋C2C4倍＋制作1.5倍（保守）","65.0億",{text:"45.8倍",options:{bold:true,color:VERM}}],
-    ["546億","ツール7倍＋C2C5倍＋制作2.0倍","79.2億",{text:"55.8倍",options:{bold:true,color:VERM}}],
-    ["644億","ツール8倍＋C2C6倍＋制作2.5倍（強気）","93.4億",{text:"65.8倍",options:{bold:true,color:VERM}}],
+    ["449億","ツール6倍＋C2C4倍＋制作1.5倍（保守）","65.2億",{text:"45.9倍",options:{bold:true,color:VERM}}],
+    ["546億","ツール7倍＋C2C5倍＋制作2.0倍","79.4億",{text:"55.9倍",options:{bold:true,color:VERM}}],
+    ["644億","ツール8倍＋C2C6倍＋制作2.5倍（強気）","93.6億",{text:"65.9倍",options:{bold:true,color:VERM}}],
   ];
   table(s, M, 3.52, W, rows, [2.0,5.4,2.4,2.23], 10, 0.40);
   warn(s, M, 5.04, (W-0.3)/2, 1.20, "維持基準は大きく超えます",
