@@ -736,7 +736,7 @@ for name, pay, heads, note in ROLES:
     put(H, r, 2, pay, fmt=N, fill=INBG, align="right")
     for i, c in enumerate(C5):
         if heads is None:
-            put(H, r, 3 + i, "=%s34" % c, fmt=N, fill=CALCBG, align="right", font=F_B)
+            put(H, r, 3 + i, "=%s35" % c, fmt=N, fill=CALCBG, align="right", font=F_B)
         else:
             put(H, r, 3 + i, heads[i], fmt=N, fill=INBG, align="right")
     put(H, r, 8, note, font=F_S)
@@ -787,19 +787,23 @@ put(H, 25, 2, "=SUMPRODUCT(B21:B23,D21:D23)*12", fmt=N, fill=CALCBG, align="righ
 put(H, 26, 1, "リード級 加重（万円/年）", font=F_B)
 put(H, 26, 2, "=SUMPRODUCT(C21:C23,D21:D23)*12", fmt=N, fill=KEYBG, align="right", font=F_B)
 put(H, 26, 8, "AX前提はこちらを使う。人数を減らすかわりに上位層に絞る", font=F_S)
-put(H, 27, 1, "⚠ 安い順は ミャンマー＜インド＜フィリピン＜ベトナム＜中国＜東欧。"
-             "中国も東欧もアジア最安ではない。「中国が安い」のは剪辑師（月18.8万）の話で、"
-             "エンジニアの受託単価ではない。", font=F_R, border=False)
+put(H, 27, 1, "⚠ 安い順は ミャンマー(40)＜インド(45)＜フィリピン(47.5)＜ベトナム(50)＜中国(71.7)＜東欧(104)。"
+             "「中国が安い」のは剪辑師（月18.8万）の話で、エンジニアの受託単価ではない。",
+    font=F_R, border=False)
+put(H, 28, 1, "⚠ ロシア・ベラルーシは対象外。外為法の役務取引規制（2022/3/18〜）で経産大臣の許可制、"
+             "限定的な例外を除き許可されない。送金も通らない。単価の問題ではなく、"
+             "上場審査で主幹事・監査法人が必ず見る論点。ミャンマーは最安だが政情リスクで△。",
+    font=F_R, border=False)
 HOFF_RATE = 26
 
-band(H, 29, "エンジニアのAX化 — 人数を減らして単価を上げる")
-header(H, 30, ["項目", ""] + Y + ["考え方"])
+band(H, 30, "エンジニアのAX化 — 人数を減らして単価を上げる")
+header(H, 31, ["項目", ""] + Y + ["考え方"])
 OFFD = [
-    (31, "必要開発工数（AXなし換算・人年）", [5, 10, 20, 30, 40], None, "★プロダクト規模から"),
-    (32, "★ エンジニアのAX倍率", [1.0, 1.3, 1.7, 2.1, 2.5], None, "★制作のAX（5期4.0倍）より保守的に置く"),
-    (33, "実エンジニア数（委託）", None, "=ROUNDUP(C31/C32,0)", "必要工数 ÷ AX倍率"),
-    (34, "PM（社員）", None, "=ROUNDUP(C33/5,0)", "1名で5名を見る。上の人件費表はここを参照"),
-    (35, "開発委託費（百万円）", None, "=C33*$B$26/100", "実人数 × リード級の年額"),
+    (32, "必要開発工数（AXなし換算・人年）", [5, 10, 20, 30, 40], None, "★プロダクト規模から"),
+    (33, "★ エンジニアのAX倍率", [1.0, 1.3, 1.7, 2.1, 2.5], None, "★制作のAX（5期4.0倍）より保守的に置く"),
+    (34, "実エンジニア数（委託）", None, "=ROUNDUP(C32/C33,0)", "必要工数 ÷ AX倍率"),
+    (35, "PM（社員）", None, "=ROUNDUP(C34/5,0)", "1名で5名を見る。上の人件費表はここを参照"),
+    (36, "開発委託費（百万円）", None, "=C34*$B$26/100", "実人数 × リード級の年額"),
 ]
 for rr, name, vals, f, note in OFFD:
     put(H, rr, 1, name, font=F_B if "委託費" in name else F_N)
@@ -813,8 +817,8 @@ for rr, name, vals, f, note in OFFD:
                 fill=KEYBG if "委託費" in name else CALCBG,
                 font=F_B if "委託費" in name else F_N)
     put(H, rr, 8, note, font=F_S)
-HOFF_COST = 35
-put(H, 37, 1, "旧構成は社員40名。PM4名＋委託16名になる。単価は年808万→926万に上げても、"
+HOFF_COST = 36
+put(H, 38, 1, "旧構成は社員40名。PM4名＋委託16名になる。単価は年808万→926万に上げても、"
              "委託費は5期300→148百万。1〜2期は逆に高くつく（AX倍率が立つ前に単価だけ上がるため）。"
              "制作のAXと同じ形で、先に投資して後で効く。", font=F_S, border=False)
 
