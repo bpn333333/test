@@ -136,15 +136,15 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   lede(s, 1.44, ["5年後・2031年、東証グロース市場への上場を目指す。",
     "日本企業から映像制作を受注し、そこで溜まったデータを特許とモデルに変えて、世界へ売る。"]);
   const y0=2.46, h=1.40, w=(W-0.6)/3;
-  stat(s, M,           y0, w, h, "社員22名", "5期の体制で、年商100.2億", "売上/社員 4.56億。制作も開発も業務委託と自動化で回す", VERM);
-  stat(s, M+w+0.3,     y0, w, h, "91%",     "人手に比例しない収益（5期）", "② ツール外販37.5億 ＋ ③ C2C 27.5億 ＋ ①のAXで比例が切れた分", NAVY);
+  stat(s, M,           y0, w, h, "社員22名", "5期の体制で、年商115.4億", "売上/社員 5.25億。制作も開発も業務委託と自動化で回す", VERM);
+  stat(s, M+w+0.3,     y0, w, h, "92%",     "人手に比例しない収益（5期）", "② ツール外販37.5億 ＋ ③ C2C 42.7億 ＋ ①のAXで比例が切れた分", NAVY);
   stat(s, M+(w+0.3)*2, y0, w, h, "1.5億円",  "今回の調達目標", "追加はシリーズA 3億のみ。累計4.5億で上場まで届く設計", GOLD);
 
   s.addShape(p.ShapeType.rect, { x:M, y:4.00, w:W, h:0.92, fill:{color:SOFT2} });
   s.addText("投資の期待値", { x:M+0.26, y:4.06, w:2.2, h:0.28, fontFace:F, fontSize:11, bold:true, color:INK, margin:0, isTextBox:true });
   s.addText("シード1.42億 → 上場後持分14.5%（ESOP10%・シリーズA・IPO公募20%で希薄化後）。出資から約4.9年",
     { x:M+0.26, y:4.40, w:2.4, h:0.46, fontFace:F, fontSize:8, color:MUTED, valign:"top", lineSpacingMultiple:1.2, margin:0, isTextBox:true });
-  const ex=[["39.6倍","388億（ライン別・保守）"],["48.0倍","470億（ライン別）"],["56.5倍","553億（ライン別・強気）"]];
+  const ex=[["45.8倍","449億（ライン別・保守）"],["55.8倍","546億（ライン別）"],["65.8倍","644億（ライン別・強気）"]];
   ex.forEach(function(e,i){
     const x=M+2.9+i*3.05;
     s.addText(e[0], { x, y:4.06, w:1.4, h:0.42, fontFace:F, fontSize:19, bold:true, color:VERM, valign:"middle", margin:0, isTextBox:true });
@@ -161,7 +161,7 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
      "日本企業は中華圏に直接発注しない。言語・商習慣・品質保証・契約が壁。",
      "その壁を引き受けることが商品。"], NAVY, 8.5, SOFT2);
   card(s, M+(w2+0.3)*2, y1, w2, h2, "どこへ向かうか",
-    ["3期に黒字化、5年目に年商100.2億・営業利益29.5億（29.4%）。",
+    ["3期に黒字化、5年目に年商115.4億・営業利益40.8億（35.3%）。",
      "①は東北新社の7%の規模にとどめ、②③で伸ばす。社員を増やさずに伸びる形をつくる。"], GOLD, 8.5, SOFT2);
   foot(s, "収支は［仮置き］を含む計画値です。投資の期待値は計画達成時の試算であり、利回りの保証ではありません。倍率は市況で変動します");
 }
@@ -281,12 +281,12 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   warn(s, M+(W-0.3)/2+0.3, 4.18, (W-0.3)/2, 1.10, "日本では、上場している映像制作会社が減っています",
     ["AOI TYOは2021年に非上場化、IMAGICA GROUPも2026年にTOBで非上場化が進行中。",
      "人手に比例する事業のままでは上場を維持しにくい、ということです。だから当社は②③を持ちます。"]);
-  sec(s, M, 5.42, W, "当社の5期 100.2億が立つ位置（億円）");
+  sec(s, M, 5.42, W, "当社の5期 115.4億が立つ位置（億円）");
   const bw2=(W-0.6)/2;
   hbar(s, M,          5.74, bw2, 0.30, 1.00, "東北新社（広告・企業映像）", "477", BAR, 2.9);
   hbar(s, M,          6.06, bw2, 0.30, 0.44, "HeyGen（AI動画・ARR）", "300", BAR, 2.9);
   hbar(s, M+bw2+0.6, 5.74, bw2, 0.30, 0.44, "Synthesia（AI動画・ARR）", "210", BAR, 2.9);
-  hbar(s, M+bw2+0.6, 6.06, bw2, 0.30, 0.210, "当社 5期（うち①制作は35.2）", "100", VERM, 2.9);
+  hbar(s, M+bw2+0.6, 6.06, bw2, 0.30, 0.242, "当社 5期（うち①制作は35.2）", "115", VERM, 2.9);
   foot(s, "出所: irbank（各社の直近通期）／ IMAGICA GROUP は第1四半期222億からの推計・TOBにより通期予想は非開示 ／ HeyGen公式・Upstarts Media・YipitData（ARR）／ WPP・Publicis 公式。為替は1ドル=150円");
 }
 
@@ -441,17 +441,17 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
     "そして浮いた分は、人件費の節約として持たずに研究開発へ戻します。"]);
   const rows=[
     hrow(["AX倍率","ディレクション費／本","1本あたり原価","制作の粗利率","5期の営業利益","営業利益率"]),
-    [{text:"1.0倍（AXなし）",options:{bold:true}},"31.0万（8時間相当）","55.0万","41.8%","+20.8億",{text:"20.8%",options:{bold:true,color:MUTED}}],
-    ["2.0倍","15.5万","39.5万","58.2%","+26.6億","26.5%"],
-    [{text:"3.0倍（ここでも成立）",options:{bold:true,color:NAVY}},{text:"10.3万",options:{color:NAVY}},{text:"34.4万",options:{color:NAVY}},{text:"63.6%",options:{color:NAVY}},{text:"+28.5億",options:{color:NAVY}},{text:"37.0%",options:{bold:true,color:NAVY}}],
-    [{text:"4.0倍（計画）",options:{bold:true,color:VERM}},{text:"7.8万（2時間相当）",options:{bold:true,color:VERM}},{text:"31.8万",options:{bold:true,color:VERM}},{text:"66.4%",options:{bold:true,color:VERM}},{text:"+29.5億",options:{bold:true,color:VERM}},{text:"29.4%",options:{bold:true,color:VERM}}],
+    [{text:"1.0倍（AXなし）",options:{bold:true}},"31.0万（8時間相当）","55.0万","41.8%","+32.1億",{text:"27.8%",options:{bold:true,color:MUTED}}],
+    ["2.0倍","15.5万","39.5万","58.2%","+37.9億","32.8%"],
+    [{text:"3.0倍（ここでも成立）",options:{bold:true,color:NAVY}},{text:"10.3万",options:{color:NAVY}},{text:"34.4万",options:{color:NAVY}},{text:"63.6%",options:{color:NAVY}},{text:"+39.8億",options:{color:NAVY}},{text:"37.0%",options:{bold:true,color:NAVY}}],
+    [{text:"4.0倍（計画）",options:{bold:true,color:VERM}},{text:"7.8万（2時間相当）",options:{bold:true,color:VERM}},{text:"31.8万",options:{bold:true,color:VERM}},{text:"66.4%",options:{bold:true,color:VERM}},{text:"+40.8億",options:{bold:true,color:VERM}},{text:"35.3%",options:{bold:true,color:VERM}}],
   ];
   table(s, M, 2.62, W, rows, [2.3,2.6,1.9,1.6,1.8,1.83], 10, 0.44);
   warn(s, M, 4.66, (W-0.3)/2, 1.12, "★ 4.0倍は現時点の仮置きです。実測して更新します",
     ["1期の最初の20案件で、着手から検収までのディレクション実工数を案件ごとに記録。",
-     "2027年6月までに実測値へ差し替えます。AXなし（1倍）でも営業利益率20.8%で成立する構造です。"]);
+     "2027年6月までに実測値へ差し替えます。AXなし（1倍）でも営業利益率27.8%で成立する構造です。"]);
   warn(s, M+(W-0.3)/2+0.3, 4.66, (W-0.3)/2, 1.12, "浮いた分は研究開発に戻します",
-    ["5期の研究開発費は16億、売上の16.0%。モデルが強くなる→AX倍率が上がる→原価が下がる→さらに戻せる。",
+    ["5期の研究開発費は16億、売上の13.9%。モデルが強くなる→AX倍率が上がる→原価が下がる→さらに戻せる。",
      "この循環が、他社が同じ年数をかけないと追いつけない理由です。"]);
   sec(s, M, 5.96, W, "1本あたりの原価（単価94.5万・AX4倍・難度1.55）：クリエイター18.6万 ／ ディレクション7.8万 ／ ツール・バッファ5.4万 ＝ 31.8万");
   foot(s, "★ AX倍率は現時点で未実証の仮置きです。シード期間中（〜2027年6月）に20案件で実測し、以後は実測値で更新します。計測は案件管理台帳に工数を記録する方式（マイルストーン参照）");
@@ -460,7 +460,7 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
 /* ═══════════ 12. ユニットエコノミクス ═══════════ */
 {
   const s = base(false);
-  head(s, 3, "ユニットエコノミクス", "売上100.2億が何の積み上げなのかを、1本・1契約・1取引あたりで示します");
+  head(s, 3, "ユニットエコノミクス", "売上115.4億が何の積み上げなのかを、1本・1契約・1取引あたりで示します");
   s.addText("① 映像制作 — 1本あたり（単価94.5万・AX4倍）", { x:M, y:1.52, w:6.0, h:0.3, fontFace:F, fontSize:11, bold:true, color:VERM, margin:0, isTextBox:true });
   const rowsA=[
     hrow(["","金額","誰が受け取るか"]),
@@ -486,20 +486,20 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   s.addText("③ 越境C2C発注 — 1取引あたり", { x:M, y:4.18, w:6.0, h:0.3, fontFace:F, fontSize:11, bold:true, color:NAVY, margin:0, isTextBox:true });
   const rowsC=[
     hrow(["","金額","備考"]),
-    ["発注者が支払う額（GMV）","9.6万","14商品。1万円〜100万円"],
-    [{text:"当社の取引手数料 30%",options:{bold:true,color:NAVY}},{text:"2.9万",options:{bold:true,color:NAVY}},"70%はクリエイターへ渡す"],
-    [{text:"★ ToC＝上限／ToB＝中点",options:{bold:true,color:VERM}},{text:"採用済み",options:{color:VERM}},{text:"個人向けは定価。法人向けは相見積もりが入るので中点",options:{color:VERM}}],
-    [{text:"売上総利益",options:{bold:true,color:NAVY}},{text:"2.3万（79%）",options:{bold:true,color:NAVY}},{text:"決済・送金・システム原価を引いた後",options:{bold:true}}],
-    [{text:"5期 年95,200件",options:{bold:true}},{text:"→ 27.5億",options:{bold:true,color:NAVY}},"GMV 91.8億"],
+    ["発注者が支払う額（GMV）","15.0万","14商品。1万円〜100万円"],
+    [{text:"当社の取引手数料 30%",options:{bold:true,color:NAVY}},{text:"4.5万",options:{bold:true,color:NAVY}},"70%はクリエイターへ渡す"],
+    [{text:"★ ToC・ToBとも上限成約",options:{bold:true,color:VERM}},{text:"採用済み",options:{color:VERM}},{text:"区分は買い手の違いを示すために残している",options:{color:VERM}}],
+    [{text:"売上総利益",options:{bold:true,color:NAVY}},{text:"3.56万（79%）",options:{bold:true,color:NAVY}},{text:"決済・送金・システム原価を引いた後",options:{bold:true}}],
+    [{text:"5期 年95,200件",options:{bold:true}},{text:"→ 42.7億",options:{bold:true,color:NAVY}},"GMV 142.5億"],
   ];
   table(s, M, 4.54, 6.0, rowsC, [2.2,1.3,2.5], 9, 0.32);
-  sec(s, M+6.3, 4.18, 5.73, "5期 売上100.2億の内訳");
-  hbar(s, M+6.3, 4.56, 5.73, 0.34, 1.00, "② ツール外販", "37.5億", GOLD, 2.4);
-  hbar(s, M+6.3, 4.94, 5.73, 0.34, 0.94, "① 映像制作 3,727本", "35.2億", VERM, 2.4);
-  hbar(s, M+6.3, 5.32, 5.73, 0.34, 0.73, "③ C2C手数料", "27.5億", NAVY, 2.4);
-  warn(s, M+6.3, 5.68, 5.73, 0.56, "②③で売上の65%。①のAX分を足すと91%",
+  sec(s, M+6.3, 4.18, 5.73, "5期 売上115.4億の内訳");
+  hbar(s, M+6.3, 4.56, 5.73, 0.34, 1.00, "③ C2C手数料", "42.7億", NAVY, 2.4);
+  hbar(s, M+6.3, 4.94, 5.73, 0.34, 0.88, "② ツール外販", "37.5億", GOLD, 2.4);
+  hbar(s, M+6.3, 5.32, 5.73, 0.34, 0.82, "① 映像制作 3,727本", "35.2億", VERM, 2.4);
+  warn(s, M+6.3, 5.68, 5.73, 0.56, "②③で売上の70%。①のAX分を足すと92%",
     ["人を増やさずに伸ばせる収益が、5期で9割を超えます。"]);
-  foot(s, "①の単価は企業の現行支払の50%。★③の価格は ToC＝上限成約／ToB＝中点成約 を採用しています（全件を上限で置いた場合は上振れシナリオとして別に持ちます）。本版の数値は上限成約のままです");
+  foot(s, "①の単価は企業の現行支払の50%。★③の価格は ToC・ToB とも上限成約（需要側の支払意思）を採用しています。本版の数値は上限成約のままです");
 }
 
 /* ═══════════ 13. 収益モデル ═══════════ */
@@ -510,7 +510,7 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
     hrow(["","収益ライン","型","開始","5期の売上","備考"]),
     [{text:"①",options:{bold:true,color:VERM}},{text:"AI映像制作の受注 → クリエイターへ配分",options:{bold:true}},"フロー",{text:"初日から",options:{bold:true}},{text:"35.2億",options:{bold:true,color:VERM}},"粗利率66%。事業の主体。ここでデータが溜まる"],
     [{text:"②",options:{bold:true,color:GOLD}},{text:"特許・制作用ツールの外販（国内・海外）",options:{bold:true}},"ストック",{text:"2期〜",options:{bold:true}},{text:"37.5億",options:{bold:true,color:GOLD}},"チェックポイント・LoRA・工程ツール。粗利率80%"],
-    [{text:"③",options:{bold:true,color:NAVY}},"越境C2C発注の取引手数料","ストック","6ヶ月目〜",{text:"27.5億",options:{bold:true,color:NAVY}},"手数料率30%。70%をクリエイターへ。②を外部に開放したもの"],
+    [{text:"③",options:{bold:true,color:NAVY}},"越境C2C発注の取引手数料","ストック","6ヶ月目〜",{text:"42.7億",options:{bold:true,color:NAVY}},"手数料率30%。70%をクリエイターへ。②を外部に開放したもの"],
   ];
   table(s, M, 1.58, W, rows, [0.7,4.0,1.0,1.2,1.3,3.83], 9.5, 0.46);
   sec(s, M, 3.56, 6.0, "②で売るもの — ①の制作で溜まったデータから作る");
@@ -714,7 +714,7 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
     [{text:"業務委託 開発（ベトナム）",options:{color:MUTED}},"5","9","14","16","19"],
     [{text:"業務委託 ディレクション",options:{color:MUTED}},"1","5","16","25","28"],
     [{text:"業務委託 中国クリエイター（稼働）",options:{color:MUTED}},"3","26","155","410","681"],
-    [{text:"★ 売上／社員",options:{bold:true}},"900万","3,742万","1.42億","2.90億",{text:"4.56億",options:{bold:true,color:VERM}}],
+    [{text:"★ 売上／社員",options:{bold:true}},"900万","3,887万","1.59億","3.32億",{text:"5.25億",options:{bold:true,color:VERM}}],
   ];
   table(s, M, 3.20, W, rows, [3.6,1.6,1.6,1.6,1.6,1.63], 9.5, 0.34);
   warn(s, M, 5.42, (W-0.3)/2, 0.82, "社員はPM中心。開発も外に出します",
@@ -730,15 +730,15 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   head(s, 7, "事業計画", "2期まで赤字、3期に黒字化。上場申請は5期です");
   const labels=["1期 2027/9","2期 2028/9","3期 2029/9","4期 2030/9","5期 2031/9"];
   s.addChart(p.ChartType.bar, [
-    { name:"売上高", labels, values:[45,336,2130,5797,10022] },
-    { name:"営業利益", labels, values:[-101,-146,311,1584,2947] },
+    { name:"売上高", labels, values:[45,350,2382,6643,11543] },
+    { name:"営業利益", labels, values:[-101,-136,498,2214,4078] },
   ], {
     x:M, y:1.6, w:6.6, h:3.3,
     barDir:"col", barGrouping:"clustered",
     chartColors:[NAVY, VERM],
     catAxisLabelFontFace:F, catAxisLabelFontSize:9, catAxisLabelColor:MUTED,
     valAxisLabelFontFace:F, valAxisLabelFontSize:9, valAxisLabelColor:MUTED,
-    valAxisMinVal:-400, valAxisMaxVal:10600,
+    valAxisMinVal:-400, valAxisMaxVal:12200,
     showValue:true, dataLabelFontFace:F, dataLabelFontSize:8, dataLabelColor:INKSOFT,
     showLegend:true, legendPos:"b", legendFontFace:F, legendFontSize:9,
     valGridLine:{ color:LINE, style:"solid", size:0.5 }, catGridLine:{ style:"none" },
@@ -749,16 +749,16 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   card(s, cx, 1.6, cw, 1.02, "1〜2期 ― 仕組みを作る",
     ["制作60本→304本でデータを溜め、2期にツール外販を立ち上げ。研究開発に1.5億を先に入れます。"], VERM, 9.5);
   card(s, cx, 2.74, cw, 0.9, "3期 ― ツールが立ち上がる",
-    ["ツール外販5.6億・C2C5.4億。ここで黒字化します（＋3.1億・14.6%）。"], GOLD, 9.5);
+    ["ツール外販5.6億・C2C7.9億。ここで黒字化します（＋5.0億・20.8%）。"], GOLD, 9.5);
   card(s, cx, 3.76, cw, 1.14, "4〜5期 ― 回収",
-    ["3期に黒字化。5期に年商100.2億・営業利益29.5億（29.4%）。社員は22名にとどめます。"], NAVY, 9.5);
+    ["3期に黒字化。5期に年商115.4億・営業利益40.8億（35.3%）。社員は22名にとどめます。"], NAVY, 9.5);
   const rows=[
     hrow(["","① 制作（本数）","② ツール ／ ③ C2C","人手に比例しない"]),
     ["1期","39（60本）","— ／ 6","13%"],
-    ["2期","230（304本）","46 ／ 61","55%"],
-    ["3期（N-2期）","1,040（1,213本）","555 ／ 535","78%"],
-    ["4期（N-1期）","2,266（2,529本）","1,933 ／ 1,596","87%"],
-    [{text:"5期（N期）→ 2031年 上場",options:{bold:true,color:VERM}},{text:"3,522（3,727本）",options:{bold:true}},{text:"3,746 ／ 2,754",options:{bold:true}},{text:"91%",options:{bold:true,color:VERM}}],
+    ["2期","230（304本）","46 ／ 74","56%"],
+    ["3期（N-2期）","1,040（1,213本）","555 ／ 786","80%"],
+    ["4期（N-1期）","2,266（2,529本）","1,933 ／ 2,442","89%"],
+    [{text:"5期（N期）→ 2031年 上場",options:{bold:true,color:VERM}},{text:"3,522（3,727本）",options:{bold:true}},{text:"3,746 ／ 4,274",options:{bold:true}},{text:"92%",options:{bold:true,color:VERM}}],
   ];
   table(s, M, 5.06, W, rows, [3.0,3.2,3.0,2.83], 10, 0.3);
   foot(s, "計画値。AX倍率・本数カーブ・ツールの契約数・③の価格と件数はすべて未実測の［仮置き］です。数字は 事業計画_Ver0.8.xlsx が計算しています");
@@ -784,29 +784,29 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
      "赤字が最大化する期に監査法人を確保できるかが関門です。シリーズAの契約書を持って臨みます。"]);
   warn(s, M, 4.96, W, 1.28, "ゴールは上場ではありません",
     ["グロースは2030年3月以降「上場5年経過後に時価総額100億円」の維持基準が新設されました。2031年上場なら2036年に100億円。",
-     "当社の想定時価総額は、保守的なライン別評価でも388億。維持基準100億に対して3.9倍のバッファがあります。"]);
+     "当社の想定時価総額は、保守的なライン別評価でも449億。維持基準100億に対して4.5倍のバッファがあります。"]);
   foot(s, "出所: 日本取引所グループ 上場維持基準。上場基準は改定が続くため、準備期に入る前に最新基準を再確認します");
 }
 
 /* ═══════════ 23. 出口とリターン ═══════════ */
 {
   const s = base(false);
-  head(s, 8, "出口とリターン", "5期の売上100.2億・営業利益29.5億を前提に試算しています");
+  head(s, 8, "出口とリターン", "5期の売上115.4億・営業利益40.8億を前提に試算しています");
   const y0=1.58, h=1.46, w=(W-0.6)/3;
-  stat(s, M,           y0, w, h, "388〜553億", "ライン別に倍率を分けた場合", "ツール6〜8倍＋C2C4〜6倍＋制作1.5〜2.5倍。証券会社が実際にやる見方", VERM);
-  stat(s, M+w+0.3,     y0, w, h, "401〜501億", "全社にPSR4〜5倍", "人手に比例しない収益が91%であることを根拠にする", NAVY);
-  stat(s, M+(w+0.3)*2, y0, w, h, "4.56億", "売上／社員（5期）", "社員22名で年商100.2億。国内SaaSの平均2,000〜4,000万に対して桁が違う", GOLD);
+  stat(s, M,           y0, w, h, "449〜644億", "ライン別に倍率を分けた場合", "ツール6〜8倍＋C2C4〜6倍＋制作1.5〜2.5倍。証券会社が実際にやる見方", VERM);
+  stat(s, M+w+0.3,     y0, w, h, "462〜577億", "全社にPSR4〜5倍", "人手に比例しない収益が92%であることを根拠にする", NAVY);
+  stat(s, M+(w+0.3)*2, y0, w, h, "5.25億", "売上／社員（5期）", "社員22名で年商115.4億。国内SaaSの平均2,000〜4,000万に対して桁が違う", GOLD);
   sec(s, M, 3.20, W, "シード投資家のリターン — 上場後持分 14.5%（ESOP10%・シリーズA・IPO公募20%で希薄化後）");
   const rows=[
     hrow(["時価総額","根拠","シードの取り分","倍率"]),
-    ["388億","ツール6倍＋C2C4倍＋制作1.5倍（保守）","56.2億",{text:"39.6倍",options:{bold:true,color:VERM}}],
-    ["470億","ツール7倍＋C2C5倍＋制作2.0倍","68.2億",{text:"48.0倍",options:{bold:true,color:VERM}}],
-    ["553億","ツール8倍＋C2C6倍＋制作2.5倍（強気）","80.2億",{text:"56.5倍",options:{bold:true,color:VERM}}],
+    ["449億","ツール6倍＋C2C4倍＋制作1.5倍（保守）","65.0億",{text:"45.8倍",options:{bold:true,color:VERM}}],
+    ["546億","ツール7倍＋C2C5倍＋制作2.0倍","79.2億",{text:"55.8倍",options:{bold:true,color:VERM}}],
+    ["644億","ツール8倍＋C2C6倍＋制作2.5倍（強気）","93.4億",{text:"65.8倍",options:{bold:true,color:VERM}}],
   ];
   table(s, M, 3.52, W, rows, [2.0,5.4,2.4,2.23], 10, 0.40);
   warn(s, M, 5.04, (W-0.3)/2, 1.20, "維持基準は大きく超えます",
-    ["グロースの「上場5年経過後に時価総額100億円」に対し、保守的な388億でも3.9倍のバッファ。",
-     "上場時の創業者持分は42%前後、評価額は約163億（388億のとき）を想定しています。"]);
+    ["グロースの「上場5年経過後に時価総額100億円」に対し、保守的な449億でも4.5倍のバッファ。",
+     "上場時の創業者持分は42%前後、評価額は約189億（449億のとき）を想定しています。"]);
   warn(s, M+(W-0.3)/2+0.3, 5.04, (W-0.3)/2, 1.20, "すべて「計画が達成された場合」の試算です",
     ["②のツール外販37.5億は海外展開が前提で、Synthesia 210億の18%にあたる規模です。",
      "2025年のグロースIPOは18社（前年34社から半減）。倍率は市況で変動し、利回りの保証ではありません。"]);
@@ -824,13 +824,13 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
     ["2027/4-9","C2C発注PFの公開（6ヶ月目）・D案IPの投入",{text:"★ AX倍率を20案件で確定（〜6月）／制作 1期60本／登録30名",options:{bold:true,color:VERM}}],
     ["2期","制作304本・ツール外販の立ち上げ","AX 1.5倍／ツール外販 法人15社／シリーズA 3億／監査法人SR"],
     ["3期","制作1,213本・黒字化・ツールの海外展開に着手","AX 2.2倍／ツール5.6億／通期黒字／監査開始"],
-    ["4期","制作2,529本・スケール","AX 3.0倍／ツール19.3億／C2C 16.0億／流通株式25%の設計合意"],
-    [{text:"5期",options:{bold:true,color:VERM}},{text:"制作3,727本・上場申請",options:{bold:true}},{text:"AX 4.0倍／年商100.2億・営業利益29.5億",options:{bold:true}}],
+    ["4期","制作2,529本・スケール","AX 3.0倍／ツール19.3億／C2C 24.4億／流通株式25%の設計合意"],
+    [{text:"5期",options:{bold:true,color:VERM}},{text:"制作3,727本・上場申請",options:{bold:true}},{text:"AX 4.0倍／年商115.4億・営業利益40.8億",options:{bold:true}}],
   ];
   table(s, M, 1.58, W, rows, [1.6,4.6,5.83], 9.5, 0.40);
   warn(s, M, 4.98, W, 1.26, "最優先で実測するのは ③の成約価格です",
-    ["★ ToC＝上限／ToB＝中点で置いています。実際にどこで成約するかを1期から件数と単価の両方で実測します。",
-     "AX倍率は次点です。★20案件で実測し2027年6月に更新。4倍なら29.4%、1倍でも20.8%で成立します。"]);
+    ["★ ToC・ToBとも上限成約で置いています。実際にどこで成約するかを1期から件数と単価の両方で実測します。",
+     "AX倍率は次点です。★20案件で実測し2027年6月に更新。4倍なら35.3%、1倍でも27.8%で成立します。"]);
   foot(s, "ゲート条件を満たさない場合は次フェーズに進まず、前提を引き直します。詳細は ROADMAP.md");
 }
 
@@ -866,17 +866,17 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
   const rows=[
     hrow(["#","影響度","発生確率","リスク","対策"]),
     [{text:"1",options:{bold:true}},{text:"高",options:{bold:true,color:VERM}},{text:"高",options:{bold:true,color:VERM}},{text:"②のツール外販が海外で売れない",options:{bold:true}},"5期37.5億の半分は海外。国内だけなら19億前後に落ちる。1期からSynthesia・HeyGenの価格と機能を追い、勝てる領域（日本語・日本市場の要求）に絞る"],
-    [{text:"2",options:{bold:true}},{text:"高",options:{bold:true,color:VERM}},{text:"中",options:{color:VERM}},{text:"③が想定した価格で成約しない",options:{bold:true}},"★ToC＝上限／ToB＝中点で置いている。法人向けが中点も割るなら件数で補うのではなく②へ寄せる。件数と単価の両方を1期から実測する"],
+    [{text:"2",options:{bold:true}},{text:"高",options:{bold:true,color:VERM}},{text:"中",options:{color:VERM}},{text:"③が価格帯の上限で成約しない",options:{bold:true}},"★ToC・ToBとも上限で置いている。中点まで落ちると③は約6割になる。件数で補うのではなく②へ寄せる。件数と単価の両方を1期から実測する"],
     [{text:"3",options:{bold:true}},{text:"高",options:{bold:true,color:VERM}},{text:"中",options:{color:VERM}},{text:"業務委託が偽装請負と判定される",options:{bold:true}},"指揮命令をしない／成果物単位で発注する契約設計。1期に弁護士と雛形を作り、監査法人にも事前確認"],
-    ["4","高","中","③のC2CがGMV91.8億に届かない","年95,200件・月7,900件が必要。届かなければ②の法人向けに寄せる。①③を止めても②が残る構造"],
-    ["5","高","低","シリーズA 3億が入らない","ツール開発の投資を止めて制作に全振り。2期の赤字は▲1.5億→▲3,000万台まで縮む"],
+    ["4","高","中","③のC2CがGMV142.5億に届かない","年95,200件・月7,900件が必要。届かなければ②の法人向けに寄せる。①③を止めても②が残る構造"],
+    ["5","高","低","シリーズA 3億が入らない","ツール開発の投資を止めて制作に全振り。2期の赤字は▲1.4億→▲3,000万台まで縮む"],
     ["6","中","高","制作の市場単価が下がる","①は規模を追わないので影響は限定的。3年の時限と見て②へ移す"],
     ["7","中","中","中国の制作パートナーへの依存","支払いと品質保証を1社に依存しない。2社目の提携を2期までに確保する"],
     ["8","中","中","資金決済法の該当性","収納代行型（当社で預からない）を前提にPF設計の前に弁護士へ確認"],
   ];
   table(s, M, 1.58, W, rows, [0.5,0.9,1.0,3.4,6.23], 9, 0.42);
   warn(s, M, 5.42, W, 0.82, "①の規模を追わないぶん、リスクは②に寄っています",
-    ["制作を売上の35%に抑えた代わりに、②37.5億と③27.5億が計画の65%になりました。ここが最大の賭けです。"]);
+    ["制作を売上の30%に抑えた代わりに、②37.5億と③42.7億が計画の70%になりました。ここが最大の賭けです。"]);
   foot(s, "全リスクと対策は BUSINESS_PLAN ／ MOAT_TIMELINE ／ CHINA_SOURCING に記載しています");
 }
 
