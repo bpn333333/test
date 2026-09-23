@@ -54,7 +54,8 @@ PAY_CARD, PAY_CARD_MIX = 0.036, 0.80    # Stripe 国内カード 3.6%
 PAY_BANK, PAY_BANK_MIX = 0.015, 0.20    # Stripe 銀行振込 1.5%
 PAY_FEE = PAY_CARD * PAY_CARD_MIX + PAY_BANK * PAY_BANK_MIX
 REMIT_FEE = 0.030                        # 中国の制作パートナー経由の送金・為替（松田さん指示）
-SYS_COST_PER_TXN = 120                   # ★円/件。サーバー・AI-bot推論・ストレージ・CDN
+SYS_COST_PER_TXN = 53                    # 円/件。systemcost.py で商品別に積んだ加重平均
+                                         # （ストレージ・転送・AI-bot・アプリ基盤）
 
 # ③は「1人のクリエイターが完結する」仕事（松田さんの定義）。
 # だから価格は工数に連動する。単純な案件＝短時間＝安い、複雑な案件＝長時間＝高い。
@@ -255,7 +256,7 @@ print("  %-34s %12s  %7s" % ("  クリエイターへ（70%）", f"{-avg * 0.70:
 print("  %-34s %12s  %7s" % ("当社の手数料収入（30%）", f"{avg * 0.30:,.0f}円", " 30.0%"))
 items = [("決済手数料（Stripe 加重%.2f%%）" % (PAY_FEE * 100), avg * PAY_FEE),
          ("送金・為替（中国パートナー経由 %.0f%%）" % (REMIT_FEE * 100), avg * REMIT_FEE),
-         ("システム原価（サーバー・推論・CDN）★", SYS_COST_PER_TXN)]
+         ("システム原価（systemcost.py）", SYS_COST_PER_TXN)]
 cogs = 0
 for nm, v in items:
     cogs += v
@@ -340,6 +341,7 @@ print("  2 上限は「日本の発注者がここまでなら払う」という
 print("    下限（クリエイターの留保価格）は中国の賃金データから出ているが、上限は推定。")
 print("    実際には競争で下限側に寄る可能性がある。だから期待値は下限寄りに置いている。")
 print()
-print("  3 システム原価120円/件は［仮置き］。送金3%は松田さんの指示値。")
+print("  3 システム原価53円/件は systemcost.py で積んだ（S3・CloudFrontの公表単価ベース）。")
+print("    送金3%は松田さんの指示値。中国パートナーの取り分が30%側か70%側かは未確定。")
 print("    中国の制作パートナーとの契約で、パートナー取り分が30%側から出るのか")
 print("    クリエイターの70%側から出るのかが決まっていない。")
