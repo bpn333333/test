@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""事業計画_Ver0.7.xlsx の整合性を通しで検査する
+"""事業計画_Ver0.8.xlsx の整合性を通しで検査する
 
 verify_xlsx.py が「plan_v15.py と同じ値か」を見るのに対し、
 こちらは **ワークブック内部が矛盾していないか** を見る。
@@ -16,7 +16,7 @@ import sys
 import formulas
 import openpyxl
 
-FN = "事業計画_Ver0.7.xlsx"
+FN = "事業計画_Ver0.8.xlsx"
 C5 = ["C", "D", "E", "F", "G"]
 I5 = ["I", "J", "K", "L", "M"]
 NG = []
@@ -94,9 +94,9 @@ eq("損益: ①粗利 ＝ ①売上 − ①原価", g1, [p1[i] - c1[i] for i in 
 
 parts = [series("損益計算書", x) for x in
          ["人件費（社員）", "開発委託費（オフショア）", "研究開発費（GPU・基盤）",
-          "BPO（CS・運用）", "獲得費", "代理店手数料", "その他販管費"]]
+          "BPO（CS・運用）", "獲得費", "代理店手数料", "知財関連費", "その他販管費"]]
 opex = series("損益計算書", "販売費・一般管理費 計")
-eq("損益: 販管費計 ＝ 7費目の和", opex, add(*parts))
+eq("損益: 販管費計 ＝ 8費目の和", opex, add(*parts))
 
 op = series("損益計算書", "営業利益")
 eq("損益: 営業利益 ＝ 粗利 − 販管費", op, [gp[i] - opex[i] for i in range(5)])

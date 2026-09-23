@@ -103,6 +103,9 @@ AGENCY_SHARE = [0.0, 0.053, 0.099, 0.147, 0.159]  # ①売上に占める代理�
 AGENCY_FEE = 0.15                                 # 代理店手数料率［仮置き］
 ACQ2 = 0.15
 ACQF = [6, 40, 90, 150, 200]
+# 知財関連費（Ver0.8で新設）★1期は特許出願・商標3か国で300万、2期以降は売上の0.5%
+IP_FIX = [3, 0, 0, 0, 0]
+IP_RATE = [0.0, 0.005, 0.005, 0.005, 0.005]
 
 PY_PER_UNIT = 1.0 / 120 + 1.0 / 90
 TOOL = [round(CORP[i] * CORP_ACV[i] / 100.0 + INDIE[i] * INDIE_ACV / 100.0) + SELF[i]
@@ -121,12 +124,13 @@ def calc():
         pay = sum(HEADS[r][i] * ROLE[r] * BURDEN for r in ROLE) / 100.0
         acq = p1 * ACQ1 + TOOL[i] * ACQ2 + ACQF[i]
         agf = p1 * AGENCY_SHARE[i] * AGENCY_FEE   # 新設。獲得費とは別に立てる
+        ip = IP_FIX[i] + rev * IP_RATE[i]
         sga = rev * 0.04
-        op = gp - pay - OFF_COST[i] - BPO[i] - RND[i] - acq - agf - sga
+        op = gp - pay - OFF_COST[i] - BPO[i] - RND[i] - acq - agf - ip - sga
         ns = TOOL[i] + C2C[i] + p1 * (1 - 1.0 / AX[i])
         out.append(dict(p1=p1, rev=rev, gp=gp, cu=cu, heads=heads, pay=pay, op=op, ns=ns,
                         off=OFF_COST[i],
-                        gig=UNITS[i] * PY_PER_UNIT * DIFF[i] / AX[i], acq=acq, agf=agf, sga=sga,
+                        gig=UNITS[i] * PY_PER_UNIT * DIFF[i] / AX[i], acq=acq, agf=agf, ip=ip, sga=sga,
                         saving=UNITS[i] * PRICE[i] / 100.0))
     return out
 
@@ -164,7 +168,8 @@ row("  開発委託費（オフショア）", OFF_COST)
 row("  研究開発費（GPU・基盤）", RND)
 row("  BPO（CS・運用）", BPO)
 row("  獲得費", [r["acq"] for r in R])
-row("  代理店手数料（新設）", [r["agf"] for r in R])
+row("  代理店手数料", [r["agf"] for r in R])
+row("  知財関連費（新設）", [r["ip"] for r in R])
 row("  その他販管費", [r["sga"] for r in R])
 row("営業利益", [r["op"] for r in R])
 row("  営業利益率(%)", [r["op"] / r["rev"] * 100 for r in R], "{:>9.1f}")
@@ -210,7 +215,7 @@ print("  " + "-" * 74)
 for k in [1.0, 2.0, 3.0, 4.0]:
     cu = cost_unit(k, DIFF[-1])
     gp = r["p1"] * (1 - cu / PRICE[-1]) + TOOL[-1] * 0.80 + C2C[-1] * C2C_GP[-1]
-    op = gp - r["pay"] - OFF_COST[-1] - BPO[-1] - RND[-1] - r["acq"] - r["agf"] - r["sga"]
+    op = gp - r["pay"] - OFF_COST[-1] - BPO[-1] - RND[-1] - r["acq"] - r["agf"] - r["ip"] - r["sga"]
     mk = "  ←計画" if k == 4.0 else ("  ←ここでも成立" if k == 3.0 else "")
     print("  %.1f倍    %8.1f万          %7.1f万     %5.1f%%   %+8.0f百万   %6.1f%%%s"
           % (k, DIRECTION_BASE / k * DIFF[-1], cu, (1 - cu / PRICE[-1]) * 100,
