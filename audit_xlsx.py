@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""事業計画_Ver1.6.xlsx の整合性を通しで検査する
+"""事業計画_Ver0.7.xlsx の整合性を通しで検査する
 
 verify_xlsx.py が「plan_v15.py と同じ値か」を見るのに対し、
 こちらは **ワークブック内部が矛盾していないか** を見る。
@@ -16,7 +16,7 @@ import sys
 import formulas
 import openpyxl
 
-FN = "事業計画_Ver1.6.xlsx"
+FN = "事業計画_Ver0.7.xlsx"
 C5 = ["C", "D", "E", "F", "G"]
 I5 = ["I", "J", "K", "L", "M"]
 NG = []
