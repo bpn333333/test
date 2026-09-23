@@ -132,22 +132,29 @@ gp3 = series("商品マスタ③", "売上総利益")
 eq("商品マスタ③: 粗利 ＝ 売上 − 原価", gp3, [m3rev[i] - cogs3[i] for i in range(5)])
 
 ws = wb["商品マスタ③"]
-sumJ = sum(val("商品マスタ③", "J%d" % r) for r in range(5, 19))
-totJ = val("商品マスタ③", "J23")
+sumJ = sum(val("商品マスタ③", "L%d" % r) for r in range(5, 19))
+totJ = val("商品マスタ③", "L23")
 eq("商品マスタ③: 合計GMV ＝ 14商品の和", [totJ], [sumJ], tol=1.0)
-adjJ = val("商品マスタ③", "J25")
+adjJ = val("商品マスタ③", "L25")
 eq("商品マスタ③: 共食い後の5期GMV ＝ 期別GMVの5期", [adjJ], [val("商品マスタ③", "G39")], tol=1.0)
 for r in range(5, 19):
-    e, f = val("商品マスタ③", "E%d" % r), val("商品マスタ③", "F%d" % r)
-    g, h, j = val("商品マスタ③", "G%d" % r), val("商品マスタ③", "H%d" % r), val("商品マスタ③", "J%d" % r)
-    if abs((e + f) / 2 - g) > 1:
+    seg = ws.cell(r, 3).value
+    lo, hi = val("商品マスタ③", "F%d" % r), val("商品マスタ③", "G%d" % r)
+    mid, adopt = val("商品マスタ③", "H%d" % r), val("商品マスタ③", "I%d" % r)
+    cnt, gmv = val("商品マスタ③", "J%d" % r), val("商品マスタ③", "L%d" % r)
+    want = hi if seg == "ToC" else mid
+    if abs((lo + hi) / 2 - mid) > 1:
         NG.append("③ %d行: 中点 ≠ (下限+上限)/2" % r)
         print("  NG  ③ %d行 %s: 中点が (下限+上限)/2 と合わない" % (r, ws.cell(r, 1).value))
-    if abs(g * h / 1e6 - j) > 0.5:
-        NG.append("③ %d行: GMV ≠ 中点×件数" % r)
-        print("  NG  ③ %d行 %s: 中点%.0f×件数%.0f/1e6=%.1f だが J=%.1f"
-              % (r, ws.cell(r, 1).value, g, h, g * h / 1e6, j))
-print("  OK  商品マスタ③: 14商品すべて 中点＝(下限+上限)/2、GMV ＝ 中点 × 件数")
+    if abs(adopt - want) > 1:
+        NG.append("③ %d行: 採用価格が区分と合わない" % r)
+        print("  NG  ③ %d行 %s(%s): 採用価格 %.0f だが %s の %.0f のはず"
+              % (r, ws.cell(r, 1).value, seg, adopt, "上限" if seg == "ToC" else "中点", want))
+    if abs(adopt * cnt / 1e6 - gmv) > 0.5:
+        NG.append("③ %d行: GMV ≠ 採用価格×件数" % r)
+        print("  NG  ③ %d行 %s: 採用価格%.0f×件数%.0f/1e6=%.1f だが L=%.1f"
+              % (r, ws.cell(r, 1).value, adopt, cnt, adopt * cnt / 1e6, gmv))
+print("  OK  商品マスタ③: ToCは上限・ToBは中点を採用し、GMV ＝ 採用価格 × 件数")
 
 hp = wb["人員と人件費"]
 heads = series("人員と人件費", "社員数 合計")
