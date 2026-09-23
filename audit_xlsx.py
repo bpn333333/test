@@ -94,9 +94,10 @@ eq("損益: ①粗利 ＝ ①売上 − ①原価", g1, [p1[i] - c1[i] for i in 
 
 parts = [series("損益計算書", x) for x in
          ["人件費（社員）", "開発委託費（オフショア）", "研究開発費（GPU・基盤）",
-          "BPO（CS・運用）", "獲得費", "代理店手数料", "知財関連費", "その他販管費"]]
+          "BPO（CS・運用）", "獲得費", "代理店手数料", "貸倒引当", "採用費",
+          "監査法人費用", "上場関連費用", "知財関連費", "その他販管費"]]
 opex = series("損益計算書", "販売費・一般管理費 計")
-eq("損益: 販管費計 ＝ 8費目の和", opex, add(*parts))
+eq("損益: 販管費計 ＝ 12費目の和", opex, add(*parts))
 
 op = series("損益計算書", "営業利益")
 eq("損益: 営業利益 ＝ 粗利 − 販管費", op, [gp[i] - opex[i] for i in range(5)])
@@ -137,12 +138,16 @@ eq("商品マスタ③: 合計GMV ＝ 14商品の和", [totJ], [sumJ], tol=1.0)
 adjJ = val("商品マスタ③", "J25")
 eq("商品マスタ③: 共食い後の5期GMV ＝ 期別GMVの5期", [adjJ], [val("商品マスタ③", "G39")], tol=1.0)
 for r in range(5, 19):
-    f, h, j = val("商品マスタ③", "F%d" % r), val("商品マスタ③", "H%d" % r), val("商品マスタ③", "J%d" % r)
-    if abs(f * h / 1e6 - j) > 0.5:
-        NG.append("③ %d行: GMV ≠ 上限×件数" % r)
-        print("  NG  ③ %d行 %s: 上限%.0f×件数%.0f/1e6=%.1f だが J=%.1f"
-              % (r, ws.cell(r, 1).value, f, h, f * h / 1e6, j))
-print("  OK  商品マスタ③: 14商品すべて GMV ＝ 上限 × 件数")
+    e, f = val("商品マスタ③", "E%d" % r), val("商品マスタ③", "F%d" % r)
+    g, h, j = val("商品マスタ③", "G%d" % r), val("商品マスタ③", "H%d" % r), val("商品マスタ③", "J%d" % r)
+    if abs((e + f) / 2 - g) > 1:
+        NG.append("③ %d行: 中点 ≠ (下限+上限)/2" % r)
+        print("  NG  ③ %d行 %s: 中点が (下限+上限)/2 と合わない" % (r, ws.cell(r, 1).value))
+    if abs(g * h / 1e6 - j) > 0.5:
+        NG.append("③ %d行: GMV ≠ 中点×件数" % r)
+        print("  NG  ③ %d行 %s: 中点%.0f×件数%.0f/1e6=%.1f だが J=%.1f"
+              % (r, ws.cell(r, 1).value, g, h, g * h / 1e6, j))
+print("  OK  商品マスタ③: 14商品すべて 中点＝(下限+上限)/2、GMV ＝ 中点 × 件数")
 
 hp = wb["人員と人件費"]
 heads = series("人員と人件費", "社員数 合計")

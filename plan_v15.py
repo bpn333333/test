@@ -38,7 +38,7 @@ Y = ["1期", "2期", "3期", "4期", "5期"]
 n = 5
 
 # ── ① 映像制作（sales.py / pricing.py から）──────────────
-UNITS = [60, 304, 1215, 2543, 3780]          # sales.py（営業体制の積み上げ）
+UNITS = [60, 304, 1213, 2517, 3679]          # sales.py（②の解約が制作会社チャネルに波及）
 
 # 商品マスタ（products.py）。単価・難度係数・構成比から、平均単価と平均難度を導出する。
 # ★単価＝企業の現行支払×(1-値引率)、難度係数、構成比 は私が置いた値
@@ -62,9 +62,9 @@ def cost_unit(ax, diff):
 
 
 # ── ② ツール外販（据え置き）────────────────────────────
-CORP = [0, 15, 100, 320, 600]
-CORP_ACV = [0, 265, 290, 308, 326]   # products.py の積み上げ（2階建て・別売り）
-INDIE = [0, 0, 2000, 8000, 17000]
+CORP = [0, 15, 99, 309, 558]        # 期末（★解約率10%適用後）
+CORP_ACV = [0, 265, 290, 308, 326]   # 積み上げ（2階建て・別売り）
+INDIE = [0, 0, 2000, 7200, 13320]   # 期末（★解約率40%適用後）
 INDIE_ACV = 12
 # ②-C 個人セルフサーブ（用途特化）。selfserve.py
 SELF = [0, 6, 29, 78, 160]
@@ -74,9 +74,9 @@ SELF = [0, 6, 29, 78, 160]
 # ★手数料率はパッケージ20%・オーダーメイド15%（要判断）。一律18%なら C2C_FLAT を使う
 # c2c.py の積み上げ（クリエイター側の受注判断から価格帯を決め、期待値で置いたもの）
 # ②-C セルフサーブの共食いは c2c.py 側で既に差し引き済み
-GMV = [19, 248, 2621, 8140, 14248]
-C2C_BUILD = [6, 74, 786, 2442, 4274]      # 手数料30%・価格は上限・③-C件数を120億に調整
-C2C_GP = [0.667, 0.797, 0.793, 0.793, 0.793]   # 30%から決済・送金・システム原価を引いた後
+GMV = [13, 163, 1571, 4790, 8336]
+C2C_BUILD = [4, 49, 471, 1437, 2501]      # 手数料30%・価格は上限・③-C件数を120億に調整
+C2C_GP = [0.75, 0.796, 0.792, 0.792, 0.792]   # 30%から決済・送金・システム原価を引いた後
 OLD_GMV = [50, 400, 1600, 4500, 8300]   # Ver1.2の一本値（参考。ここには寄せない）
 CANNIB_GMV = [0, 0, 0, 0, 0]            # c2c.py で処理済み
 
@@ -105,6 +105,10 @@ ACQ2 = 0.15
 ACQF = [6, 40, 90, 150, 200]
 # 知財関連費（Ver0.8で新設）★1期は特許出願・商標3か国で300万、2期以降は売上の0.5%
 IP_FIX = [3, 0, 0, 0, 0]
+BAD_RATE = 0.005                    # 貸倒引当（売上比）★
+REC_COST = [5, 9, 13, 11, 4]            # 採用費（人員シートの積み上げ）★
+AUDIT = [0, 0, 20, 20, 20]          # 監査法人（上場2年前から）★
+IPO_COST = [0, 0, 0, 0, 100]        # 上場関連（上場期）★
 IP_RATE = [0.0, 0.005, 0.005, 0.005, 0.005]
 
 PY_PER_UNIT = 1.0 / 120 + 1.0 / 90
@@ -125,12 +129,15 @@ def calc():
         acq = p1 * ACQ1 + TOOL[i] * ACQ2 + ACQF[i]
         agf = p1 * AGENCY_SHARE[i] * AGENCY_FEE   # 新設。獲得費とは別に立てる
         ip = IP_FIX[i] + rev * IP_RATE[i]
+        bad = rev * BAD_RATE
+        other = REC_COST[i] + AUDIT[i] + IPO_COST[i]
         sga = rev * 0.04
-        op = gp - pay - OFF_COST[i] - BPO[i] - RND[i] - acq - agf - ip - sga
+        op = gp - pay - OFF_COST[i] - BPO[i] - RND[i] - acq - agf - ip - bad - other - sga
         ns = TOOL[i] + C2C[i] + p1 * (1 - 1.0 / AX[i])
         out.append(dict(p1=p1, rev=rev, gp=gp, cu=cu, heads=heads, pay=pay, op=op, ns=ns,
                         off=OFF_COST[i],
-                        gig=UNITS[i] * PY_PER_UNIT * DIFF[i] / AX[i], acq=acq, agf=agf, ip=ip, sga=sga,
+                        gig=UNITS[i] * PY_PER_UNIT * DIFF[i] / AX[i], acq=acq, agf=agf, ip=ip,
+                        bad=bad, other=other, sga=sga,
                         saving=UNITS[i] * PRICE[i] / 100.0))
     return out
 
@@ -169,7 +176,9 @@ row("  研究開発費（GPU・基盤）", RND)
 row("  BPO（CS・運用）", BPO)
 row("  獲得費", [r["acq"] for r in R])
 row("  代理店手数料", [r["agf"] for r in R])
-row("  知財関連費（新設）", [r["ip"] for r in R])
+row("  知財関連費", [r["ip"] for r in R])
+row("  貸倒引当（新設）", [r["bad"] for r in R])
+row("  採用・監査・上場（新設）", [r["other"] for r in R])
 row("  その他販管費", [r["sga"] for r in R])
 row("営業利益", [r["op"] for r in R])
 row("  営業利益率(%)", [r["op"] / r["rev"] * 100 for r in R], "{:>9.1f}")
@@ -215,7 +224,7 @@ print("  " + "-" * 74)
 for k in [1.0, 2.0, 3.0, 4.0]:
     cu = cost_unit(k, DIFF[-1])
     gp = r["p1"] * (1 - cu / PRICE[-1]) + TOOL[-1] * 0.80 + C2C[-1] * C2C_GP[-1]
-    op = gp - r["pay"] - OFF_COST[-1] - BPO[-1] - RND[-1] - r["acq"] - r["agf"] - r["ip"] - r["sga"]
+    op = gp - r["pay"] - OFF_COST[-1] - BPO[-1] - RND[-1] - r["acq"] - r["agf"] - r["ip"] - r["bad"] - r["other"] - r["sga"]
     mk = "  ←計画" if k == 4.0 else ("  ←ここでも成立" if k == 3.0 else "")
     print("  %.1f倍    %8.1f万          %7.1f万     %5.1f%%   %+8.0f百万   %6.1f%%%s"
           % (k, DIRECTION_BASE / k * DIFF[-1], cu, (1 - cu / PRICE[-1]) * 100,

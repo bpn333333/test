@@ -143,6 +143,13 @@ ROWS = [
      "特許出願（ビジネスモデル特許）＋商標3か国（日・中・台）の初期費用 300万"),
     ("", "知財関連費率（2期以降・売上比）", [0.0, 0.005, 0.005, 0.005, 0.005], "%", "★",
      "出願維持・年金・監視・権利処理。売上の0.5%"),
+    ("費用", "貸倒引当率（売上比）", [0.005, 0.005, 0.005, 0.005, 0.005], "%", "★",
+     "★0.5〜1%のうち下限を採る。③は収納代行で当社が与信を負わず、②は年額前受。"
+     "貸倒が立つのは①の掛売（60日）だけで、①は売上の3割。全社0.5%＝①売上の約1.7%相当"),
+    ("", "監査法人費用", [0, 0, 20, 20, 20], "百万円", "★",
+     "★上場2年前（3期）から年2,000万。その他販管費の見積からは監査報酬を外してある"),
+    ("", "上場関連費用", [0, 0, 0, 0, 100], "百万円", "★",
+     "★上場期に1億（主幹事引受手数料・取引所上場料・印刷・株式事務の立ち上げ）"),
 ]
 r = 4
 for big, item, vals, unit, kind, note in ROWS:
@@ -158,7 +165,7 @@ for big, item, vals, unit, kind, note in ROWS:
     r += 1
 (pAX, pCRE, pDIR, pTOOL, pBUF, pRND, pBPO, pACQF, pACQ1, pACQ2,
  pAGSH, pAGFE, pSGA, pBURD, pTAX, pAR, pAP, pDEF, pCAPEX, pSEED, pSERA, pLOAN,
- pIPFIX, pIPRATE) = range(4, 28)
+ pIPFIX, pIPRATE, pBAD, pAUDIT, pIPO) = range(4, 31)
 
 
 def pf(row, i):
@@ -407,7 +414,7 @@ SLD = [
     ("　1社あたり年間本数", [4, 5, 6, 6, 6], "★採用・展示会・製品・IRで年6本"),
     ("　小計（本）", "=C5*C6*C7", None),
     ("2 制作会社経由", None, None),
-    ("　②の法人契約数", "=商品マスタ②!C19", "②を売ることが①の営業になっている"),
+    ("　②の法人契約数", "=商品マスタ②!C21", "②を売ることが①の営業になっている"),
     ("　うち発注もする割合", [0.0, 0.20, 0.25, 0.30, 0.30], "★手に余る案件を当社に流す"),
     ("　1社あたり年間本数", [0, 6, 7, 8, 8], "★"),
     ("　小計（本）", "=ROUND(C10*C11*C12,0)", None),
@@ -509,94 +516,102 @@ put(M2, 15, 10, "新規契約の25%が初年度に発注★", font=F_S)
 band(M2, 17, "期別")
 header(M2, 18, ["項目", ""] + Y + ["", "", "考え方"])
 M2D = [
-    ("法人契約数", [0, 15, 100, 320, 600], "★海外展開が前提"),
-    ("Enterprise比率", [0.0, 0.13, 0.20, 0.25, 0.30], "★事例が増えるほど上位プランが取れる"),
-    ("　Enterprise 社数", "=ROUND(C19*C20,0)", ""),
-    ("　Standard 社数", "=C19-C21", ""),
-    ("積み上げACV（万円）", "=IF(C19=0,0,(C21*$E$12+C22*$E$13)/C19+$C$15)", "一本値ではなく積み上げ"),
-    ("法人売上（百万円）", "=C19*C23/100", ""),
-    ("個人契約数", [0, 0, 2000, 8000, 17000], "★プロクリエイター"),
-    ("個人ACV（万円）", [12, 12, 12, 12, 12], "月1万円（チェックポイント6千＋工程ツール4千）"),
-    ("個人売上（百万円）", "=C25*C26/100", ""),
+    (19, "新規獲得 法人（社）", [0, 15, 85, 220, 280], None, "★海外展開が前提"),
+    (20, "★ 法人の年次解約率", [0.0, 0.10, 0.10, 0.10, 0.10], None,
+     "★年10%。工程に組み込まれるので粘着性は高いが、B2B SaaSの標準的な水準を置く"),
+    (21, "法人契約数（期末）", None, "=ROUND({p}21*(1-{c}20)+{c}19,0)", "前期末×(1−解約率)＋新規"),
+    (22, "Enterprise比率", [0.0, 0.13, 0.20, 0.25, 0.30], None, "★事例が増えるほど上位プランが取れる"),
+    (23, "　Enterprise 社数", None, "=ROUND({c}21*{c}22,0)", ""),
+    (24, "　Standard 社数", None, "={c}21-{c}23", ""),
+    (25, "積み上げACV（万円）", None, "=IF({c}21=0,0,({c}23*$E$12+{c}24*$E$13)/{c}21+$C$15)", "一本値ではなく積み上げ"),
+    (26, "法人売上（百万円）", None, "={c}21*{c}25/100", ""),
+    (27, "新規獲得 個人（人）", [0, 0, 2000, 6000, 9000], None, "★プロクリエイター"),
+    (28, "★ 個人の年次解約率", [0.0, 0.40, 0.40, 0.40, 0.40], None,
+     "★年40%（月4%相当）。個人向けSaaSは解約が早い。法人の4倍で置く"),
+    (29, "個人契約数（期末）", None, "=ROUND({p}29*(1-{c}28)+{c}27,0)", "前期末×(1−解約率)＋新規"),
+    (30, "個人ACV（万円）", [12, 12, 12, 12, 12], None, "月1万円（チェックポイント6千＋工程ツール4千）"),
+    (31, "個人売上（百万円）", None, "={c}29*{c}30/100", ""),
 ]
-r = 19
-for name, vals, note in M2D:
-    put(M2, r, 1, name, font=F_B if isinstance(vals, str) else F_N)
-    put(M2, r, 2, "")
-    for i, c in enumerate(C5):
-        if isinstance(vals, str):
-            put(M2, r, 3 + i, vals.replace("C1", c + "1").replace("C2", c + "2"),
-                fmt=N if "ACV" in name or "売上" in name else N, align="right", fill=CALCBG,
-                font=F_B if "売上" in name else F_N)
-        else:
-            put(M2, r, 3 + i, vals[i], fmt=P if isinstance(vals[i], float) else N,
+for rr, name, vals, f, note in M2D:
+    put(M2, rr, 1, name, font=F_R if name.startswith("★") else (F_B if f else F_N))
+    put(M2, rr, 2, "")
+    for i2, c in enumerate(C5):
+        if vals is not None:
+            put(M2, rr, 3 + i2, vals[i2], fmt=P if isinstance(vals[i2], float) else N,
                 fill=INBG, align="right")
-    if note:
-        put(M2, r, 10, note, font=F_S)
-    r += 1
-m2CORPREV, m2INDREV = 24, 27
+        else:
+            prev = C5[i2 - 1] if i2 else None
+            if rr == 21 and i2 == 0:
+                ff = "=%s19" % c
+            elif rr == 29 and i2 == 0:
+                ff = "=%s27" % c
+            else:
+                ff = f.format(c=c, p=prev)
+            put(M2, rr, 3 + i2, ff, fmt=N, align="right", fill=CALCBG,
+                font=F_B if "売上" in name else F_N)
+    put(M2, rr, 10, note, font=F_S)
+m2CORPREV, m2INDREV = 26, 31
 
-band(M2, 29, "②-C 個人セルフサーブ（用途特化・フリーミアム）")
-header(M2, 30, ["項目", ""] + Y + ["", "", "考え方"])
+band(M2, 33, "②-C 個人セルフサーブ（用途特化・フリーミアム）")
+header(M2, 34, ["項目", ""] + Y + ["", "", "考え方"])
 M2S = [
-    ("登録ユーザー（累計）", [0, 30000, 120000, 280000, 500000], "★テンプレートは③-Aの6商品に固定"),
-    ("有料転換率", [0.0, 0.05, 0.06, 0.07, 0.08], "★"),
-    ("　有料ユーザー", "=ROUND(C31*C32,0)", ""),
-    ("ARPPU（円/年）", [0, 4000, 4000, 4000, 4000], "★都度1,500円/本と月額980円の混合"),
-    ("②-C 売上（百万円）", "=C33*C34/1000000", ""),
-    ("年間出力本数（データ）", "=ROUND(C33*2.5,0)", "却下された中間生成物も学習に回る"),
+    (35, "登録ユーザー（累計）", [0, 30000, 120000, 280000, 500000], None, "★テンプレートは③-Aの6商品に固定"),
+    (36, "有料転換率", [0.0, 0.05, 0.06, 0.07, 0.08], None, "★"),
+    (37, "　有料ユーザー", None, "=ROUND({c}35*{c}36,0)", ""),
+    (38, "ARPPU（円/年）", [0, 4000, 4000, 4000, 4000], None, "★都度1,500円/本と月額980円の混合"),
+    (39, "②-C 売上（百万円）", None, "={c}37*{c}38/1000000", ""),
+    (40, "年間出力本数（データ）", None, "=ROUND({c}37*2.5,0)", "却下された中間生成物も学習に回る"),
 ]
-r = 31
-for name, vals, note in M2S:
-    put(M2, r, 1, name, font=F_B if isinstance(vals, str) else F_N)
-    put(M2, r, 2, "")
-    for i, c in enumerate(C5):
-        if isinstance(vals, str):
-            put(M2, r, 3 + i, vals.replace("C3", c + "3"), fmt=N, align="right", fill=CALCBG,
-                font=F_B if "売上" in name else F_N)
-        else:
-            put(M2, r, 3 + i, vals[i], fmt=P if isinstance(vals[i], float) else N,
+for rr, name, vals, f, note in M2S:
+    put(M2, rr, 1, name)
+    put(M2, rr, 2, "")
+    for i2, c in enumerate(C5):
+        if vals is not None:
+            put(M2, rr, 3 + i2, vals[i2], fmt=P if isinstance(vals[i2], float) else N,
                 fill=INBG, align="right")
-    if note:
-        put(M2, r, 10, note, font=F_S)
-    r += 1
-m2SELF = 35
+        else:
+            put(M2, rr, 3 + i2, f.format(c=c), fmt=N, align="right", fill=CALCBG,
+                font=F_B if "売上" in name else F_N)
+    put(M2, rr, 10, note, font=F_S)
+m2SELF = 39
 
-put(M2, 38, 1, "② 売上 合計（百万円）", font=F_B)
-put(M2, 38, 2, "")
-for i, c in enumerate(C5):
-    put(M2, 38, 3 + i, "=%s%d+%s%d+%s%d" % (c, m2CORPREV, c, m2INDREV, c, m2SELF),
+put(M2, 42, 1, "② 売上 合計（百万円）", font=F_B)
+put(M2, 42, 2, "")
+for i2, c in enumerate(C5):
+    put(M2, 42, 3 + i2, "=%s%d+%s%d+%s%d" % (c, m2CORPREV, c, m2INDREV, c, m2SELF),
         fmt=N, fill=KEYBG, align="right", font=F_B)
-m2REV = 38
-band(M2, 41, "ARRベース（継続課金のみ）— Synthesia・HeyGenと同じ土俵で比べるための行")
-header(M2, 42, ["項目", ""] + Y + ["", "", "考え方"])
-put(M2, 47, 1, "②-C のうち継続課金の比率", font=F_B)
-put(M2, 47, 2, 0.50, fmt=P, fill=INBG, align="right")
-put(M2, 47, 10, "★月額980円と都度1,500円/本の混合。都度分はARRに入らない", font=F_S)
-m2SUBSH = 47
+m2REV = 42
+put(M2, 43, 1, "② 粗利率", font=F_B)
+put(M2, 43, 2, 0.80, fmt=P, fill=INBG, align="right")
+put(M2, 43, 10, "★ソフトウェア外販の一般水準", font=F_S)
+m2GPR = 43
+
+band(M2, 45, "ARRベース（継続課金のみ）— Synthesia・HeyGenと同じ土俵で比べるための行")
+header(M2, 46, ["項目", ""] + Y + ["", "", "考え方"])
+put(M2, 51, 1, "②-C のうち継続課金の比率", font=F_B)
+put(M2, 51, 2, 0.50, fmt=P, fill=INBG, align="right")
+put(M2, 51, 10, "★月額980円と都度1,500円/本の混合。都度分はARRに入らない", font=F_S)
+m2SUBSH = 51
 ARRD = [
-    (43, "法人ARR / 社（万円）", "=IF(C19=0,0,C23-$C$15)", "積み上げACVから LoRA個別構築の20万を除く"),
-    (44, "法人ARR（百万円）", "=C19*C43/100", ""),
-    (45, "② ARR 合計（百万円）", "=C44+C27+C35*$B$47", "法人ARR ＋ 個人 ＋ セルフサーブの継続分"),
-    (46, "一過性収入（百万円）", "=C38-C45", "LoRA個別構築とセルフサーブの都度課金"),
+    (47, "法人ARR / 社（万円）", "=IF({c}21=0,0,{c}25-$C$15)", "積み上げACVから LoRA個別構築の20万を除く"),
+    (48, "法人ARR（百万円）", "={c}21*{c}47/100", ""),
+    (49, "② ARR 合計（百万円）", "={c}48+{c}31+{c}39*$B$51", "法人ARR ＋ 個人 ＋ セルフサーブの継続分"),
+    (50, "一過性収入（百万円）", "={c}42-{c}49", "LoRA個別構築とセルフサーブの都度課金"),
 ]
 for rr, name, f, note in ARRD:
     put(M2, rr, 1, name, font=F_B if "合計" in name else F_N)
     put(M2, rr, 2, "")
-    for i, c in enumerate(C5):
-        ff = f
-        for src in ["C19", "C23", "C27", "C35", "C38", "C43", "C44", "C45"]:
-            ff = ff.replace(src, c + src[1:])
-        put(M2, rr, 3 + i, ff, fmt=N, align="right",
+    for i2, c in enumerate(C5):
+        put(M2, rr, 3 + i2, f.format(c=c), fmt=N, align="right",
             fill=KEYBG if "ARR 合計" in name else CALCBG,
             font=F_B if "ARR 合計" in name else F_N)
     if note:
         put(M2, rr, 10, note, font=F_S)
-m2ARR = 45
-put(M2, 49, 1, "② 売上（ACVベース）と ② ARR の差が一過性収入。投資家に「御社のARRは？」と聞かれたら下の行を答える。"
-             "デッキで Synthesia 210億・HeyGen 300億と並べているが、あちらの公表値はARRなので揃える必要がある。",
-    font=F_S, border=False)
-put(M2, 51, 1, "②-C はここに置く（③ではなく）。ツール事業の倍率が当たる側で、会社の形も3事業のまま保てる。",
+m2ARR = 49
+put(M2, 53, 1, "★ 解約率を入れたので、契約数は「新規獲得 − 解約」の純増になる。"
+             "5期に法人600社を維持するには、累計600社ではなく解約分を上乗せして獲得し続ける必要がある。",
+    font=F_R, border=False)
+put(M2, 55, 1, "②-C はここに置く（③ではなく）。ツール事業の倍率が当たる側で、会社の形も3事業のまま保てる。",
     font=F_S, border=False)
 
 # ══════════════════════════════════════════════════════════════
@@ -606,8 +621,8 @@ M3 = sheet("商品マスタ③", [26, 8, 9, 9, 12, 13, 12, 11, 12, 13, 34])
 title(M3, "③ 越境C2C — 商品別",
       "価格は**上限を採用**（松田さんの決定）。上限＝日本の発注者の支払意思。"
       "下限はクリエイターの留保価格で、下回ると供給が付かないという床。中点は参考。".replace("**", ""))
-header(M3, 3, ["商品", "分類", "参考 軽い場合", "標準工数", "下限（供給）", "上限＝採用価格",
-               "参考 中点", "5期件数", "年間工数", "5期GMV(百万)", "上限の根拠"])
+header(M3, 3, ["商品", "分類", "参考 軽い場合", "標準工数", "下限（供給）", "上限（上振れ）",
+               "中点＝採用価格", "5期件数", "年間工数", "5期GMV(百万)", "上限の根拠"])
 S3 = [
     ("SNS用ショート", "A", 0.5, 1.5, 10000, 25000, "個人の動画編集外注 5千〜3万の下側"),
     ("誕生日ムービー", "A", 1.0, 2.5, 15000, 12000, "サプライズ動画 数千〜2万"),
@@ -632,11 +647,11 @@ for name, grp, hmin, hmax, pmax, cnt, why in S3:
     put(M3, r, 4, hmax, fmt="0.0", fill=INBG, align="right")
     put(M3, r, 5, "=ROUNDUP(クリエイター経済!$B$10*D%d/(1-$B$28)/500,0)*500" % r,
         fmt=N, fill=CALCBG, align="right")
-    put(M3, r, 6, pmax, fmt=N, fill=KEYBG, align="right", font=F_B)
-    put(M3, r, 7, "=(E%d+F%d)/2" % (r, r), fmt=N, align="right", font=F_S)
+    put(M3, r, 6, pmax, fmt=N, fill=INBG, align="right", font=F_S)
+    put(M3, r, 7, "=(E%d+F%d)/2" % (r, r), fmt=N, fill=KEYBG, align="right", font=F_B)
     put(M3, r, 8, cnt, fmt=N, fill=INBG, align="right")
     put(M3, r, 9, "=D%d*H%d" % (r, r), fmt=N, align="right")
-    put(M3, r, 10, "=F%d*H%d/1000000" % (r, r), fmt=M, align="right")   # 価格は上限を採用
+    put(M3, r, 10, "=G%d*H%d/1000000" % (r, r), fmt=M, align="right")   # 価格は中点を採用
     put(M3, r, 11, why, font=F_S)
     r += 1
 for i, (g, lab) in enumerate([("A", "小計 ③-A 個人パッケージ"), ("B", "小計 ③-B 中小企業"),
@@ -716,10 +731,6 @@ put(M3, 46, 1, "⚠ 全商品が上限で成約する前提。下限（クリエ
              "供給が厚いほど競争で下限側に寄るのが市場の常なので、ここは最も強気の置き方。"
              "中点なら③のGMVは約57%、全部が下限なら約5%になる。", font=F_R, border=False)
 
-put(M2, 39, 1, "② 粗利率", font=F_B)
-put(M2, 39, 2, 0.80, fmt=P, fill=INBG, align="right")
-put(M2, 39, 10, "★ソフトウェア外販の一般水準", font=F_S)
-m2GPR = 39
 
 band(M3, 47, "ACV / ARR — ③は取引ベースなのでARRはゼロ")
 header(M3, 48, ["項目", ""] + Y + ["", "", "考え方"])
@@ -889,7 +900,34 @@ put(H, 60, 1, "その他販管費（5期・売上の4%）", font=F_B)
 H_SGA_CELL = (60, 3)
 put(H, 61, 1, "判定", font=F_B)
 put(H, 61, 3, '=IF(C60>=C59,"○ 上限まで賄える","× 足りない")', align="center", font=F_B)
-put(H, 61, 8, "★費目はすべて私の見積もり。実際の見積を取ったものではない", font=F_S)
+put(H, 61, 8, "★費目はすべて私の見積もり。実際の見積を取ったものではない。"
+             "監査報酬は別線（前提シート）に出したので、この表からは外してある", font=F_S)
+
+band(H, 63, "採用費 — 4人目から計上する")
+header(H, 64, ["項目", ""] + Y + ["考え方"])
+REC = [
+    (65, "社員数（期末）", None, "='人員と人件費'!{c}10", ""),
+    (66, "増員（人）", None, "={c}65-{p}65", "1期は期末人数そのもの"),
+    (67, "★ 免除（既に確保済み・リファラル）", [3, 0, 0, 0, 0], None, "最初の3名は計上しない"),
+    (68, "計上人数", None, "=MAX(0,{c}66-{c}67)", ""),
+    (69, "平均年収（万円）", None, "=IF({c}65=0,0,'人員と人件費'!{c}11/1.16*100/{c}65)", "人件費 ÷ 負担率 ÷ 人数"),
+    (70, "★ 採用費率（想定年収比）", [0.30, 0.30, 0.30, 0.30, 0.30], None, "★エージェント手数料の一般水準"),
+    (71, "採用費（百万円）", None, "={c}68*{c}69*{c}70/100", ""),
+]
+for rr, name, vals, f, note in REC:
+    put(H, rr, 1, name, font=F_R if name.startswith("★") else (F_B if rr == 71 else F_N))
+    put(H, rr, 2, "")
+    for i2, c in enumerate(C5):
+        if vals is not None:
+            put(H, rr, 3 + i2, vals[i2], fmt=P if isinstance(vals[i2], float) else N,
+                fill=INBG, align="right")
+        else:
+            prev = C5[i2 - 1] if i2 else None
+            ff = "={c}65".format(c=c) if (rr == 66 and i2 == 0) else f.format(c=c, p=prev)
+            put(H, rr, 3 + i2, ff, fmt=N, align="right",
+                fill=KEYBG if rr == 71 else CALCBG, font=F_B if rr == 71 else F_N)
+    put(H, rr, 8, note, font=F_S)
+H_REC = 71
 
 # ══════════════════════════════════════════════════════════════
 # 損益計算書
@@ -950,6 +988,14 @@ line("acq", "獲得費", lambda i, c, col: "=%s%d*%s+%s%d*%s+%s"
      % (c, RL["p1"], pf(pACQ1, i), c, RL["p2"], pf(pACQ2, i), pf(pACQF, i)))
 line("agf", "代理店手数料", lambda i, c, col: "=%s%d*%s*%s" % (c, RL["p1"], pf(pAGSH, i), pf(pAGFE, i)),
      note="①の代理店チャネル分のみ")
+line("bad", "貸倒引当", lambda i, c, col: "=%s%d*%s" % (c, RL["rev"], pf(pBAD, i)),
+     note="★売上の0.5%。貸倒が立つのは①の掛売のみ（③は収納代行・②は前受）")
+line("rec", "採用費", lambda i, c, col: "='人員と人件費'!%s%d" % (c, H_REC),
+     note="★4人目から。1人あたり想定年収の30%")
+line("audit", "監査法人費用", lambda i, c, col: "=%s" % pf(pAUDIT, i),
+     note="★上場2年前（3期）から年2,000万")
+line("ipo", "上場関連費用", lambda i, c, col: "=%s" % pf(pIPO, i),
+     note="★上場期に1億（主幹事・取引所・印刷・株式事務）")
 line("ip", "知財関連費", lambda i, c, col: "=%s+%s%d*%s" % (pf(pIPFIX, i), c, RL["rev"], pf(pIPRATE, i)),
      note="1期は出願・商標の初期費用★、2期以降は売上の0.5%★")
 line("sga", "その他販管費", lambda i, c, col: "=%s%d*%s" % (c, RL["rev"], pf(pSGA, i)))
@@ -1043,6 +1089,31 @@ kline("burn", "月次バーン（平均）",
 kline("cash0", "（感応度）前受金ゼロなら期末残高",
       lambda i, c, pc: "=%s%d+%s%d" % (c, RK["cash"], c, RK["wc2"]),
       note="ツールを月額課金にした場合")
+
+FX0 = _k[0] + 1
+band(K, FX0, "為替感応度 — 原価は中国・ベトナムに出る")
+header(K, FX0 + 1, ["項目", ""] + Y + ["備考"])
+FXD = [
+    (FX0 + 2, "① 中国クリエイターへの支払", "=商品マスタ①!{I}15", "本数 × 難度 × 12万"),
+    (FX0 + 3, "③ 送金・為替（GMV×3%）", "=商品マスタ③!{c}39*商品マスタ③!$B$30", "中国の制作パートナー経由"),
+    (FX0 + 4, "開発委託（ベトナム）", "='人員と人件費'!{c}42", "リード級 × 実人数"),
+    (FX0 + 5, "外貨建ての支払 計", "={c}%d+{c}%d+{c}%d" % (FX0 + 2, FX0 + 3, FX0 + 4), ""),
+    (FX0 + 6, "★ 10%の円安で増えるコスト", "={c}%d*0.1" % (FX0 + 5), "そのまま営業利益を押し下げる"),
+    (FX0 + 7, "　売上に対する比率", "=IF(損益計算書!{c}%d=0,0,{c}%d/損益計算書!{c}%d)"
+     % (RL["rev"], FX0 + 6, RL["rev"]), "10%円高なら同額が利益に乗る。赤字期は利益比が使えないので売上比で示す"),
+]
+for rr, name, f, note in FXD:
+    put(K, rr, 1, name, font=F_B if "計" in name or "★" in name else F_N)
+    put(K, rr, 2, "")
+    for i2, c in enumerate(C5):
+        col = get_column_letter(9 + i2)
+        put(K, rr, 3 + i2, f.format(c=c, I=col),
+            fmt=P if "影響" in name else N, align="right",
+            fill=KEYBG if "★" in name else CALCBG, font=F_B if "★" in name else F_N)
+    put(K, rr, 8, note, font=F_S)
+put(K, FX0 + 9, 1, "ヘッジ方針: 年間の外貨支払見込みの50%★を為替予約（3〜6ヶ月）でカバーし、"
+                   "残りは①の単価改定と③の手数料率で吸収する。予約はキャッシュを拘束するので、"
+                   "残高が薄い1〜2期は付保率を下げる。", font=F_R, border=False)
 
 # ══════════════════════════════════════════════════════════════
 # 資本構成の推移
@@ -1252,7 +1323,7 @@ put(B, r, 3, "①制作＋②ツール＋③C2C", font=F_R)
 put(B, r, 4, "本計画", font=F_S)
 r += 2
 for lab, f in [("① 制作 ÷ 東北新社", "=損益計算書!$G$%d/100/477" % RL["p1"]),
-               ("② ツール（ARRベース）÷ Synthesia", "=商品マスタ②!$G$45/100/210")]:
+               ("② ツール（ARRベース）÷ Synthesia", "=商品マスタ②!$G$49/100/210")]:
     put(B, r, 1, lab, font=F_B, border=False)
     put(B, r, 2, f, fmt=P, align="right")
     r += 1
@@ -1498,6 +1569,26 @@ HIST = [
      "枚数を増やさないため、知財単独スライドを作り替えた"),
     ("", "", "③の価格前提を「次版で中点成約に変更」と記述（数値は未変更）",
      "⚠ この段階では損益計算書・資金計画の数値を一切変更していない。数値改訂は次版"),
+    ("0.8 数値改訂", "2026-09-23", "③ 上限成約 → 中点成約",
+     "5期GMV 142.5億→83.4億（約59%）。③売上 42.7億→25.0億。上限成約は上振れシナリオとして保持"),
+    ("", "", "② に解約率を新設（★法人 年10%／個人 年40%）",
+     "契約数は「新規獲得−解約」の純増に。法人600→558社、個人17,000→13,320人。②売上 41.6億→35.8億"),
+    ("", "", "②の解約が①にも波及",
+     "制作会社チャネル＝法人契約数×転換率なので、①の本数 3,780→3,679本、売上 35.7→34.8億"),
+    ("", "", "貸倒引当を新設（★売上の0.5%）",
+     "③は収納代行・②は前受なので、貸倒が立つのは①の掛売のみ。0.5〜1%の下限を採る"),
+    ("", "", "採用費を新設（★4人目から・想定年収の30%）",
+     "最初の3名は確保済み／リファラル前提で計上しない。5期4百万"),
+    ("", "", "監査法人費用を新設（★3期から年2,000万）",
+     "その他販管費の見積からは監査報酬を外して二重計上を避けた"),
+    ("", "", "上場関連費用を新設（★上場期に1億）", "主幹事引受・取引所上場料・印刷・株式事務"),
+    ("", "", "設備投資ゼロの前提を見直し（★1期2／3期6／4期12百万）",
+     "20名規模のオフィス。1人あたり内装・什器・敷金で60万★。減価償却は金額が小さいため未計上"),
+    ("", "", "為替感応度を追加（資金計画シート）",
+     "外貨建て支払は5期10.3億。10%円安で1.0億の利益圧迫。ヘッジは外貨支払見込みの50%★を予約"),
+    ("", "", "再計算の結果",
+     "5期 売上 120.0→95.6億、営業利益 45.4→26.3億（37.8%→27.6%）。黒字化は3期のまま。"
+     "2期末キャッシュ188百万でシリーズA前の資金ショートなし"),
 ]
 r = 4
 for ver, date, what, why in HIST:
@@ -1557,6 +1648,32 @@ for label, src, key, fmt, bold, note in SUM:
     r += 1
 
 r += 1
+band(S, r, "Ver0.8 数値改訂の前後（5期）")
+r += 1
+header(S, r, ["項目", "", "改訂前", "改訂後", "差", "", "", "変更の中身"])
+r += 1
+CMP = [
+    ("売上高", 12005, "rev", "③を中点成約に／②に解約率"),
+    ("　③ 越境C2C", 4274, "p3", "上限成約→中点成約。GMVは約57%に"),
+    ("　② ツール外販", 4158, "p2", "★法人10%・個人40%の年次解約率を新設"),
+    ("営業利益", 4536, "op", "上に加えて費用5項目（貸倒・採用・監査・上場・オフィス）"),
+]
+CMP_R0 = r
+for name, before, key, note in CMP:
+    put(S, r, 1, name, font=F_B if "　" not in name else F_N)
+    put(S, r, 2, "")
+    put(S, r, 3, before, fmt=N, align="right", font=F_S)
+    put(S, r, 4, "=損益計算書!G%d" % RL[key], fmt=N, align="right", font=F_B, fill=KEYBG)
+    put(S, r, 5, "=D%d-C%d" % (r, r), fmt="+#,##0;-#,##0", align="right", font=F_R)
+    put(S, r, 8, note, font=F_S)
+    r += 1
+put(S, r, 1, "営業利益率", font=F_B)
+put(S, r, 2, "")
+put(S, r, 3, 0.378, fmt=P, align="right", font=F_S)
+put(S, r, 4, "=損益計算書!G%d" % RL["opr"], fmt=P, align="right", font=F_B, fill=KEYBG)
+put(S, r, 5, "=D%d-C%d" % (r, r), fmt="+0.0%;-0.0%", align="right", font=F_R)
+put(S, r, 8, "各期の対比は改訂履歴シート", font=F_S)
+r += 2
 band(S, r, "継続収益（ARR）と非継続の内訳")
 r += 1
 header(S, r, ["項目", ""] + Y + ["考え方"])
@@ -1564,7 +1681,7 @@ r += 1
 ARR_ROWS = {}
 for tag, name, ref, note in [
         ("p1", "① 映像制作 ARR", "'商品マスタ①'!{I}21", "案件ベース。リテイナー契約分のみ（いまは0）"),
-        ("p2", "② ツール外販 ARR", "'商品マスタ②'!{c}45", "LoRA個別構築とセルフサーブ都度分を除く"),
+        ("p2", "② ツール外販 ARR", "'商品マスタ②'!{c}49", "LoRA個別構築とセルフサーブ都度分を除く"),
         ("p3", "③ 越境C2C ARR", "'商品マスタ③'!{c}49", "取引ベースなのでゼロ")]:
     ARR_ROWS[tag] = r
     put(S, r, 1, name)
