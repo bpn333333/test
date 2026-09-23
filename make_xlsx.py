@@ -594,10 +594,10 @@ put(M2, 51, 1, "②-C はここに置く（③ではなく）。ツール事業�
 # ══════════════════════════════════════════════════════════════
 M3 = sheet("商品マスタ③", [26, 8, 9, 9, 12, 13, 12, 11, 12, 13, 34])
 title(M3, "③ 越境C2C — 商品別",
-      "下限はクリエイターの留保価格（標準工数×時給÷(1−手数料)）。上限は日本の発注者の支払意思。"
-      "工数は旧maxを標準に置き直した（ミニマムの見立てが甘かったため）。★上限・工数・件数は提案値。")
-header(M3, 3, ["商品", "分類", "参考 軽い場合", "標準工数", "下限（供給）", "上限（需要）", "中点",
-               "5期件数", "年間工数", "5期GMV(百万)", "上限の根拠"])
+      "価格は**上限を採用**（松田さんの決定）。上限＝日本の発注者の支払意思。"
+      "下限はクリエイターの留保価格で、下回ると供給が付かないという床。中点は参考。".replace("**", ""))
+header(M3, 3, ["商品", "分類", "参考 軽い場合", "標準工数", "下限（供給）", "上限＝採用価格",
+               "参考 中点", "5期件数", "年間工数", "5期GMV(百万)", "上限の根拠"])
 S3 = [
     ("SNS用ショート", "A", 0.5, 1.5, 10000, 25000, "個人の動画編集外注 5千〜3万の下側"),
     ("誕生日ムービー", "A", 1.0, 2.5, 15000, 12000, "サプライズ動画 数千〜2万"),
@@ -622,11 +622,11 @@ for name, grp, hmin, hmax, pmax, cnt, why in S3:
     put(M3, r, 4, hmax, fmt="0.0", fill=INBG, align="right")
     put(M3, r, 5, "=ROUNDUP(クリエイター経済!$B$10*D%d/(1-$B$26)/500,0)*500" % r,
         fmt=N, fill=CALCBG, align="right")
-    put(M3, r, 6, pmax, fmt=N, fill=INBG, align="right")
-    put(M3, r, 7, "=(E%d+F%d)/2" % (r, r), fmt=N, fill=KEYBG, align="right", font=F_B)
+    put(M3, r, 6, pmax, fmt=N, fill=KEYBG, align="right", font=F_B)
+    put(M3, r, 7, "=(E%d+F%d)/2" % (r, r), fmt=N, align="right", font=F_S)
     put(M3, r, 8, cnt, fmt=N, fill=INBG, align="right")
     put(M3, r, 9, "=D%d*H%d" % (r, r), fmt=N, align="right")
-    put(M3, r, 10, "=G%d*H%d/1000000" % (r, r), fmt=M, align="right")
+    put(M3, r, 10, "=F%d*H%d/1000000" % (r, r), fmt=M, align="right")   # 価格は上限を採用
     put(M3, r, 11, why, font=F_S)
     r += 1
 for i, (g, lab) in enumerate([("A", "小計 ③-A 個人パッケージ"), ("B", "小計 ③-B 中小企業"),
@@ -681,6 +681,7 @@ ROWS3 = [
     ("③ 売上（手数料30%）", "=C39*$B$26"),
     ("　− 決済・送金・システム", "=C39*($B$27+$B$28)+C40*システム原価!$H$%d/1000000" % SC_AVG),
     ("売上総利益", "=C41-C42"),
+    ("年間工数（時間）", "=$I$20*C32*(1-C35)+$I$21*C33+$I$22*C34"),
 ]
 r = 36
 for name, f in ROWS3:
@@ -694,9 +695,10 @@ for name, f in ROWS3:
             fill=KEYBG if name.startswith("③ 売上") or name.startswith("売上総") else CALCBG,
             font=F_B if name.startswith("③ 売上") or name.startswith("売上総") else F_N)
     r += 1
-m3GMV, m3CNT, m3REV, m3COGS, m3GP = 39, 40, 41, 42, 43
-put(M3, 45, 1, "成約が価格帯のどこに落ちるかで③は3倍動く。ここは中点（均等）を採用している（松田さん決定）。"
-             "下限寄りに寄ると小さくなる。", font=F_R, border=False)
+m3GMV, m3CNT, m3REV, m3COGS, m3GP, m3HRS = 39, 40, 41, 42, 43, 44
+put(M3, 46, 1, "⚠ 全商品が上限で成約する前提。下限（クリエイターの留保価格）との差がそのまま利幅になる。"
+             "供給が厚いほど競争で下限側に寄るのが市場の常なので、ここは最も強気の置き方。"
+             "中点なら③のGMVは約57%、全部が下限なら約5%になる。", font=F_R, border=False)
 
 put(M2, 39, 1, "② 粗利率", font=F_B)
 put(M2, 39, 2, 0.80, fmt=P, fill=INBG, align="right")
@@ -766,9 +768,16 @@ for i, c in enumerate(C5):
     col = get_column_letter(9 + i)
     put(H, HGIG, 3 + i, "=商品マスタ①!%s%d*(1/120+1/90)*商品マスタ①!%s%d/%s"
         % (col, M1_UNITS, col, M1_DIFF, pf(pAX, i)), fmt=M, align="right")
-put(H, HGIG + 1, 1, "中国クリエイター（登録・人）")
-put(H, HGIG + 1, 8, "クリエイター経済シート。①③の合計", font=F_S)
-put(H, HGIG + 1, 7, "=クリエイター経済!B%d" % CR_REG, fmt=N, align="right", font=F_B)
+put(H, HGIG + 1, 1, "中国クリエイター（稼働・人）")
+put(H, HGIG + 2, 1, "中国クリエイター（登録・人）", font=F_B)
+put(H, HGIG + 1, 8, "（③の年間工数 ＋ ①のクリエイター支払÷実効時給4,000円）÷ 年1,800時間", font=F_S)
+put(H, HGIG + 2, 8, "稼働の2.5倍★。全員が常時稼働はしない", font=F_S)
+for i2, c in enumerate(C5):
+    col = get_column_letter(9 + i2)
+    fte = ("(商品マスタ③!%s%d+商品マスタ①!%s%d*1000000/4000)/1800" % (c, m3HRS, col, M1_CREPAY))
+    put(H, HGIG + 1, 3 + i2, "=" + fte, fmt=N, align="right")
+    put(H, HGIG + 2, 3 + i2, "=%s%d*2.5" % (c, HGIG + 1), fmt=N, fill=KEYBG,
+        align="right", font=F_B)
 
 band(H, 19, "オフショア開発（業務委託）— ベトナム内のピラミッド")
 header(H, 20, ["国・職位", "月額(万)", "構成比", "", "", "", "", "出所・考え方"])
