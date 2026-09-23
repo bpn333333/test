@@ -38,6 +38,8 @@ print("  フリーランス割増 ×%.1f  →  **受注の判断ライン 時給
       % (FREELANCE, f"{floor_hourly:,.0f}"))
 print()
 print("  ③は1人のクリエイターが完結する仕事なので、発注額はこの時給に工数を掛けたものになる。")
+print("  ⚠ 工数は**標準工数**（旧maxを標準に置き直したもの）で計算する。".replace("**", ""))
+print("     以前は最小工数で下限を出していたが、見立てが甘かった（松田さんの指摘）。")
 print("  価格の幅＝「工数の幅 × 時給の幅（新人1,600円〜熟練3,500円）」。")
 print()
 print("  手数料30%・クリエイター70%なので、発注額 ＝ 時給 × 工数 ÷ 0.70。")
@@ -64,11 +66,12 @@ HOURLY_LO = 1600      # 円。受注判断ライン（平均月給8,935元＋フ
 HOURLY_HI = 3500      # ★熟練クリエイター。月20,000元相当×フリーランス割増
 
 
-def price_floor(hmin, take):
-    """下限 ＝ クリエイターの留保価格。単純な案件を新人が受けても時給が出る額。
+def price_floor(hstd, take):
+    """下限 ＝ クリエイターの留保価格。**標準工数**で計算する。
+       松田さんの指摘: 工数のミニマムの見立てが低すぎた。旧maxを標準に置き直した。
        丸めで判断ラインを割らないよう、500円単位で切り上げる"""
     import math
-    return int(math.ceil(HOURLY_LO * hmin / (1 - take) / 500) * 500)
+    return int(math.ceil(HOURLY_LO * hstd / (1 - take) / 500) * 500)
 
 
 # 上限は「日本の発注者の留保価格」。これ以上なら発注者が既存手段を選ぶ、という線。
@@ -79,18 +82,18 @@ def block(title, items, take, note=""):
     print("=" * 100)
     print(title + "（手数料率 %.0f%%・1人のクリエイターが完結）" % (take * 100))
     print("=" * 100)
-    print("  %-20s %9s %19s %11s %12s"
-          % ("商品", "所要時間", "価格帯（下限=供給/上限=需要）", "受取（下限〜上限）", "実効時給"))
-    print("  " + "-" * 86)
+    print("  %-20s %8s %8s %19s %11s %12s"
+          % ("商品", "旧min", "標準工数", "価格帯（下限=供給/上限=需要）", "受取（下限〜上限）", "実効時給"))
+    print("  " + "-" * 94)
     out = []
-    for name, hmin, hmax, hi, cnt, why in items:
-        lo = price_floor(hmin, take)
+    for name, hmin, hstd, hi, cnt, why in items:
+        lo = price_floor(hstd, take)
         rl, rh = lo * (1 - take), hi * (1 - take)
-        print("  %-20s %3.1f〜%4.1fh %8s〜%9s円 %6s〜%8s円 %5s〜%6s円"
-              % (name, hmin, hmax, f"{lo:,}", f"{hi:,}",
+        print("  %-20s %6.1fh %6.1fh %8s〜%9s円 %6s〜%8s円 %5s〜%6s円"
+              % (name, hmin, hstd, f"{lo:,}", f"{hi:,}",
                  f"{rl:,.0f}", f"{rh:,.0f}",
-                 f"{rl / hmin:,.0f}", f"{rh / hmax:,.0f}"))
-        out.append((name, lo, hi, cnt, hmin, hmax, why))
+                 f"{rl / hstd:,.0f}", f"{rh / hstd:,.0f}"))
+        out.append((name, lo, hi, cnt, hmin, hstd, why))
     print()
     if note:
         print("  " + note)
@@ -295,7 +298,7 @@ print("=" * 100)
 tot_h = 0
 for label, rows in [("A", RA), ("B", RB), ("C", RC)]:
     for name, lo, hi, cnt, hmin, hmax, why in rows:
-        tot_h += cnt * (hmin + hmax) / 2
+        tot_h += cnt * hmax   # 標準工数
 FTE_HOURS = 1800.0
 fte3 = tot_h / FTE_HOURS
 # ① の分（1本あたり中国クリエイター支払 12万×難度1.55、実効時給4,000円想定）
