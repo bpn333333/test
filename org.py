@@ -33,8 +33,11 @@ EE_SENIOR = sum(EE_MONTH.values()) / len(EE_MONTH)
 
 SENIOR = {"ミャンマー": 40.0, "インド": 45.0, "フィリピン": 47.5, "ベトナム": 50.0,
           "バングラデシュ": 52.5, "中国": 71.7, "東欧": EE_SENIOR}
-# AX前提のリード級（ブリッジSE／アーキテクト相当）
+# ベトナム内のピラミッド（松田さんの決定・案C）
+PG = {"ベトナム": 40.1, "インド": 37.5}
+BSE = {"ベトナム": 59.0, "インド": 60.0}
 LEAD = {"ベトナム": 59.0, "インド": 60.0, "中国": 75.8, "東欧": EE_SENIOR * 1.2}
+PYRAMID = [("ベトナム", "ブリッジSE", 59.0, 0.20), ("ベトナム", "プログラマー", 40.1, 0.80)]
 
 print("=" * 92)
 print("オフショア単価（シニア・人月）")
@@ -119,20 +122,21 @@ print()
 # 松田さんの決定（2026-09-23）: ベトナム主軸＋インド。中国・東欧は外す
 MIX = {"ベトナム": 0.70, "インド": 0.30}
 SEN_BLEND = sum(SENIOR[k] * w for k, w in MIX.items())
-LEAD_BLEND = sum(LEAD[k] * w for k, w in MIX.items())
+LEAD_BLEND = sum(rt * w for _, _, rt, w in PYRAMID)
 print("=" * 92)
 print("エンジニアのAX化 — 人数を減らして単価を上げる")
 print("=" * 92)
-print("  構成比 ベトナム70% / インド30%（松田さんの決定）")
-print("  中国(71.7)と東欧(104.0)は外した。ベトナム(50.0)・インド(45.0)より高いため")
+print("  松田さんの決定（案C）: ベトナム内のピラミッド")
+for cn, gr, rt, w in PYRAMID:
+    print("    %s %-12s %5.1f万/月 × %.0f%%" % (cn, gr, rt, w * 100))
+print("  中国(シニア71.7)・東欧(104.0)は外した。ベトナムBSE(59.0)より高く、")
+print("  シニアとミドルを別国に分けるとレビュー境界に継ぎ目ができるため。")
 print("  %-28s 月 %5.1f万  年 %4.0f万" % ("シニア級（AXなし）", SEN_BLEND, SEN_BLEND * 12))
-print("  %-28s 月 %5.1f万  年 %4.0f万  （+%.0f%%）"
-      % ("リード級（AX前提）", LEAD_BLEND, LEAD_BLEND * 12,
-         (LEAD_BLEND / SEN_BLEND - 1) * 100))
-print("    リード級＝ブリッジSE／アーキテクト相当。AIを使い切れる層に絞る。")
+print("  %-28s 月 %5.1f万  年 %4.0f万" % ("ピラミッド加重", LEAD_BLEND, LEAD_BLEND * 12))
+print("    上位20%がレビューと設計、80%が実装。社員PMの下が2層で収まる。")
 print()
 NEED = [5, 10, 20, 30, 40]           # ★必要開発工数（AXなし換算・人年）
-AX_DEV = [1.0, 1.3, 1.7, 2.1, 2.5]   # ★エンジニアのAX倍率
+AX_DEV = [1.0, 1.2, 1.5, 1.9, 2.2]   # ★ミドル中心。レビューが制約になるので制作(4.0)より低く
 OFF_HEADS = [int(math.ceil(NEED[i] / AX_DEV[i])) for i in range(n)]
 OFF_YEAR = LEAD_BLEND * 12
 OFF_COST = [OFF_HEADS[i] * OFF_YEAR / 100 for i in range(n)]
