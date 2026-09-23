@@ -93,6 +93,7 @@ def band(ws, r, text, font=None):
 
 
 N, M, P = "#,##0", "#,##0.0", "0.0%"
+SL_ACC_ROW = 22   # 営業体制シートの「取引アカウント数」行
 
 # ══════════════════════════════════════════════════════════════
 # 前提
@@ -349,6 +350,34 @@ for j, lab in enumerate(LBL):
         put(M1, rr, 9 + i, f, fmt=fmt, align="right",
             fill=KEYBG if j in (1, 5) else CALCBG, font=F_B if j in (1, 5) else F_N)
 M1_PRICE, M1_DIFF, M1_CU, M1_UNITS, M1_REV, M1_SAVE, M1_CREPAY = r + 1, r + 2, r + 3, r + 4, r + 5, r + 6, r + 7
+
+band(M1, 17, "ACV / ARR — ①は案件ベースなので、そのままではARRにならない")
+header(M1, 18, ["項目", "", "", "", "", "", "", "", "1期", "2期", "3期", "4期", "5期", "考え方"])
+put(M1, 22, 1, "年間リテイナー契約の比率", font=F_B)
+put(M1, 22, 2, 0.00, fmt=P, fill=INBG, align="right")
+put(M1, 22, 14, "★「年◯本でいくら」の包括契約にした分だけARRに入る。いまは0", font=F_S)
+M1_RET = 22
+A1 = [
+    (19, "取引アカウント数", "=営業体制!C{acc}", "営業体制シート"),
+    (20, "アカウントあたり年間取引額（万円）", "=IF(I19=0,0,I13*100/I19)",
+     "ACV相当。ただし契約ではなく案件の集まり"),
+    (21, "① ARR（百万円）", "=I13*$B$22", "リテイナー契約分のみ。スポット受注はARRではない"),
+    (23, "① 非継続（百万円）", "=I13-I21", "案件ごとの発注。毎年の継続は保証されない"),
+]
+for rr, name, f, note in A1:
+    put(M1, rr, 1, name, font=F_B if "ARR" in name else F_N)
+    for i, c in enumerate(C5):
+        col = get_column_letter(9 + i)
+        ff = f.replace("{acc}", str(SL_ACC_ROW)).replace("C{", c + "{")
+        ff = ff.replace("営業体制!C", "営業体制!" + c).replace("I1", col + "1").replace("I2", col + "2")
+        put(M1, rr, 9 + i, ff, fmt=N, align="right",
+            fill=KEYBG if "ARR" in name else CALCBG,
+            font=F_B if "ARR" in name else F_N)
+    put(M1, rr, 14, note, font=F_S)
+put(M1, 25, 1, "①は1本ごとの発注で、翌年も同じ社が同じ本数を出す義務はない。"
+             "だから「1社あたり年567万」はACV相当ではあってもARRではない。"
+             "年間包括（リテイナー）契約を商品として作れば、その分はARRに算入できる。★要判断",
+    font=F_S, border=False)
 
 # ══════════════════════════════════════════════════════════════
 # 営業体制
@@ -670,6 +699,20 @@ put(M2, 39, 1, "② 粗利率", font=F_B)
 put(M2, 39, 2, 0.80, fmt=P, fill=INBG, align="right")
 put(M2, 39, 10, "★ソフトウェア外販の一般水準", font=F_S)
 m2GPR = 39
+
+band(M3, 47, "ACV / ARR — ③は取引ベースなのでARRはゼロ")
+header(M3, 48, ["項目", ""] + Y + ["", "", "考え方"])
+for rr, name, f, note in [
+        (49, "③ ARR（百万円）", "=0", "取引手数料。契約ではないのでARRに算入できない"),
+        (50, "③ 非継続（百万円）", "=C41", "全額が取引ベース")]:
+    put(M3, rr, 1, name, font=F_B)
+    put(M3, rr, 2, "")
+    for i, c in enumerate(C5):
+        put(M3, rr, 3 + i, f.replace("C4", c + "4"), fmt=N, align="right", fill=CALCBG)
+    put(M3, rr, 11, note, font=F_S)
+put(M3, 52, 1, "マーケットプレイスはARRでは評価されない。見るのは GMV・取引件数・手数料率・"
+             "そして発注者のリピート率。リピート率はまだモデルに入っていない。★次に詰めるならここ",
+    font=F_S, border=False)
 
 # ══════════════════════════════════════════════════════════════
 # 人員と人件費
@@ -1176,6 +1219,42 @@ for label, src, key, fmt, bold, note in SUM:
     r += 1
 
 r += 1
+band(S, r, "継続収益（ARR）と非継続の内訳")
+r += 1
+header(S, r, ["項目", ""] + Y + ["考え方"])
+r += 1
+ARR_ROWS = {}
+for tag, name, ref, note in [
+        ("p1", "① 映像制作 ARR", "'商品マスタ①'!{I}21", "案件ベース。リテイナー契約分のみ（いまは0）"),
+        ("p2", "② ツール外販 ARR", "'商品マスタ②'!{c}45", "LoRA個別構築とセルフサーブ都度分を除く"),
+        ("p3", "③ 越境C2C ARR", "'商品マスタ③'!{c}49", "取引ベースなのでゼロ")]:
+    ARR_ROWS[tag] = r
+    put(S, r, 1, name)
+    put(S, r, 2, "")
+    for i2, c in enumerate(C5):
+        col = get_column_letter(9 + i2)
+        put(S, r, 3 + i2, "=" + ref.format(I=col, c=c), fmt=N, align="right")
+    put(S, r, 8, note, font=F_S)
+    r += 1
+ARR_TOT = r
+put(S, r, 1, "全社 ARR", font=F_B)
+put(S, r, 2, "")
+for i2, c in enumerate(C5):
+    put(S, r, 3 + i2, "=%s%d+%s%d+%s%d" % (c, ARR_ROWS["p1"], c, ARR_ROWS["p2"], c, ARR_ROWS["p3"]),
+        fmt=N, align="right", fill=KEYBG, font=F_B)
+put(S, r, 8, "投資家に「御社のARRは？」と聞かれたらこの行", font=F_S)
+r += 1
+put(S, r, 1, "　ARR比率（対 売上）", font=F_B)
+put(S, r, 2, "")
+for i2, c in enumerate(C5):
+    put(S, r, 3 + i2, "=IF(%s4=0,0,%s%d/%s4)" % (c, c, ARR_TOT, c),
+        fmt=P, align="right", fill=KEYBG, font=F_B)
+put(S, r, 8, "②以外は継続収益にならない", font=F_S)
+r += 1
+put(S, r, 1, "⚠ 継続収益になるのは②だけ。①は案件ベース、③は取引ベース。"
+             "下のライン別評価でツール6〜8倍・C2C4〜6倍・制作1.5〜2.5倍と差をつけているのは、"
+             "まさにこの違いを反映している。", font=F_S, border=False)
+r += 2
 band(S, r, "シード投資家（1.42億）のリターン")
 r += 1
 header(S, r, ["ケース", "", "時価総額(億)", "取り分(億)", "倍率", "IRR", "", "根拠"])
