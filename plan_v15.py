@@ -66,12 +66,16 @@ CORP = [0, 15, 100, 320, 600]
 CORP_ACV = [0, 265, 290, 308, 326]   # products.py の積み上げ（2階建て・別売り）
 INDIE = [0, 0, 2000, 8000, 17000]
 INDIE_ACV = 12
+# ②-C 個人セルフサーブ（用途特化）。selfserve.py
+SELF = [0, 6, 29, 78, 160]
 
 # ── ③ 越境C2C（c2c.py の商品別積み上げ）────────────────
 # ③-A 個人パッケージ / ③-B 中小企業パッケージ / ③-C オーダーメイド
 # ★手数料率はパッケージ20%・オーダーメイド15%（要判断）。一律18%なら C2C_FLAT を使う
-GMV = [9, 143, 1212, 3625, 6366]
-C2C_BUILD = [2, 29, 216, 629, 1099]     # 率を分けた場合
+# ②-C セルフサーブによる ③-A の共食いを、隠さず差し引く（selfserve.py・SKU別）
+CANNIB_GMV = [0, 5, 22, 60, 122]        # 百万円。③-A の GMV 減
+GMV = [9 - 0, 143 - 5, 1212 - 22, 3625 - 60, 6366 - 122]
+C2C_BUILD = [2, 28, 212, 617, 1075]     # 率を分けた場合（共食い後）
 C2C_FLAT = [round(g * 0.18) for g in GMV]
 OLD_GMV = [50, 400, 1600, 4500, 8300]   # Ver1.2の一本値
 TAKE = None
@@ -97,7 +101,8 @@ ACQ2 = 0.15
 ACQF = [6, 40, 90, 150, 200]
 
 PY_PER_UNIT = 1.0 / 120 + 1.0 / 90
-TOOL = [round(CORP[i] * CORP_ACV[i] / 100.0 + INDIE[i] * INDIE_ACV / 100.0) for i in range(n)]
+TOOL = [round(CORP[i] * CORP_ACV[i] / 100.0 + INDIE[i] * INDIE_ACV / 100.0) + SELF[i]
+        for i in range(n)]
 C2C = C2C_BUILD
 
 
@@ -140,9 +145,11 @@ row("    平均難度係数", DIFF, "{:>9.2f}")
 row("    1本あたり原価(万円)", [r["cu"] for r in R], "{:>9.1f}")
 row("    AX倍率", AX, "{:>9.1f}")
 row("  ② ツール外販", TOOL)
+row("    うち ②-C セルフサーブ", SELF)
 row("  ③ C2C手数料", C2C)
 row("    参考 GMV", GMV)
 row("    （Ver1.2の一本値GMV）", OLD_GMV)
+row("    ②-Cによる共食い(GMV減)", CANNIB_GMV)
 row("売上高", [r["rev"] for r in R])
 print("-" * 92)
 row("売上総利益", [r["gp"] for r in R])
