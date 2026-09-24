@@ -510,7 +510,7 @@ function hbar(s,x,y,w,h,frac,label,val,col,lw){
     hrow(["","収益ライン","型","開始","5期の売上","備考"]),
     [{text:"①",options:{bold:true,color:VERM}},{text:"AI映像制作の受注 → クリエイターへ配分",options:{bold:true}},"フロー",{text:"初日から",options:{bold:true}},{text:"35.2億",options:{bold:true,color:VERM}},"粗利率66%。事業の主体。ここでデータが溜まる"],
     [{text:"②",options:{bold:true,color:GOLD}},{text:"特許・制作用ツールの外販（国内・海外）",options:{bold:true}},"ストック",{text:"2期〜",options:{bold:true}},{text:"39.4億",options:{bold:true,color:GOLD}},"チェックポイント・LoRA・工程ツール。粗利率80%"],
-    [{text:"③",options:{bold:true,color:NAVY}},"越境C2C発注の取引手数料","ストック","6ヶ月目〜",{text:"42.7億",options:{bold:true,color:NAVY}},"手数料率30%。70%をクリエイターへ。②を外部に開放したもの"],
+    [{text:"③",options:{bold:true,color:NAVY}},"越境C2C発注の取引手数料","フロー","6ヶ月目〜",{text:"42.7億",options:{bold:true,color:NAVY}},"手数料率30%。70%をクリエイターへ。②を外部に開放したもの"],
   ];
   table(s, M, 1.58, W, rows, [0.7,4.0,1.0,1.2,1.3,3.83], 9.5, 0.46);
   sec(s, M, 3.56, 6.0, "②で売るもの — ①の制作で溜まったデータから作る");
