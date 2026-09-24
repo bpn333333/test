@@ -10,6 +10,8 @@ PowerPoint を手で作らず、**コードから生成**しています。数�
 | `build.js` | `投資家向け企画書 Ver0.8.pptx` | **投資家向けデッキ 28枚**（本体） |
 | `extra.js` | `市場規模と制作費の構造.pptx` | 補足 2枚（市場規模／制作費とAI） |
 | `av.js` | `市場規模と制作費の構造_AV含む版.pptx` | 上の 3枚版（AVの行と解説を追加） |
+| `visual.js` | `生産体制と3本の柱.pptx` | 補足 2枚（東アジア地図の生産体制／3本の柱）。地図は `make_map.py` が先に描く |
+| `make_map.py` | `assets/map_eastasia.png` `.json` | 地図の画像と、拠点・矢印ラベルの座標。元データは `assets/eastasia_50m.geojson`（Natural Earth 1:50m の東アジア切り出し） |
 | `slim.py` | — | **必ず通す後処理**（下記） |
 | `check_layout.py` | — | PPTX の EMU 座標を読んで**枠外・フッター侵食**を検出（表の伸長と折り返しは検出不可） |
 | `shot.mjs` | `p*.png` | `investor_deck.html` のスライドを Playwright で撮る |
