@@ -1,0 +1,17 @@
+# デッキ生成の中間物（deck/assets は成果物なので除外しない）
+deck/node_modules/
+deck/deck.pptx
+deck/extra.pptx
+deck/av.pptx
+deck/*.png
+deck/*.jpg
+deck/_*.js
+deck/_*.html
+deck/_*.py
+
+__pycache__/
+*.pyc
+
+# この案件と無関係（MT5のEA）
+trading-tools/
+deck/visual.pptx
